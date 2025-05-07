@@ -1,0 +1,10 @@
+# Ignore Python cache files
+__pycache__/
+
+# Ignore CIFAR-10 raw data
+data/
+data/**
+
+# Ignore all artifacts and logs
+artifact/
+artifact/**

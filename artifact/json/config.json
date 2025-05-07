@@ -1,0 +1,7 @@
+{
+  "data_dir": "data/cifar-10-batches-py",
+  "log_path": "artifact/json/results.json",
+  "config_path": "artifact/json/config.json",
+  "batch_size": 128,
+  "num_workers": 2
+}
