@@ -8,3 +8,6 @@ data/**
 # Ignore all artifacts and logs
 artifact/
 artifact/**
+
+# Ignore archive files
+*.tar.gz
