@@ -1,6 +1,6 @@
 {
   "CONFIG_PATH": "artifact/json/config.json",
-  "DATA_PATH": "data",
+  "DATA_PATH": "artifact/data",
   "RESULTS_PATH": "artifact/json/results.json",
   "BATCH_SIZE": 128,
   "NUM_WORKERS": 2

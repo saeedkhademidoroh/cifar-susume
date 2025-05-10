@@ -1,6 +1,7 @@
 # Ignore Python cache files
 __pycache__/
 
-# Ignore CIFAR-10 raw data
-cifar/data/cifar-10-batches-py/
-cifar/data/cifar-10-python.tar.gz
+# Ignore all artifacts
+artifact/data/
+artifact/checkpoints/
+artifact/json/

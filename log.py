@@ -3,10 +3,10 @@ import os
 import time
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 
 # Project-specific (optional default path)
 from config import CONFIG
+
 
 # Ensure output directory exists
 def ensure_dir(path):
@@ -48,3 +48,6 @@ def log_to_json(file_path=CONFIG.RESULTS_PATH, key="log", record=None):
         json.dump(data, f, indent=2)
 
     print(f"✅ Logged under '{key}' in {file_path}")
+
+# Print confirmation message
+print("\n✅ log.py successfully executed")
