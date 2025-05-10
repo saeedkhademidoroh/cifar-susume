@@ -1,10 +1,9 @@
 # Import project-specific libraries
 from experiment import run_experiment
 
+
 # Run a single model (MobileNet) once
 run_experiment(model_numbers=1, runs=1)
-
-# -------------------- Test Case: experiment.run_experiment() --------------------
 
 # Run Model 3 one time
 # run_experiment(3)
@@ -15,30 +14,5 @@ run_experiment(model_numbers=1, runs=1)
 # Run specific models 1, 3, and 5, each 2 times
 # run_experiment([1, 3, 5], runs=2)
 
-# -------------------- Test Case: data.log_to_json() ----------------------------
-
-# train_data, train_labels, test_data, test_labels = load_dataset()
-
-# log_to_json(key="train_overview", record={
-#     "samples": len(train_data),
-#     "shape": list(train_data[0].shape),
-#     "labels": len(set(train_labels))
-# })
-
-# log_to_json(key="test_overview", record={
-#     "samples": len(test_data),
-#     "shape": list(test_data[0].shape),
-#     "labels": len(set(test_labels))
-# })
-
-# -------------------- Test Case: config.CONFIG ---------------------------------
-
-# from config import CONFIG
-
-# print(f"🔍 DEBUGGING ACTIVE: This path is resolved from config.json inside config.py:\n {CONFIG.CONFIG_PATH}")
-
-# -------------------------------------------------------------------------------
-
-
 # Print confirmation message
-print("✅ main.py successfully executed")
+print("\n✅ main.py successfully executed")

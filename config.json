@@ -4,9 +4,9 @@
   "LOG_PATH": "artifact/log",
   "CHECKPOINT_PATH": "artifact/checkpoint",
   "RESULT_PATH": "artifact/result",
-  "EPOCHS_COUNT": 20,
+  "EPOCHS_COUNT": 2,
   "BATCH_SIZE": 64,
   "VALIDATION_SPLIT": 0.15,
   "NUM_WORKERS": 2,
-  "CLEAN_OUTPUTS": false
+  "CLEAN_OUTPUTS": true
 }
