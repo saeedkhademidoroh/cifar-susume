@@ -25,7 +25,7 @@ def build_model(model_number: int) -> Model:
 
     if model_number == 1:
         input_layer = Input(shape=(32, 32, 3))
-        base_model = MobileNet(input_tensor=input_layer, include_top=False, weights="imagenet")
+        base_model = MobileNet(input_tensor=input_layer, include_top=False, weights=None)
         base_model.trainable = False
 
         x = base_model.output

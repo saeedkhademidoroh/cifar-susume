@@ -35,4 +35,4 @@ def load_dataset(data_dir=CONFIG.DATA_PATH, one_hot=False):
 
 
 # Print confirmation message
-print("\n✅ data.py successfully executed")
+print("\n✅ data.py successfully executed\n")

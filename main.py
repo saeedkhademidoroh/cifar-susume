@@ -31,11 +31,11 @@ run_experiment(model_numbers=1, runs=1)
 #     "labels": len(set(test_labels))
 # })
 
-# print("\n✅ main.py successfully executed")
-
 # -------------------- Test Case: config.CONFIG ---------------------------------
 
-# print(f"\n🔧 Batch size from config: {CONFIG.BATCH_SIZE}")
+# from config import CONFIG
+
+# print(f"🔍 DEBUGGING ACTIVE: This path is resolved from config.json inside config.py:\n {CONFIG.CONFIG_PATH}")
 
 # -------------------------------------------------------------------------------
 

@@ -1,0 +1,11 @@
+{
+  "CONFIG_PATH": "artifact/config.json",
+  "DATA_PATH": "artifact/data",
+  "LOG_PATH": "artifact/log",
+  "CHECKPOINT_PATH": "artifact/checkpoint",
+  "RESULT_PATH": "artifact/result",
+  "EPOCHS_COUNT": 1,
+  "BATCH_SIZE": 64,
+  "VALIDATION_SPLIT": 0.15,
+  "NUM_WORKERS": 2
+}

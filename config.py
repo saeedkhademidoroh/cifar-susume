@@ -15,16 +15,24 @@ class Config:
     Example keys (from config.json):
         - CONFIG_PATH
         - DATA_PATH
-        - RESULTS_PATH
+        - LOG_PATH
+        - CHECKPOINT_PATH
+        - RESULT_PATH
+        - EPOCHS_COUNT
         - BATCH_SIZE
+        - VALIDATION_SPLIT
         - NUM_WORKERS
     """
 
     # Generic fields that will be set dynamically from JSON
     CONFIG_PATH: Path
     DATA_PATH: Path
-    RESULTS_PATH: Path
+    LOG_PATH: Path
+    CHECKPOINT_PATH: Path
+    RESULT_PATH: Path
+    EPOCHS_COUNT: int
     BATCH_SIZE: int
+    VALIDATION_SPLIT: float
     NUM_WORKERS: int
 
     @staticmethod
@@ -41,7 +49,7 @@ class Config:
             ValueError: If required keys are missing.
         """
         current_dir = Path(__file__).parent
-        raw_config_path = current_dir / "artifact/json/config.json"
+        raw_config_path = current_dir / "config.json"
 
         if not raw_config_path.exists():
             raise FileNotFoundError(f"❌ Configuration file not found: {raw_config_path}")
@@ -52,8 +60,12 @@ class Config:
         required_keys = [
             "CONFIG_PATH",
             "DATA_PATH",
-            "RESULTS_PATH",
+            "LOG_PATH",
+            "CHECKPOINT_PATH",
+            "RESULT_PATH",
+            "EPOCHS_COUNT",
             "BATCH_SIZE",
+            "VALIDATION_SPLIT",
             "NUM_WORKERS"
         ]
         missing = [key for key in required_keys if key not in config_data]
@@ -63,8 +75,12 @@ class Config:
         return Config(
             CONFIG_PATH=current_dir / config_data["CONFIG_PATH"],
             DATA_PATH=current_dir / config_data["DATA_PATH"],
-            RESULTS_PATH=current_dir / config_data["RESULTS_PATH"],
+            LOG_PATH=current_dir / config_data["LOG_PATH"],
+            CHECKPOINT_PATH=current_dir / config_data["CHECKPOINT_PATH"],
+            RESULT_PATH = current_dir / config_data["RESULT_PATH"],
+            EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"],
+            VALIDATION_SPLIT=config_data["VALIDATION_SPLIT"],
             NUM_WORKERS=config_data["NUM_WORKERS"]
         )
 

@@ -4,16 +4,13 @@ import time
 import json
 from datetime import datetime, timezone
 
-# Project-specific (optional default path)
-from config import CONFIG
-
 
 # Ensure output directory exists
 def ensure_dir(path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 # General-purpose JSON logger
-def log_to_json(file_path=CONFIG.RESULTS_PATH, key="log", record=None):
+def log_to_json(file_path, key, record=None):
     """
     Appends a record to a JSON log file under the specified key.
     Adds both POSIX and ISO UTC timestamps if not already present.
@@ -47,7 +44,7 @@ def log_to_json(file_path=CONFIG.RESULTS_PATH, key="log", record=None):
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
 
-    print(f"✅ Logged under '{key}' in {file_path}")
+    print(f"📝 Saved to result JSON: key='{key}', file='{file_path.name}'")
 
 # Print confirmation message
 print("\n✅ log.py successfully executed")
