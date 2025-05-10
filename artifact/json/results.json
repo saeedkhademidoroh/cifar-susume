@@ -1,116 +1,28 @@
 {
-  "train_stats": [
+  "train_overview": [
     {
+      "samples": 50000,
       "shape": [
-        45000,
-        3072
+        32,
+        32,
+        3
       ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.0532660111784935,
-      "std": 0.5034547448158264,
-      "sample_count": 45000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746621101.5934546,
-      "timestamp_utc": "2025-05-07T12:31:41.593455"
-    },
-    {
-      "shape": [
-        45000,
-        3072
-      ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.053266026079654694,
-      "std": 0.5034542083740234,
-      "sample_count": 45000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746623621.4024668,
-      "timestamp_utc": "2025-05-07T13:13:41.402467"
+      "labels": 10,
+      "timestamp": 1746860103.2293055,
+      "timestamp_utc": "2025-05-10T06:55:03.229306+00:00"
     }
   ],
-  "validation_stats": [
+  "test_overview": [
     {
+      "samples": 10000,
       "shape": [
-        5000,
-        3072
+        32,
+        32,
+        3
       ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.05334598943591118,
-      "std": 0.5002774596214294,
-      "sample_count": 5000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746621102.7856884,
-      "timestamp_utc": "2025-05-07T12:31:42.785688"
-    },
-    {
-      "shape": [
-        5000,
-        3072
-      ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.05334598943591118,
-      "std": 0.5002774596214294,
-      "sample_count": 5000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746623622.3664308,
-      "timestamp_utc": "2025-05-07T13:13:42.366431"
-    }
-  ],
-  "test_stats": [
-    {
-      "shape": [
-        10000,
-        3072
-      ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.04683012515306473,
-      "std": 0.5024392604827881,
-      "sample_count": 10000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746621104.1744943,
-      "timestamp_utc": "2025-05-07T12:31:44.174494"
-    },
-    {
-      "shape": [
-        10000,
-        3072
-      ],
-      "dtype": "float32",
-      "missing_values": 0,
-      "min": -1.0,
-      "max": 1.0,
-      "mean": -0.04683012515306473,
-      "std": 0.5024392604827881,
-      "sample_count": 10000,
-      "normalization": "mean=0.5, std=0.5",
-      "torch_version": "2.5.1",
-      "platform": "W-P3-AI4217",
-      "timestamp": 1746623623.7937129,
-      "timestamp_utc": "2025-05-07T13:13:43.793713"
+      "labels": 10,
+      "timestamp": 1746860103.2304115,
+      "timestamp_utc": "2025-05-10T06:55:03.230412+00:00"
     }
   ]
 }

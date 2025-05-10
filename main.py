@@ -1,18 +1,29 @@
 # Import project-specific modules
 from data import load_dataset
-from log import analyze_and_log_dataset
-from config import load_config
+from log import log_to_json
+from config import CONFIG
 
-config = load_config()
-print(config["batch_size"])
 
-# Load CIFAR-10 dataset into cifar/data/
-train_loader, val_loader, test_loader = load_dataset()
 
-# Analyze datasets and log to cifar/artifact/json/results.json
-analyze_and_log_dataset(train_loader, "Train")
-analyze_and_log_dataset(val_loader, "Validation")
-analyze_and_log_dataset(test_loader, "Test")
 
-# Print confirmation message
-print("\n✅ main.py successfully executed")
+# -----------------------------Test Case: log_to_json-----------------------------
+
+# print(f"\n🔧 Batch size from config: {CONFIG.BATCH_SIZE}")
+
+# train_data, train_labels, test_data, test_labels = load_dataset()
+
+# log_to_json(key="train_overview", record={
+#     "samples": len(train_data),
+#     "shape": list(train_data[0].shape),
+#     "labels": len(set(train_labels))
+# })
+
+# log_to_json(key="test_overview", record={
+#     "samples": len(test_data),
+#     "shape": list(test_data[0].shape),
+#     "labels": len(set(test_labels))
+# })
+
+# print("\n✅ main.py successfully executed")
+
+# -------------------------------------------------------------------------------

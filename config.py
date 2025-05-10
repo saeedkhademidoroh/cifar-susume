@@ -1,30 +1,76 @@
-# Import standard libraries
+# Standard imports
 import json
 from pathlib import Path
+from dataclasses import dataclass
 
-# Base directory for this script
-BASE_DIR = Path(__file__).parent
 
-# Path to config.json (only hardcoded reference)
-CONFIG_PATH = BASE_DIR / "artifact/json/config.json"
+@dataclass(frozen=True)
+class Config:
+    """
+    Immutable configuration class loaded from config.json.
 
-# Load configuration from JSON file
-def load_config(path=CONFIG_PATH):
-    if not path.exists():
-        raise FileNotFoundError(f"❌ Config file not found: {path}")
-    with open(path, "r") as f:
-        config = json.load(f)
-    print(f"✅ Loaded config from {path}")
-    return config
+    All attributes are loaded dynamically based on keys in the config file.
+    Paths are resolved relative to the script's location.
 
-# Load once globally
-CONFIG = load_config()
+    Example keys (from config.json):
+        - CONFIG_PATH
+        - DATA_PATH
+        - RESULTS_PATH
+        - BATCH_SIZE
+        - NUM_WORKERS
+    """
 
-# Resolve key paths dynamically relative to BASE_DIR
-DATA_DIR = BASE_DIR / CONFIG["data_dir"]
-LOG_PATH = BASE_DIR / CONFIG["log_path"]
-CONFIG_PATH_RESOLVED = BASE_DIR / CONFIG["config_path"]
+    # Generic fields that will be set dynamically from JSON
+    CONFIG_PATH: Path
+    DATA_PATH: Path
+    RESULTS_PATH: Path
+    BATCH_SIZE: int
+    NUM_WORKERS: int
 
-# Other config values
-BATCH_SIZE = CONFIG["batch_size"]
-NUM_WORKERS = CONFIG["num_workers"]
+    @staticmethod
+    def load_from_json() -> "Config":
+        """
+        Loads and validates configuration from artifact/json/config.json.
+        Ensures all keys exist and resolves path values relative to script directory.
+
+        Returns:
+            Config: Frozen dataclass instance with resolved values.
+
+        Raises:
+            FileNotFoundError: If config.json is missing.
+            ValueError: If required keys are missing.
+        """
+        current_dir = Path(__file__).parent
+        raw_config_path = current_dir / "artifact/json/config.json"
+
+        if not raw_config_path.exists():
+            raise FileNotFoundError(f"❌ Configuration file not found: {raw_config_path}")
+
+        with open(raw_config_path, "r") as f:
+            config_data = json.load(f)
+
+        required_keys = [
+            "CONFIG_PATH",
+            "DATA_PATH",
+            "RESULTS_PATH",
+            "BATCH_SIZE",
+            "NUM_WORKERS"
+        ]
+        missing = [key for key in required_keys if key not in config_data]
+        if missing:
+            raise ValueError(f"❌ Missing required config keys: {missing}")
+
+        return Config(
+            CONFIG_PATH=current_dir / config_data["CONFIG_PATH"],
+            DATA_PATH=current_dir / config_data["DATA_PATH"],
+            RESULTS_PATH=current_dir / config_data["RESULTS_PATH"],
+            BATCH_SIZE=config_data["BATCH_SIZE"],
+            NUM_WORKERS=config_data["NUM_WORKERS"]
+        )
+
+
+# Load config at module level
+CONFIG = Config.load_from_json()
+
+# Confirmation
+print("\n✅ config.py successfully executed")

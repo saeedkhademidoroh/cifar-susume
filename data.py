@@ -1,38 +1,27 @@
 # Import third-party libraries
+import numpy as np
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader, Subset
+from config import CONFIG
 
-# Import project-specific modules
-from config import DATA_DIR, BATCH_SIZE, NUM_WORKERS
-
-# Function to prepare CIFAR-10 dataloaders
-def load_dataset(data_dir=DATA_DIR, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS):
+# Function to load raw CIFAR-10 train/test data and labels
+def load_dataset(data_dir=CONFIG.DATA_PATH):
     """
-    Loads CIFAR-10 dataset and returns train/val/test loaders.
-
-    Args:
-        data_dir (Path): Directory for CIFAR-10 files
-        batch_size (int): Batch size for loaders
-        num_workers (int): Data loading worker threads
+    Loads CIFAR-10 dataset and returns raw train/test data and labels.
 
     Returns:
-        tuple: train_loader, val_loader, test_loader
+        tuple: train_data (np.ndarray), train_labels (np.ndarray),
+               test_data (np.ndarray), test_labels (np.ndarray)
     """
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,))
-    ])
+    # Load without transform to access raw NumPy arrays
+    train_set = datasets.CIFAR10(root=data_dir, train=True, download=True)
+    test_set = datasets.CIFAR10(root=data_dir, train=False, download=True)
 
-    full_train = datasets.CIFAR10(root=data_dir, train=True, download=True, transform=transform)
-    train_set = Subset(full_train, range(0, 45000))
-    val_set = Subset(full_train, range(45000, 50000))
-    test_set = datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform)
+    train_data = np.array(train_set.data)
+    train_labels = np.array(train_set.targets)
+    test_data = np.array(test_set.data)
+    test_labels = np.array(test_set.targets)
 
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
-    return train_loader, val_loader, test_loader
+    return train_data, train_labels, test_data, test_labels
 
 # Print confirmation message
 print("\n✅ data.py successfully executed")
