@@ -44,7 +44,7 @@ def log_to_json(file_path, key, record=None):
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
 
-    print(f"📝 Saved to result JSON: key='{key}', file='{file_path.name}'")
+    print(f"\n📝 Saved to result JSON: key='{key}', file='{file_path.name}'")
 
 # Print confirmation message
 print("\n✅ log.py successfully executed")

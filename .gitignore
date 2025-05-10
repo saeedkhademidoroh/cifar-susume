@@ -2,6 +2,7 @@
 __pycache__/
 
 # Ignore all artifacts
-artifact/data/
-artifact/checkpoints/
-artifact/json/
+artifact/checkpoint
+artifact/data
+artifact/log
+artifact/result

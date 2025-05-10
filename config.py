@@ -10,18 +10,8 @@ class Config:
     Immutable configuration class loaded from config.json.
 
     All attributes are loaded dynamically based on keys in the config file.
-    Paths are resolved relative to the script's location.
+    Paths in particular are resolved relative to the script's location.
 
-    Example keys (from config.json):
-        - CONFIG_PATH
-        - DATA_PATH
-        - LOG_PATH
-        - CHECKPOINT_PATH
-        - RESULT_PATH
-        - EPOCHS_COUNT
-        - BATCH_SIZE
-        - VALIDATION_SPLIT
-        - NUM_WORKERS
     """
 
     # Generic fields that will be set dynamically from JSON
@@ -34,6 +24,7 @@ class Config:
     BATCH_SIZE: int
     VALIDATION_SPLIT: float
     NUM_WORKERS: int
+    CLEAN_OUTPUTS: bool
 
     @staticmethod
     def load_from_json() -> "Config":
@@ -66,7 +57,8 @@ class Config:
             "EPOCHS_COUNT",
             "BATCH_SIZE",
             "VALIDATION_SPLIT",
-            "NUM_WORKERS"
+            "NUM_WORKERS",
+            "CLEAN_OUTPUTS"
         ]
         missing = [key for key in required_keys if key not in config_data]
         if missing:
@@ -81,7 +73,8 @@ class Config:
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"],
             VALIDATION_SPLIT=config_data["VALIDATION_SPLIT"],
-            NUM_WORKERS=config_data["NUM_WORKERS"]
+            NUM_WORKERS=config_data["NUM_WORKERS"],
+            CLEAN_OUTPUTS = config_data["CLEAN_OUTPUTS"]
         )
 
 

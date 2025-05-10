@@ -1,18 +1,42 @@
 # Standard imports
-import os
+import shutil
+import datetime
 import sys
 import json
-import datetime
-from pathlib import Path
-
-# Third-party imports
-import numpy as np
 
 # Project-specific imports
 from config import CONFIG
 from data import load_dataset
 from model import build_model
 from train import train_model
+
+def remove_output(flag=CONFIG.CLEAN_OUTPUTS):
+    """
+    Removes the entire checkpoint, log, and result directories if enabled.
+
+    Parameters:
+        flag (bool): If True, deletes each target directory. If False, does nothing.
+    """
+    if not flag:
+        print("🗑️  Skipped removing outputs (flag is disabled)\n")
+        return
+
+    target_folders = [
+        CONFIG.LOG_PATH,
+        CONFIG.RESULT_PATH,
+        CONFIG.CHECKPOINT_PATH,
+    ]
+
+    for folder in target_folders:
+        if folder.exists():
+            try:
+                shutil.rmtree(folder)
+                print(f"🗑️  Removed entire folder:\n {folder}\n")
+            except Exception as e:
+                print(f"⚠️ Failed to remove folder:\n {folder}\n{e}")
+        else:
+            raise FileNotFoundError(f"❌ Target folder not found:\n {folder}\n")
+
 
 # Function to collect result info
 def collect_experiment_result(model, history, model_name: str):
@@ -32,10 +56,13 @@ def collect_experiment_result(model, history, model_name: str):
     }
 
 # Function to run experiment
-def run_experiment(model_numbers, runs=1):
+def run_experiment(model_numbers, runs=1, ):
     """
     Executes training experiments and logs all stdout/stderr to timestamped file.
     """
+
+    remove_output()
+
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
     CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)

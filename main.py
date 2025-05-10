@@ -41,4 +41,4 @@ run_experiment(model_numbers=1, runs=1)
 
 
 # Print confirmation message
-print("\n✅ main.py successfully executed")
+print("✅ main.py successfully executed")
