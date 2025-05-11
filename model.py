@@ -2,92 +2,77 @@
 from timeit import default_timer as timer
 
 # Import third-party libraries
-from keras.api.layers import Input, Dense, GlobalAveragePooling2D
 from keras.api.models import Model
+from keras.api.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense
 from keras.api.optimizers import Adam
-from keras.api.losses import CategoricalCrossentropy
-from keras.api.applications import MobileNet
-import numpy as np
-
-
-# Function to benchmark model inference time
-def benchmark_inference(model, input_shape, model_number=None):
-    """
-    Measures and prints inference time for a single forward pass.
-
-    Args:
-        model (tf.keras.Model): The compiled model to benchmark.
-        input_shape (tuple): Shape of the input (excluding batch size).
-        model_number (int, optional): If provided, included in the print output.
-    """
-
-    # Print header for function execution
-    print("\n🎯 benchmark_inference 🎯")
-
-    sample_input = np.random.rand(1, *input_shape).astype(np.float32)
-    start_time = timer()
-    _ = model(sample_input)
-    elapsed_time = timer() - start_time
-
-    print("\n🔹 Inference Time:\n")
-    label = f" (m{model_number})" if model_number is not None else ""
-    print(f"{elapsed_time:.6f} seconds{label}")
-
+from keras.api.losses import SparseCategoricalCrossentropy
 
 
 # Function to create model based on a model number
 def build_model(model_number: int) -> Model:
     """
-    Returns compiled model based on specified model number.
+    Builds and compiles a model based on the specified model_number.
 
-    Parameters:
-        model_number (int): Model variant to create (1 to N).
+    Args:
+        model_number (int): Identifier for model architecture.
+            - 1: Simple CNN for sanity checks
+            - 2: Compact VGG-style CNN for deeper training
 
     Returns:
-        tuple: Compiled model and description (if any).
+        Model: A compiled Keras model ready for training.
     """
-
-    # Print header for function execution
     print("\n🎯 build_model\n")
 
     if model_number == 1:
-        # Define input layer
+
         input_layer = Input(shape=(32, 32, 3))
 
-        # Load MobileNet base (no weights, frozen)
-        base_model = MobileNet(input_tensor=input_layer, include_top=False, weights=None)
-        base_model.trainable = False
+        x = Conv2D(32, (3, 3), activation="relu", padding="same")(input_layer)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x = Flatten()(x)
+        x = Dense(64, activation="relu")(x)
 
-        # Add custom classifier head
-        x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(256, activation="relu")(x)
         prediction_layer = Dense(10, activation="softmax")(x)
 
-        # Assemble and compile model
-        model = Model(inputs=input_layer, outputs=prediction_layer, name="mobilenet_cifar")
+        model = Model(inputs=input_layer, outputs=prediction_layer)
         model.compile(
             optimizer=Adam(),
-            loss=CategoricalCrossentropy(),
+            loss=SparseCategoricalCrossentropy(),
             metrics=["accuracy"]
         )
 
-        description = "MobileNet (frozen) + dense head for CIFAR-10"
-
-        model.summary()
-
-        # Measure inference time
-        benchmark_inference(model, input_shape=(32, 32, 3), model_number=model_number)
-
-        return model, description
-
     elif model_number == 2:
-        raise NotImplementedError("Model 2 is not implemented yet.")
+
+        input_layer = Input(shape=(32, 32, 3))
+
+        x = Conv2D(32, (3, 3), activation="relu", padding="same")(input_layer)
+        x = Conv2D(32, (3, 3), activation="relu", padding="same")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+        x = Conv2D(64, (3, 3), activation="relu", padding="same")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        x = Flatten()(x)
+        x = Dense(128, activation="relu")(x)
+        
+        prediction_layer = Dense(10, activation="softmax")(x)
+
+        model = Model(inputs=input_layer, outputs=prediction_layer)
+        model.compile(
+            optimizer=Adam(),
+            loss=SparseCategoricalCrossentropy(),
+            metrics=["accuracy"]
+        )
 
     else:
-        raise ValueError(f"❌ Invalid model number: {model_number}")
+        raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
+
+    model.summary()
+
+    return model
 
 
-
-# Print confirmation message
 print("\n✅ model.py successfully executed")

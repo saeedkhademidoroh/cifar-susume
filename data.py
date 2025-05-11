@@ -1,48 +1,76 @@
 # Import third-party libraries
 import numpy as np
-import torch
 from torchvision import datasets
 
 # Import project-specific libraries
 from config import CONFIG
 
 
-# Function to load normalized CIFAR-10 data with one-hot labels (optional)
-def load_dataset(data_path=CONFIG.DATA_PATH, one_hot=False):
+# Function to load dataset for model variant m2
+def load_dataset_m2():
+    # Currently identical to m1 but can be customized later
+    return load_dataset_m1()
+
+
+# Function to load and preprocess CIFAR-10 for model variant m1
+def load_dataset_m1():
     """
-    Loads CIFAR-10 dataset, normalizes images to [0,1], and optionally one-hot encodes labels.
+    Loads CIFAR-10, normalizes pixel values, and optionally trims for LIGHT_MODE.
 
     Args:
-        data_path (Path): Directory to store CIFAR-10
-        one_hot (bool): Whether to return one-hot encoded labels (as torch tensors)
+        path (Path): Directory to store or load CIFAR-10.
 
     Returns:
-        tuple: train_data, train_labels, test_data, test_labels
+        tuple: (train_data, train_labels, test_data, test_labels)
     """
 
-    # Print header for function execution
-    print("\n🎯 load_dataset")
 
-    # Download and load CIFAR-10 training and test sets
-    train_set = datasets.CIFAR10(root=data_path, train=True, download=True)
-    test_set = datasets.CIFAR10(root=data_path, train=False, download=True)
+    # Load CIFAR-10 training and test sets
+    train_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=True, download=True)
+    test_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=False, download=True)
 
-    # Normalize image pixel values to the [0, 1] range
+    # Normalize image pixel values to range [0, 1]
     train_data = train_set.data.astype(np.float32) / 255.0
     test_data = test_set.data.astype(np.float32) / 255.0
 
-    # Extract class labels
+    # Convert labels to NumPy arrays
     train_labels = np.array(train_set.targets)
     test_labels = np.array(test_set.targets)
 
-    # Optionally one-hot encode labels (if required by model)
-    if one_hot:
-        train_labels = torch.nn.functional.one_hot(torch.tensor(train_labels), num_classes=10).numpy()
-        test_labels = torch.nn.functional.one_hot(torch.tensor(test_labels), num_classes=10).numpy()
+    # Reduce dataset size for local/light runs
+    if CONFIG.LIGHT_MODE:
+        train_data = train_data[:1000]
+        train_labels = train_labels[:1000]
+        test_data = test_data[:200]
+        test_labels = test_labels[:200]
+    else:
+        # Use all but last 5000 as training
+        train_data = train_data[:-5000]
+        train_labels = train_labels[:-5000]
 
-    # Return all preprocessed data and labels
     return train_data, train_labels, test_data, test_labels
 
 
-# Confirm successful execution of this module
+# Routing function to dispatch model-specific dataset loaders
+def load_dataset(model_number):
+    """
+    Routes dataset loading based on model number.
+
+    Args:
+        model_number (int): Model variant identifier (e.g., 1, 2)
+
+    Returns:
+        tuple: (train_data, train_labels, test_data, test_labels)
+    """
+    print(f"\n🎯 load_dataset_m{model_number}")
+
+    if model_number == 1:
+        return load_dataset_m1()
+    elif model_number == 2:
+        return load_dataset_m2()
+    else:
+        raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
+
+
+# Confirmation message on successful module execution
 print("\n✅ data.py successfully executed\n")
