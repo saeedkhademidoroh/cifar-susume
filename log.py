@@ -18,6 +18,7 @@ def log_to_json(path, key, record=None):
         record (dict): Dictionary to log.
     """
 
+    # Print header for function execution
     print("\n🎯 log_to_json")
 
     if record is None:

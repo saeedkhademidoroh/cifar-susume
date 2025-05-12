@@ -18,6 +18,8 @@ def build_model(model_number: int) -> Model:
     Returns:
         Model: A compiled Keras model ready for training.
     """
+
+    # Print header for function execution
     print("\n🎯 build_model\n")
 
     # Sanity check model
@@ -86,6 +88,7 @@ def build_model(model_number: int) -> Model:
     # Print model architecture summary to console
     model.summary()
 
+    # Return built model
     return model
 
 

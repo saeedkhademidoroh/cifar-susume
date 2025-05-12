@@ -22,6 +22,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
         dict: Contains min/max loss, accuracy, test loss, test accuracy, and predictions.
     """
 
+    # Print header for function execution
     print("\n🎯 evaluate_model")
 
     # Extract metrics from history
@@ -42,7 +43,6 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
         print(f"Max Validation Accuracy : {metrics['max_val_acc']:.4f} (Epoch {metrics['max_val_acc_epoch']})")
     print(f"Final Test Loss         : {final_test_loss:.4f}")
     print(f"Final Test Accuracy     : {final_test_accuracy:.4f}")
-
 
     # Return metrics for logging and further analysis
     return {
@@ -68,8 +68,7 @@ def extract_history_metrics(history):
         dict: Contains min/max loss & accuracy with their corresponding epochs.
     """
 
-
-    # Print header for function
+    # Print header for function execution
     print("\n🎯 extract_history_metrics")
 
     # Ensure history is a dictionary
@@ -94,6 +93,7 @@ def extract_history_metrics(history):
     else:
         metrics["min_val_loss"], metrics["max_val_acc"] = None, None
 
+    # Return metrics dictionary
     return metrics
 
 

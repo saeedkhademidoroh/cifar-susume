@@ -23,6 +23,8 @@ def load_dataset_m0():
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
+    # Print header for function execution
+    print(f"\n🎯 load_dataset_m0\n")
 
     # Load CIFAR-10 training and test sets
     train_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=True, download=True)
@@ -47,7 +49,7 @@ def load_dataset_m0():
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
-
+    # Return dataset split as train and test
     return train_data, train_labels, test_data, test_labels
 
 
@@ -62,7 +64,9 @@ def load_dataset(model_number):
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
-    print(f"\n🎯 load_dataset_m{model_number}\n")
+
+    # Print header for function execution
+    print(f"\n🎯 load_dataset")
 
     # Dispatch dataset loader
     try:

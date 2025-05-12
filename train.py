@@ -1,6 +1,7 @@
 # Import standard libraries
 import json
 from pathlib import Path
+import datetime
 
 # Import third-party libraries
 from keras.api.callbacks import Callback, ModelCheckpoint
@@ -8,11 +9,10 @@ from keras.api.models import load_model
 
 # Import project-specific libraries
 from config import CONFIG
-from log import log_to_json
 
 
 # Function to train a model with checkpointing and optional resumption
-def train_model(train_data, train_labels, model, model_number, verbose=2):
+def train_model(train_data, train_labels, model, model_number, timestamp, verbose=2):
     """
     Trains a model using given data and logs all key metrics after training.
 
@@ -27,6 +27,7 @@ def train_model(train_data, train_labels, model, model_number, verbose=2):
         tuple: (trained model, Keras History object)
     """
 
+    # Print header for function execution
     print("\n🎯 train_model")
 
     # Define model-specific checkpoint directory
@@ -76,8 +77,8 @@ def train_model(train_data, train_labels, model, model_number, verbose=2):
     )
 
     # Save final model to disk for evaluation and future use
-    CONFIG.MODEL_PATH.mkdir(parents=True, exist_ok=True)
-    model_path = CONFIG.MODEL_PATH / f"m{model_number}.keras"
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    model_path = CONFIG.MODEL_PATH / f"m{model_number}_{timestamp}.keras"
     model.save(model_path)
 
 
@@ -98,7 +99,7 @@ class RecoveryCheckpoint(Callback):
         Initializes recovery paths and ensures checkpoint folder exists.
         """
 
-        # Print header for function execution
+        # Print header for function
         print("\n🎯 __init__ (RecoveryCheckpoint)")
 
         # Initialize the parent Callback class
@@ -193,9 +194,8 @@ def load_training_state(model_checkpoint_path: Path):
         # Return resumed model and initial_epoch for continuation
         return model, state.get("initial_epoch", 0)
 
-    # If no valid checkpoint found, return None and start from epoch 0
+    # Return if no checkpoint found
     return None, 0
-
 
 
 # Print confirmation message

@@ -23,9 +23,10 @@ def run_experiment(model_numbers=0, runs=1):
         runs (int): Number of repetitions per model (default: 1).
     """
 
+    # Print header for function execution
     print("\n🎯 run_experiment")
 
-    # Clean unnecessary data
+    # Clean old output
     clean_old_output()
 
     # Generate timestamp for result/log filenames
@@ -64,7 +65,7 @@ def run_experiment(model_numbers=0, runs=1):
                 # Build and train model
                 model = build_model(model_number)
                 trained_model, history = train_model(
-                    train_data, train_labels, model, model_number
+                    train_data, train_labels, model, model_number, timestamp
                 )
 
                 # Record results for current run
@@ -102,6 +103,8 @@ def clean_old_output():
 
     Each directory is cleaned only if its corresponding CLEAN_* flag is set to True.
     """
+
+    # Print header for function execution
     print("\n🎯 clean_old_output")
 
     # Define the folders to target along with their associated CLEAN_* flags
