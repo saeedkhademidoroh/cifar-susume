@@ -6,13 +6,12 @@ from torchvision import datasets
 from config import CONFIG
 
 
-# Function to load dataset for model variant m2
+# Function to load dataset
 def load_dataset_m2():
-    # Currently identical to m1 but can be customized later
     return load_dataset_m1()
 
 
-# Function to load and preprocess CIFAR-10 for model variant m1
+# Function to load dataset
 def load_dataset_m1():
     """
     Loads CIFAR-10, normalizes pixel values, and optionally trims for LIGHT_MODE.
@@ -33,7 +32,7 @@ def load_dataset_m1():
     train_data = train_set.data.astype(np.float32) / 255.0
     test_data = test_set.data.astype(np.float32) / 255.0
 
-    # Convert labels to NumPy arrays
+    # Convert labels to numpy arrays
     train_labels = np.array(train_set.targets)
     test_labels = np.array(test_set.targets)
 
@@ -48,10 +47,11 @@ def load_dataset_m1():
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
+
     return train_data, train_labels, test_data, test_labels
 
 
-# Routing function to dispatch model-specific dataset loaders
+# Function to dispatch dataset loaders
 def load_dataset(model_number):
     """
     Routes dataset loading based on model number.
@@ -62,7 +62,7 @@ def load_dataset(model_number):
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
-    print(f"\n🎯 load_dataset_m{model_number}")
+    print(f"\n🎯 load_dataset_m{model_number}\n")
 
     if model_number == 1:
         return load_dataset_m1()
@@ -72,5 +72,5 @@ def load_dataset(model_number):
         raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
 
 
-# Confirmation message on successful module execution
+# Print confirmation message
 print("\n✅ data.py successfully executed\n")

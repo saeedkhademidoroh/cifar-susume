@@ -7,12 +7,13 @@ import json
 # Import project-specific libraries
 from config import CONFIG
 from data import load_dataset
+from evaluate import evaluate_model
 from model import build_model
 from train import train_model
 
 
 # Function to run training experiments and optionally log and save results
-def run_experiment(model_numbers, runs=1):
+def run_experiment(model_numbers=0, runs=1):
     """
     Runs one or more training experiments, logs terminal output to file
     (if LIGHT_MODE is disabled), and saves results as a timestamped JSON file.
@@ -29,14 +30,15 @@ def run_experiment(model_numbers, runs=1):
     # Generate timestamp for result/log filenames
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Optional log file setup (only in full mode)
+    # Redirect output to log file
     if not CONFIG.LIGHT_MODE:
         CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
         log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
         original_stdout = sys.stdout
         original_stderr = sys.stderr
-        sys.stdout = open(log_file, "a")
+        sys.stdout = open(log_file, "a", buffering=1)  # line-buffered
         sys.stderr = sys.stdout
+        print(f"\n📝 Logging:\n{log_file}\n", flush=True)
     else:
         log_file = None
 
@@ -58,7 +60,7 @@ def run_experiment(model_numbers, runs=1):
                 print(f"\n🚀 Launching m{model_number} ({run}/{runs}) ...")
 
                 # Load dataset
-                train_data, train_labels, _, _ = load_dataset(model_number)
+                train_data, train_labels, test_data, test_labels = load_dataset(model_number)
 
                 # Build and train model
                 model = build_model(model_number)
@@ -67,7 +69,20 @@ def run_experiment(model_numbers, runs=1):
                 )
 
                 # Record results for current run
-                result = collect_experiment_result(trained_model, history, model_number)
+                eval_result = evaluate_model(trained_model, history, test_data, test_labels)
+                result = {
+                    "model": model_number,
+                    "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                    "layers": len(trained_model.layers),
+                    "optimizer": type(trained_model.optimizer).__name__,
+                    "val_accuracy": eval_result.get("max_val_acc"),
+                    "train_accuracy": eval_result.get("max_train_acc"),
+                    "val_loss": eval_result.get("min_val_loss"),
+                    "train_loss": eval_result.get("min_train_loss"),
+                    "test_accuracy": eval_result.get("final_test_accuracy"),
+                    "test_loss": eval_result.get("final_test_loss")
+                }
+
                 all_results.append(result)
 
         # Save all run results into a timestamped result file
@@ -82,49 +97,23 @@ def run_experiment(model_numbers, runs=1):
             sys.stderr = original_stderr
 
 
-# Function to structure metrics and metadata from training
-def collect_experiment_result(model, history, model_number):
-    """
-    Extracts relevant training results and model metadata.
-
-    Args:
-        model (Model): Trained Keras model.
-        history (History): Training history object from model.fit().
-        model_number (int): ID of the model variant.
-
-    Returns:
-        dict: Structured summary with accuracy, loss, and config details.
-    """
-    print("\n🎯 collect_experiment_result")
-
-    return {
-        "model": model_number,
-        "time": datetime.datetime.now().strftime("%H:%M:%S"),
-        "layers": len(model.layers),
-        "optimizer": type(model.optimizer).__name__,
-        "val_accuracy": round(max(history.history.get("val_accuracy", [0])), 4),
-        "train_accuracy": round(max(history.history.get("accuracy", [0])), 4),
-        "val_loss": round(min(history.history.get("val_loss", [0])), 4),
-        "train_loss": round(min(history.history.get("loss", [0])), 4),
-    }
-
-
-# Function to remove output folders based on individual CLEAN_* flags
+# Function to clean output
 def clean_old_output():
     """
-    Removes log, checkpoint, and result folders based on config flags:
-        - CLEAN_LOG
-        - CLEAN_CHECKPOINT
-        - CLEAN_RESULT
+    Cleans output directories specified in the configuration.
+
+    Each directory is cleaned only if its corresponding CLEAN_* flag is set to True.
     """
     print("\n🎯 clean_old_output")
 
+    # Define the folders to target along with their associated CLEAN_* flags
     targets = [
         (CONFIG.LOG_PATH, CONFIG.CLEAN_LOG),
         (CONFIG.CHECKPOINT_PATH, CONFIG.CLEAN_CHECKPOINT),
         (CONFIG.RESULT_PATH, CONFIG.CLEAN_RESULT),
     ]
 
+    # Iterate over each folder and clean it if the flag is enabled
     for path, clean_flag in targets:
         if clean_flag and path.exists():
             try:
@@ -135,6 +124,5 @@ def clean_old_output():
 
 
 
-
-# Confirmation message
+# Print confirmation message
 print("\n✅ experiment.py successfully executed")
