@@ -69,7 +69,7 @@ def extract_history_metrics(history):
     """
 
     # Print header for function execution
-    print("\n🎯 extract_history_metrics")
+    print("\n🎯 extract_history_metrics\n")
 
     # Ensure history is a dictionary
     history = history.history if hasattr(history, "history") else history

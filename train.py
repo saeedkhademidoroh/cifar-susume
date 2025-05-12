@@ -79,7 +79,9 @@ def train_model(train_data, train_labels, model, model_number, timestamp, verbos
     # Save final model to disk for evaluation and future use
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     model_path = CONFIG.MODEL_PATH / f"m{model_number}_{timestamp}.keras"
+    model_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
     model.save(model_path)
+
 
 
     # Return the trained model and history
@@ -100,7 +102,7 @@ class RecoveryCheckpoint(Callback):
         """
 
         # Print header for function
-        print("\n🎯 __init__ (RecoveryCheckpoint)")
+        print("\n🎯 __init__ (RecoveryCheckpoint)\n")
 
         # Initialize the parent Callback class
         super().__init__()
