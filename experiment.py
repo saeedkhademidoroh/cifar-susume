@@ -12,16 +12,17 @@ from model import build_model
 from train import train_model
 
 
-# Function to run training experiments and optionally log and save results
+# Function to run experiments on models
 def run_experiment(model_numbers=0, runs=1):
     """
-    Runs one or more training experiments, logs terminal output to file
-    (if LIGHT_MODE is disabled), and saves results as a timestamped JSON file.
+    Runs one or more training experiments, logs output to both terminal and log file,
+    and saves results to a timestamped JSON file.
 
     Args:
-        model_numbers (int or tuple): Model ID(s) to run (e.g. 1 or (1, 3)).
-        runs (int): Number of repetitions per model (default is 1).
+        model_numbers (int or tuple): Single model ID or a range of IDs (e.g. 1 or (1, 3)).
+        runs (int): Number of repetitions per model (default: 1).
     """
+
     print("\n🎯 run_experiment")
 
     # Clean unnecessary data
@@ -30,17 +31,15 @@ def run_experiment(model_numbers=0, runs=1):
     # Generate timestamp for result/log filenames
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Redirect output to log file
-    if not CONFIG.LIGHT_MODE:
-        CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
-        log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-        sys.stdout = open(log_file, "a", buffering=1)  # line-buffered
-        sys.stderr = sys.stdout
-        print(f"\n📝 Logging:\n{log_file}\n", flush=True)
-    else:
-        log_file = None
+    # Setup dual logging: terminal + log file
+    CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
+    log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
+    log_stream = open(log_file, "a", buffering=1)
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    sys.stdout = Tee(sys.stdout, log_stream)
+    sys.stderr = Tee(sys.stderr, log_stream)
+    print(f"\n📝 Logging:\n{log_file}", flush=True)
 
     try:
         # Create result path and file
@@ -69,18 +68,18 @@ def run_experiment(model_numbers=0, runs=1):
                 )
 
                 # Record results for current run
-                eval_result = evaluate_model(trained_model, history, test_data, test_labels)
+                evaluation = evaluate_model(trained_model, history, test_data, test_labels)
                 result = {
                     "model": model_number,
                     "time": datetime.datetime.now().strftime("%H:%M:%S"),
                     "layers": len(trained_model.layers),
                     "optimizer": type(trained_model.optimizer).__name__,
-                    "val_accuracy": eval_result.get("max_val_acc"),
-                    "train_accuracy": eval_result.get("max_train_acc"),
-                    "val_loss": eval_result.get("min_val_loss"),
-                    "train_loss": eval_result.get("min_train_loss"),
-                    "test_accuracy": eval_result.get("final_test_accuracy"),
-                    "test_loss": eval_result.get("final_test_loss")
+                    "val_accuracy": evaluation.get("max_val_acc"),
+                    "train_accuracy": evaluation.get("max_train_acc"),
+                    "val_loss": evaluation.get("min_val_loss"),
+                    "train_loss": evaluation.get("min_train_loss"),
+                    "test_accuracy": evaluation.get("final_test_accuracy"),
+                    "test_loss": evaluation.get("final_test_loss")
                 }
 
                 all_results.append(result)
@@ -89,12 +88,11 @@ def run_experiment(model_numbers=0, runs=1):
         with open(result_file, "w") as jf:
             json.dump(all_results, jf, indent=2)
 
+    # Restore standard output and close log stream
     finally:
-        # Restore standard output if redirected
-        if log_file:
-            sys.stdout.close()
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+        log_stream.close()
 
 
 # Function to clean output
@@ -111,6 +109,7 @@ def clean_old_output():
         (CONFIG.LOG_PATH, CONFIG.CLEAN_LOG),
         (CONFIG.CHECKPOINT_PATH, CONFIG.CLEAN_CHECKPOINT),
         (CONFIG.RESULT_PATH, CONFIG.CLEAN_RESULT),
+        (CONFIG.MODEL_PATH, CONFIG.CLEAN_MODEL),
     ]
 
     # Iterate over each folder and clean it if the flag is enabled
@@ -118,10 +117,24 @@ def clean_old_output():
         if clean_flag and path.exists():
             try:
                 shutil.rmtree(path)
-                print(f"\n🗑️  Cleaned:\n{path}")
+                print(f"\n🗑️  Cleaning:\n{path}")
             except Exception as e:
                 print(f"\n❌ Exception:\n{path}\n{e}\n")
 
+
+# Class to tee output to both terminal and log file
+class Tee:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for s in self.streams:
+            s.write(data)
+            s.flush()
+
+    def flush(self):
+        for s in self.streams:
+            s.flush()
 
 
 # Print confirmation message

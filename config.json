@@ -4,10 +4,12 @@
   "LOG_PATH": "artifact/log",
   "CHECKPOINT_PATH": "artifact/checkpoint",
   "RESULT_PATH": "artifact/result",
+  "MODEL_PATH": "artifact/model/",
   "EPOCHS_COUNT": 20,
   "BATCH_SIZE": 16,
   "CLEAN_LOG": true,
-  "CLEAN_CHECKPOINT": true,
+  "CLEAN_CHECKPOINT": false,
   "CLEAN_RESULT": true,
+  "CLEAN_MODEL": true,
   "LIGHT_MODE": true
 }

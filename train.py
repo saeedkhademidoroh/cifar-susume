@@ -29,9 +29,11 @@ def train_model(train_data, train_labels, model, model_number, verbose=2):
 
     print("\n🎯 train_model")
 
+    # Define model-specific checkpoint directory
     model_checkpoint_path = CONFIG.CHECKPOINT_PATH / f"m{model_number}"
     model_checkpoint_path.mkdir(parents=True, exist_ok=True)
 
+    # Optionally resume training from saved checkpoint
     if not CONFIG.CLEAN_CHECKPOINT:
         resumed_model, initial_epoch = load_training_state(model_checkpoint_path)
         if resumed_model:
@@ -42,24 +44,26 @@ def train_model(train_data, train_labels, model, model_number, verbose=2):
     else:
         initial_epoch = 0
 
-
+    # Validation split logic based on mode
     if CONFIG.LIGHT_MODE:
-        # In light mode, use 20% of reduced train set for validation
+        # Use 20% of reduced train set as validation in light mode
         val_split = int(0.2 * len(train_data))
         val_data = train_data[-val_split:]
         val_labels = train_labels[-val_split:]
         train_data = train_data[:-val_split]
         train_labels = train_labels[:-val_split]
     else:
-        # In full mode, use fixed 5,000-sample validation set
+        # Use fixed 5,000 samples for validation in full mode
         val_data = train_data[-5000:]
         val_labels = train_labels[-5000:]
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
+    # Setup callbacks for checkpointing
     callbacks = get_checkpoint_callbacks(model_checkpoint_path, verbose)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
+    # Train the model with validation and checkpointing
     history = model.fit(
         x=train_data,
         y=train_labels,
@@ -71,6 +75,13 @@ def train_model(train_data, train_labels, model, model_number, verbose=2):
         initial_epoch=initial_epoch
     )
 
+    # Save final model to disk for evaluation and future use
+    CONFIG.MODEL_PATH.mkdir(parents=True, exist_ok=True)
+    model_path = CONFIG.MODEL_PATH / f"m{model_number}.keras"
+    model.save(model_path)
+
+
+    # Return the trained model and history
     return model, history
 
 
@@ -90,10 +101,19 @@ class RecoveryCheckpoint(Callback):
         # Print header for function execution
         print("\n🎯 __init__ (RecoveryCheckpoint)")
 
+        # Initialize the parent Callback class
         super().__init__()
+
+        # Store the checkpoint directory for this model
         self.checkpoint_path = checkpoint_path
+
+        # Ensure the checkpoint directory exists
         self.checkpoint_path.mkdir(parents=True, exist_ok=True)
+
+        # Path to the latest model file (used for recovery)
         self.model_path = checkpoint_path / "latest.keras"
+
+        # Path to JSON file for storing training state (e.g., epoch)
         self.state_path = checkpoint_path / "state.json"
 
 
@@ -126,6 +146,7 @@ def get_checkpoint_callbacks(model_checkpoint_path: Path, verbose: int):
     per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"
 
     return [
+        # Callback to save only the best-performing model based on validation accuracy
         ModelCheckpoint(
             filepath=best_model_path,
             monitor='val_accuracy',
@@ -133,6 +154,8 @@ def get_checkpoint_callbacks(model_checkpoint_path: Path, verbose: int):
             save_weights_only=False,
             verbose=verbose
         ),
+
+        # Callback to save a model checkpoint at the end of every epoch
         ModelCheckpoint(
             filepath=per_epoch_path,
             save_best_only=False,
@@ -158,13 +181,21 @@ def load_training_state(model_checkpoint_path: Path):
     state_path = model_checkpoint_path / "state.json"
     model_path = model_checkpoint_path / "latest.keras"
 
+    # If both model file and training state file exist, resume training
     if model_path.exists() and state_path.exists():
+        # Load training metadata (e.g., last completed epoch)
         with open(state_path, "r") as f:
             state = json.load(f)
+
+        # Load the saved model
         model = load_model(model_path)
+
+        # Return resumed model and initial_epoch for continuation
         return model, state.get("initial_epoch", 0)
 
+    # If no valid checkpoint found, return None and start from epoch 0
     return None, 0
+
 
 
 # Print confirmation message

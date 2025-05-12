@@ -1,8 +1,8 @@
-# Third-party imports
+# Import standard libraries
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Project-specific imports
+# Import project-specific libraries
 from config import CONFIG
 
 
@@ -22,32 +22,29 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
         dict: Contains min/max loss, accuracy, test loss, test accuracy, and predictions.
     """
 
-    print("\n🎯 Evaluate Model 🎯")
+    print("\n🎯 evaluate_model")
 
     # Extract metrics from history
     metrics = extract_history_metrics(history)
 
-    # Print training history details
-    print("\n🔹 Training History:\n")
-    print(f"Min Training Loss: {metrics['min_train_loss']:.4f} (Epoch {metrics['min_train_loss_epoch']})")
-    print(f"Max Training Accuracy: {metrics['max_train_acc']:.4f} (Epoch {metrics['max_train_acc_epoch']})")
-
-    if metrics["min_val_loss"] is not None:
-        print(f"Min Validation Loss: {metrics['min_val_loss']:.4f} (Epoch {metrics['min_val_loss_epoch']})")
-        print(f"Max Validation Accuracy: {metrics['max_val_acc']:.4f} (Epoch {metrics['max_val_acc_epoch']})")
-
     # Evaluate model
     final_test_loss, final_test_accuracy = model.evaluate(test_data, test_labels, batch_size=CONFIG.BATCH_SIZE, verbose=verbose)
-
-    # Print evaluation results
-    print("\n🔹 Evaluation Result:\n")
-    print(f"Final Test Loss: {final_test_loss:.4f}")
-    print(f"Final Test Accuracy: {final_test_accuracy:.4f}")
 
     # Predict values
     predictions = model.predict(test_data, verbose=verbose)
 
-    # Return metrics for logging or further analysis
+    # Print summary of training and evaluation metrics
+    print("\n📊 Summary Metrics:")
+    print(f"Min Training Loss       : {metrics['min_train_loss']:.4f} (Epoch {metrics['min_train_loss_epoch']})")
+    print(f"Max Training Accuracy   : {metrics['max_train_acc']:.4f} (Epoch {metrics['max_train_acc_epoch']})")
+    if metrics["min_val_loss"] is not None:
+        print(f"Min Validation Loss     : {metrics['min_val_loss']:.4f} (Epoch {metrics['min_val_loss_epoch']})")
+        print(f"Max Validation Accuracy : {metrics['max_val_acc']:.4f} (Epoch {metrics['max_val_acc_epoch']})")
+    print(f"Final Test Loss         : {final_test_loss:.4f}")
+    print(f"Final Test Accuracy     : {final_test_accuracy:.4f}")
+
+
+    # Return metrics for logging and further analysis
     return {
         "min_train_loss": metrics["min_train_loss"],
         "max_train_acc": metrics["max_train_acc"],
@@ -59,7 +56,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     }
 
 
-# Function to extract min/max loss & accuracy from history
+# Function to extract history metrics
 def extract_history_metrics(history):
     """
     Extracts min/max loss and accuracy from training history.
@@ -73,8 +70,7 @@ def extract_history_metrics(history):
 
 
     # Print header for function
-    print("\n🎯 Extract History 🎯")
-
+    print("\n🎯 extract_history_metrics")
 
     # Ensure history is a dictionary
     history = history.history if hasattr(history, "history") else history
@@ -102,4 +98,4 @@ def extract_history_metrics(history):
 
 
 # Print confirmation message
-print("\n✅ evaluate.py successfully executed")
+print("\n✅ evaluate.py successfully executed\n")

@@ -7,12 +7,12 @@ from config import CONFIG
 
 
 # Function to load dataset
-def load_dataset_m2():
-    return load_dataset_m1()
+def load_dataset_m1():
+    return load_dataset_m0()
 
 
 # Function to load dataset
-def load_dataset_m1():
+def load_dataset_m0():
     """
     Loads CIFAR-10, normalizes pixel values, and optionally trims for LIGHT_MODE.
 
@@ -64,13 +64,15 @@ def load_dataset(model_number):
     """
     print(f"\n🎯 load_dataset_m{model_number}\n")
 
-    if model_number == 1:
-        return load_dataset_m1()
-    elif model_number == 2:
-        return load_dataset_m2()
-    else:
+    # Dispatch dataset loader
+    try:
+        # Construct function name and resolve dynamically
+        loader_fn = globals()[f"load_dataset_m{model_number}"]
+        return loader_fn()
+    except KeyError:
         raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
 
 
+
 # Print confirmation message
-print("\n✅ data.py successfully executed\n")
+print("\n✅ data.py successfully executed")

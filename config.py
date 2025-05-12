@@ -36,20 +36,27 @@ class Config:
     # Path to result/
     RESULT_PATH: Path
 
+    # Path to trained_model.h5
+    MODEL_PATH: Path
+
     # Number of training epochs
     EPOCHS_COUNT: int
 
     # Number of batch size
     BATCH_SIZE: int
 
-    # Flag for clearing log/
+    # Flag for cleaning log/
     CLEAN_LOG: bool
 
-    # Flag for clearing checkpoint/
+    # Flag for cleaning checkpoint/
     CLEAN_CHECKPOINT: bool
 
-    # Flag for clearing result/
+    # Flag for cleaning result/
     CLEAN_RESULT: bool
+
+    # Flag for cleaning mode/
+    CLEAN_MODEL: bool
+
 
     # Flag for lightweight mode
     LIGHT_MODE: bool
@@ -84,11 +91,13 @@ class Config:
             "LOG_PATH",
             "CHECKPOINT_PATH",
             "RESULT_PATH",
+            "MODEL_PATH",
             "EPOCHS_COUNT",
             "BATCH_SIZE",
             "CLEAN_LOG",
             "CLEAN_CHECKPOINT",
             "CLEAN_RESULT",
+            "CLEAN_MODEL",
             "LIGHT_MODE"
         ]
 
@@ -104,11 +113,13 @@ class Config:
             LOG_PATH=current_dir / config_data["LOG_PATH"],
             CHECKPOINT_PATH=current_dir / config_data["CHECKPOINT_PATH"],
             RESULT_PATH=current_dir / config_data["RESULT_PATH"],
+            MODEL_PATH=current_dir / config_data["MODEL_PATH"],
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"],
             CLEAN_LOG=config_data["CLEAN_LOG"],
             CLEAN_CHECKPOINT=config_data["CLEAN_CHECKPOINT"],
             CLEAN_RESULT=config_data["CLEAN_RESULT"],
+            CLEAN_MODEL=config_data["CLEAN_MODEL"],
             LIGHT_MODE=config_data["LIGHT_MODE"]
         )
 

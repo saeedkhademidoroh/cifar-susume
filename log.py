@@ -42,16 +42,19 @@ def log_to_json(path, key, record=None):
         record["timestamp"] = timestamp
         record["timestamp_utc"] = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
+    # Initialize the key in the JSON structure if it doesn't exist
     if key not in data:
         data[key] = []
 
+    # Append the new record under the specified key
     data[key].append(record)
 
+    # Write the updated structure back to the JSON file
     with open(log_file, "w") as f:
         json.dump(data, f, indent=2)
 
+    # Confirm successful logging to terminal
     print(f"\n📝 Logged: key='{key}', file='{log_file.name}'")
-
 
 
 # Print confirmation message
