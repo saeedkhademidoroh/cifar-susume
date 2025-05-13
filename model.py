@@ -1,6 +1,6 @@
 # Import third-party libraries
 from keras.api.models import Model
-from keras.api.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, BatchNormalization, Activation
+from keras.api.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, BatchNormalization, Activation, GlobalAveragePooling2D
 from keras.api.optimizers import Adam
 from keras.api.losses import SparseCategoricalCrossentropy
 
@@ -22,7 +22,7 @@ def build_model(model_number: int) -> Model:
     # Print header for function execution
     print("\n🎯 build_model\n")
 
-    # Sanity check model
+    # m0 = Sanity check model
     if model_number == 0:
 
         # Input layer for 32x32 RGB images
@@ -51,7 +51,7 @@ def build_model(model_number: int) -> Model:
             metrics=["accuracy"]
         )
 
-    # VGG style model
+    # m1 = Baseline VGG-style (no BatchNorm, uses Dense(128))
     elif model_number == 1:
 
         input_layer = Input(shape=(32, 32, 3))
@@ -112,6 +112,78 @@ def build_model(model_number: int) -> Model:
         prediction_layer = Dense(10, activation="softmax")(x)
 
         # Build and compile the model
+        model = Model(inputs=input_layer, outputs=prediction_layer)
+        model.compile(
+            optimizer=Adam(),
+            loss=SparseCategoricalCrossentropy(),
+            metrics=["accuracy"]
+        )
+
+    # m3 = m2 + Reduced filters + Global Average Pooling
+    elif model_number == 3:
+
+        input_layer = Input(shape=(32, 32, 3))
+
+        # Block 1 – 2×Conv(16) + BN + ReLU + MaxPool
+        x = Conv2D(16, (3, 3), padding="same")(input_layer)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = Conv2D(16, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        # Block 2 – 2×Conv(32) + BN + ReLU + MaxPool
+        x = Conv2D(32, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = Conv2D(32, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        # GAP – replaces Flatten + Dense(128) to reduce params
+        x = GlobalAveragePooling2D()(x)
+
+        # Output layer – Dense(10) softmax classifier
+        prediction_layer = Dense(10, activation="softmax")(x)
+
+        model = Model(inputs=input_layer, outputs=prediction_layer)
+        model.compile(
+            optimizer=Adam(),
+            loss=SparseCategoricalCrossentropy(),
+            metrics=["accuracy"]
+        )
+
+    # m4 = m2 - Dense(128) + Global Average Pooling
+    elif model_number == 4:
+
+        input_layer = Input(shape=(32, 32, 3))
+
+        # Block 1 – 2×Conv(32) + BN + ReLU + MaxPool
+        x = Conv2D(32, (3, 3), padding="same")(input_layer)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = Conv2D(32, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        # Block 2 – 2×Conv(64) + BN + ReLU + MaxPool
+        x = Conv2D(64, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = Conv2D(64, (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+
+        # GAP – replaces Flatten + Dense(128) to reduce params
+        x = GlobalAveragePooling2D()(x)
+
+        # Output layer – Dense(10) softmax classifier
+        prediction_layer = Dense(10, activation="softmax")(x)
+
         model = Model(inputs=input_layer, outputs=prediction_layer)
         model.compile(
             optimizer=Adam(),

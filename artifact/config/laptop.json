@@ -6,7 +6,7 @@
   "RESULT_PATH": "artifact/result",
   "MODEL_PATH": "artifact/model/",
   "EPOCHS_COUNT": 8,
-  "BATCH_SIZE": 16,
+  "BATCH_SIZE": 8,
   "CLEAN_LOG": true,
   "CLEAN_CHECKPOINT": true,
   "CLEAN_RESULT": true,

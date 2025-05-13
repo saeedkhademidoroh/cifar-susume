@@ -5,6 +5,13 @@ from torchvision import datasets
 # Import project-specific libraries
 from config import CONFIG
 
+# Function to load dataset
+def load_dataset_m4():
+    return load_dataset_m0()
+
+# Function to load dataset
+def load_dataset_m3():
+    return load_dataset_m0()
 
 # Function to load dataset
 def load_dataset_m2():

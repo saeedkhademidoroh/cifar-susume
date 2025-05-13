@@ -1,7 +1,3 @@
-# Import standard libraries
-import numpy as np
-import matplotlib.pyplot as plt
-
 # Import project-specific libraries
 from config import CONFIG
 
@@ -34,26 +30,35 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     # Predict values
     predictions = model.predict(test_data, verbose=verbose)
 
-    # Print summary of training and evaluation metrics
-    print("\n📊 Summary Metrics:")
-    print(f"Min Training Loss       : {metrics['min_train_loss']:.4f} (Epoch {metrics['min_train_loss_epoch']})")
-    print(f"Max Training Accuracy   : {metrics['max_train_acc']:.4f} (Epoch {metrics['max_train_acc_epoch']})")
-    if metrics["min_val_loss"] is not None:
-        print(f"Min Validation Loss     : {metrics['min_val_loss']:.4f} (Epoch {metrics['min_val_loss_epoch']})")
-        print(f"Max Validation Accuracy : {metrics['max_val_acc']:.4f} (Epoch {metrics['max_val_acc_epoch']})")
-    print(f"Final Test Loss         : {final_test_loss:.4f}")
-    print(f"Final Test Accuracy     : {final_test_accuracy:.4f}")
+    # Build full result dict for both terminal and JSON output
+    result = {
+        "train_loss_min": metrics["min_train_loss"],
+        "train_loss_min_epoch": metrics["min_train_loss_epoch"],
+        "train_accuracy_max": metrics["max_train_acc"],
+        "train_accuracy_max_epoch": metrics["max_train_acc_epoch"],
+        "val_loss_min": metrics.get("min_val_loss"),
+        "val_loss_min_epoch": metrics.get("min_val_loss_epoch"),
+        "val_accuracy_max": metrics.get("max_val_acc"),
+        "val_accuracy_max_epoch": metrics.get("max_val_acc_epoch"),
+        "test_loss_final": final_test_loss,
+        "test_accuracy_final": final_test_accuracy
+    }
 
     # Return metrics for logging and further analysis
     return {
         "min_train_loss": metrics["min_train_loss"],
+        "min_train_loss_epoch": metrics["min_train_loss_epoch"],
         "max_train_acc": metrics["max_train_acc"],
+        "max_train_acc_epoch": metrics["max_train_acc_epoch"],
         "min_val_loss": metrics.get("min_val_loss"),
+        "min_val_loss_epoch": metrics.get("min_val_loss_epoch"),
         "max_val_acc": metrics.get("max_val_acc"),
+        "max_val_acc_epoch": metrics.get("max_val_acc_epoch"),
         "final_test_loss": final_test_loss,
         "final_test_accuracy": final_test_accuracy,
         "predictions": predictions,
     }
+
 
 
 # Function to extract history metrics

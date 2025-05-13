@@ -70,20 +70,24 @@ def run_experiment(model_numbers=0, runs=1):
 
                 # Record results for current run
                 evaluation = evaluate_model(trained_model, history, test_data, test_labels)
-                result = {
+
+                evaluation.update({
                     "model": model_number,
                     "time": datetime.datetime.now().strftime("%H:%M:%S"),
                     "layers": len(trained_model.layers),
-                    "optimizer": type(trained_model.optimizer).__name__,
-                    "val_accuracy": evaluation.get("max_val_acc"),
-                    "train_accuracy": evaluation.get("max_train_acc"),
-                    "val_loss": evaluation.get("min_val_loss"),
-                    "train_loss": evaluation.get("min_train_loss"),
-                    "test_accuracy": evaluation.get("final_test_accuracy"),
-                    "test_loss": evaluation.get("final_test_loss")
-                }
+                    "optimizer": type(trained_model.optimizer).__name__
+                })
 
-                all_results.append(result)
+                # Remove non-serializable fields
+                evaluation_clean = {k: v for k, v in evaluation.items() if k != "predictions"}
+
+                # Print clean JSON to terminal
+                print("\n📊 Summary JSON:")
+                print(json.dumps([evaluation_clean], indent=2))
+
+                # Save clean JSON to results
+                all_results.append(evaluation_clean)
+
 
         # Save all run results into a timestamped result file
         with open(result_file, "w") as jf:
