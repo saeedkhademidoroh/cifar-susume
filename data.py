@@ -7,6 +7,10 @@ from config import CONFIG
 
 
 # Function to load dataset
+def load_dataset_m2():
+    return load_dataset_m0()
+
+# Function to load dataset
 def load_dataset_m1():
     return load_dataset_m0()
 
