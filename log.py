@@ -6,16 +6,17 @@ import json
 from datetime import datetime, timezone
 
 
-# Function to log a dictionary under a named key in JSON
-def log_to_json(path, key, record=None):
+# Function to log a dictionary under a named key in a JSON file
+def log_to_json(path, key, record=None, error=False):
     """
-    Appends a record to a JSON log file under the specified key.
-    Adds both POSIX and ISO UTC timestamps if not already present.
+    Logs a record to a JSON file. For normal logs, appends under 'key' inside result.json.
+    For errors, creates a separate error_<timestamp>.json file in ERROR_PATH.
 
     Args:
-        path (Path or str): Directory where the log file should reside.
-        key (str): Key under which to store the log record.
-        record (dict): Dictionary to log.
+        path (Path or str): Target directory.
+        key (str): Key under which to store the record (ignored for error logs).
+        record (dict): Record dictionary to log.
+        error (bool): Whether to treat this as an error log (default: False).
     """
 
     # Print header for function execution
@@ -24,37 +25,39 @@ def log_to_json(path, key, record=None):
     if record is None:
         record = {}
 
-    # Ensure parent directory exists
+    # Ensure path exists
     os.makedirs(path, exist_ok=True)
 
-    # Define full file path
-    log_file = Path(path) / "result.json"
+    # Inject timestamp if not already present
+    if "timestamp" not in record:
+        ts = time.time()
+        record["timestamp"] = ts
+        record["timestamp_utc"] = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
 
-    # Load or initialize log content
+    # Handle error case
+    if error:
+        error_file = path / f"error_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
+        with open(error_file, "w") as f:
+            json.dump(record, f, indent=2)
+        print(f"\n❌ Error: {error_file}")
+        return
+
+    # Standard result log
+    log_file = Path(path) / "result.json"
     if log_file.exists():
         with open(log_file, "r") as f:
             data = json.load(f)
     else:
         data = {}
 
-    # Inject timestamps
-    if "timestamp" not in record:
-        timestamp = time.time()
-        record["timestamp"] = timestamp
-        record["timestamp_utc"] = datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
-
-    # Initialize the key in the JSON structure if it doesn't exist
     if key not in data:
         data[key] = []
 
-    # Append the new record under the specified key
     data[key].append(record)
 
-    # Write the updated structure back to the JSON file
     with open(log_file, "w") as f:
         json.dump(data, f, indent=2)
 
-    # Confirm successful logging to terminal
     print(f"\n📝 Logged: key='{key}', file='{log_file.name}'")
 
 

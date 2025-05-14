@@ -1,18 +1,23 @@
+from pathlib import Path
+from config import CONFIG
+from experiment import run_experiment
+
 # Print confirmation message
 print("\n✅ main.py is being executed")
 
+# Disable GPU (force CPU usage)
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
-from experiment import run_experiment
-# run_experiment(4)
-run_experiment((0, 4), runs=1)
-# run_experiment([1, 2], runs=2)
 
-# import torch
-# print(torch.cuda.is_available())
-# print(torch.cuda.get_device_name())
+# Resolve base config path from CONFIG object
+CONFIG_DIR = CONFIG.CONFIG_PATH
 
-# import os
-# import torch
-# os.environ["CUDA_VISIBLE_DEVICES"] = ""
-# print("CUDA available:", torch.cuda.is_available())
+# Build config_map using CONFIG_PATH + filenames
+config_map = {
+    model: {
+        1: CONFIG_DIR / "laptop.json",
+    } for model in range(5)
+}
+
+# Run all models using laptop config for both runs
+run_experiment((0, 4))

@@ -21,6 +21,22 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     # Print header for function execution
     print("\n🎯 evaluate_model")
 
+    # Fallback: Load saved history if not in memory (resumed run)
+    if history is None:
+        from pathlib import Path
+        history_path = CONFIG.CHECKPOINT_PATH / f"m{model.model_id}/history.json"
+        if history_path.exists():
+            try:
+                with open(history_path, "r") as f:
+                    history_data = json.load(f)
+                    class DummyHistory: pass
+                    history = DummyHistory()
+                    history.history = history_data
+                print(f"\n📄 Loaded fallback history from:\n{history_path}")
+            except Exception as e:
+                print(f"\n⚠️ Failed to load fallback history:\n{e}")
+                history = {}
+
     # Extract metrics from history
     metrics = extract_history_metrics(history)
 
@@ -30,21 +46,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     # Predict values
     predictions = model.predict(test_data, verbose=verbose)
 
-    # Build full result dict for both terminal and JSON output
-    result = {
-        "train_loss_min": metrics["min_train_loss"],
-        "train_loss_min_epoch": metrics["min_train_loss_epoch"],
-        "train_accuracy_max": metrics["max_train_acc"],
-        "train_accuracy_max_epoch": metrics["max_train_acc_epoch"],
-        "val_loss_min": metrics.get("min_val_loss"),
-        "val_loss_min_epoch": metrics.get("min_val_loss_epoch"),
-        "val_accuracy_max": metrics.get("max_val_acc"),
-        "val_accuracy_max_epoch": metrics.get("max_val_acc_epoch"),
-        "test_loss_final": final_test_loss,
-        "test_accuracy_final": final_test_accuracy
-    }
-
-    # Return metrics for logging and further analysis
+    # Build result dictionary for both JSON and log output
     return {
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
@@ -60,7 +62,6 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     }
 
 
-
 # Function to extract history metrics
 def extract_history_metrics(history):
     """
@@ -74,7 +75,7 @@ def extract_history_metrics(history):
     """
 
     # Print header for function execution
-    print("\n🎯 extract_history_metrics\n")
+    print("\n🎯 extract_history_metrics")
 
     # Ensure history is a dictionary
     history = history.history if hasattr(history, "history") else history

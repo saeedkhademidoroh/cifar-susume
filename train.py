@@ -12,7 +12,7 @@ from config import CONFIG
 
 
 # Function to train a model with checkpointing and optional resumption
-def train_model(train_data, train_labels, model, model_number, timestamp, verbose=2):
+def train_model(train_data, train_labels, model, model_number, run, timestamp, verbose=2):
     """
     Trains a model using given data and logs all key metrics after training.
 
@@ -24,24 +24,34 @@ def train_model(train_data, train_labels, model, model_number, timestamp, verbos
         verbose (int): Keras verbosity level.
 
     Returns:
-        tuple: (trained model, Keras History object)
+        tuple: (trained model, Keras History object, was resumed)
     """
 
     # Print header for function execution
     print("\n🎯 train_model")
 
     # Define model-specific checkpoint directory
-    model_checkpoint_path = CONFIG.CHECKPOINT_PATH / f"m{model_number}"
+    model_checkpoint_path = CONFIG.CHECKPOINT_PATH / f"m{model_number}_r{run}"
     model_checkpoint_path.mkdir(parents=True, exist_ok=True)
 
+    # Prepare history file path
+    history_file = CONFIG.HISTORY_PATH / f"m{model_number}_{timestamp}.json"
+    history = None
+
     # Optionally resume training from saved checkpoint
+    resumed_model, initial_epoch = None, 0
     if not CONFIG.CLEAN_CHECKPOINT:
         resumed_model, initial_epoch = load_training_state(model_checkpoint_path)
         if resumed_model:
             print(f"\n🔁 Resumed: epoch_{initial_epoch}")
             model = resumed_model
-        else:
-            initial_epoch = 0
+            if history_file.exists():
+                with open(history_file, "r") as f:
+                    history_data = json.load(f)
+                    class DummyHistory: pass
+                    history = DummyHistory()
+                    history.history = history_data
+
     else:
         initial_epoch = 0
 
@@ -64,17 +74,36 @@ def train_model(train_data, train_labels, model, model_number, timestamp, verbos
     callbacks = get_checkpoint_callbacks(model_checkpoint_path, verbose)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
-    # Train the model with validation and checkpointing
-    history = model.fit(
-        x=train_data,
-        y=train_labels,
-        validation_data=(val_data, val_labels),
-        epochs=CONFIG.EPOCHS_COUNT,
-        batch_size=CONFIG.BATCH_SIZE,
-        callbacks=callbacks,
-        verbose=verbose,
-        initial_epoch=initial_epoch
-    )
+    # Train the model with validation and checkpointing if needed
+    try:
+        if history is None:
+            model.model_id = model_number
+            history = model.fit(
+                x=train_data,
+                y=train_labels,
+                validation_data=(val_data, val_labels),
+                epochs=CONFIG.EPOCHS_COUNT,
+                batch_size=CONFIG.BATCH_SIZE,
+                callbacks=callbacks,
+                verbose=verbose,
+                initial_epoch=initial_epoch
+            )
+
+            # Save training history to unique history file
+            if CONFIG.HISTORY_PATH:
+                CONFIG.HISTORY_PATH.mkdir(parents=True, exist_ok=True)
+                with open(history_file, "w") as f:
+                    json.dump(history.history, f)
+
+    except Exception as e:
+        # Save partial training history if available
+        if hasattr(model, "history") and model.history:
+            try:
+                with open(history_file, "w") as f:
+                    json.dump(model.history.history, f)
+            except Exception as log_error:
+                print(f"\n⚠️ Failed to save history during exception:\n{log_error}")
+        raise e
 
     # Save final model to disk for evaluation and future use
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -82,10 +111,9 @@ def train_model(train_data, train_labels, model, model_number, timestamp, verbos
     model_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
     model.save(model_path)
 
-
-
     # Return the trained model and history
     return model, history, resumed_model is not None
+
 
 # Function to define a custom recovery callback that saves the model and state after each epoch
 class RecoveryCheckpoint(Callback):
@@ -118,19 +146,18 @@ class RecoveryCheckpoint(Callback):
         # Path to JSON file for storing training state (e.g., epoch)
         self.state_path = checkpoint_path / "state.json"
 
-
-    # Function to save model and state.json after each epoch
+    # Function to save model, state.json, and training history after each epoch
     def on_epoch_end(self, epoch, logs=None):
         """
-        Saves model and training state at the end of each epoch.
+        Saves model, training state, and training history at the end of each epoch.
         """
-
-        # Print header for function execution
         print("\n🎯 on_epoch_end")
 
         self.model.save(self.model_path)
+
         with open(self.state_path, "w") as f:
             json.dump({"initial_epoch": epoch + 1}, f)
+
         print(f"\n💾 Checkpoint: epoch_{epoch + 1}\n")
 
 

@@ -5,127 +5,123 @@ from dataclasses import dataclass
 
 
 # Dataclass for immutable config
-from dataclasses import dataclass
-from pathlib import Path
-import json
-
-
 @dataclass(frozen=True)
 class Config:
     """
     Immutable configuration object for the CIFAR experiment system.
 
-    This dataclass is loaded from config.json at runtime and contains:
+    This dataclass is loaded from default.json at runtime and contains:
     - Paths for data, logs, results, and checkpoints
     - Training hyperparameters
     - Flags to control cleaning behavior and runtime mode
     """
 
-    # Path to the config.json
     CONFIG_PATH: Path
-
-    # Path to dataset/
     DATA_PATH: Path
-
-    # Path to log/
     LOG_PATH: Path
-
-    # Path to checkpoint/
     CHECKPOINT_PATH: Path
-
-    # Path to result/
     RESULT_PATH: Path
-
-    # Path to trained_model.h5
     MODEL_PATH: Path
-
-    # Number of training epochs
+    HISTORY_PATH: Path
+    ERROR_PATH: Path
     EPOCHS_COUNT: int
-
-    # Number of batch size
     BATCH_SIZE: int
-
-    # Flag for cleaning log/
     CLEAN_LOG: bool
-
-    # Flag for cleaning checkpoint/
     CLEAN_CHECKPOINT: bool
-
-    # Flag for cleaning result/
     CLEAN_RESULT: bool
-
-    # Flag for cleaning mode/
     CLEAN_MODEL: bool
-
-
-    # Flag for lightweight mode
+    CLEAN_HISTORY: bool
+    CLEAN_ERROR: bool
     LIGHT_MODE: bool
 
+    # Function to load the default configuration from artifact/config/default.json
     @staticmethod
-    def load_from_json() -> "Config":
-        """
-        Loads and validates configuration from config.json located
-        in the same directory as this script.
+    def load_default_config() -> "Config":
 
-        Returns:
-            Config: A fully populated, immutable Config object.
+        # Print header for function execution
+        print("\n🎯 load_default_config")
 
-        Raises:
-            FileNotFoundError: If the config.json file is missing.
-            ValueError: If any required keys are missing from the file.
-        """
-        print("\n🎯 load_from_json")
+        # Define default config path and display it
         current_dir = Path(__file__).parent
-        raw_config_path = current_dir / "config.json"
+        raw_config_path = current_dir / "artifact/config/default.json"
+        print(f"\n📂 Loading default config:\n{raw_config_path}")
 
+        # Check that the file exists, raise an error if not
         if not raw_config_path.exists():
             raise FileNotFoundError(f"❌ FileNotFoundError:\nraw_config_path={raw_config_path}\n")
 
+        # Load and parse the JSON config file
         with open(raw_config_path, "r") as f:
             config_data = json.load(f)
 
-        # Required keys that must be present in config.json
+        # Validate required keys
         required_keys = [
-            "CONFIG_PATH",
-            "DATA_PATH",
-            "LOG_PATH",
-            "CHECKPOINT_PATH",
-            "RESULT_PATH",
-            "MODEL_PATH",
-            "EPOCHS_COUNT",
-            "BATCH_SIZE",
-            "CLEAN_LOG",
-            "CLEAN_CHECKPOINT",
-            "CLEAN_RESULT",
-            "CLEAN_MODEL",
-            "LIGHT_MODE"
+            "CONFIG_PATH", "DATA_PATH", "LOG_PATH", "CHECKPOINT_PATH", "RESULT_PATH", "MODEL_PATH",
+            "HISTORY_PATH", "ERROR_PATH",
+            "EPOCHS_COUNT", "BATCH_SIZE",
+            "CLEAN_LOG", "CLEAN_CHECKPOINT", "CLEAN_RESULT", "CLEAN_MODEL", "CLEAN_HISTORY", "CLEAN_ERROR", "LIGHT_MODE"
         ]
-
-        # Validate presence of required keys
         missing = [key for key in required_keys if key not in config_data]
         if missing:
             raise ValueError(f"❌ ValueError:\nmissing={missing}\n")
 
-        # Create and return frozen Config object
+        return Config._from_dict(config_data, current_dir)
+
+    # Function to load an experiment-specific config from custom path
+    @staticmethod
+    def load_from_custom_path(custom_path: Path) -> "Config":
+        """
+        Loads configuration from a user-defined .json file (e.g. colab.json, desktop.json)
+        """
+        print("\n🎯 load_from_custom_path")
+        print(f"\n📂 Loading custom configuration:\n{custom_path}")
+        base_path = custom_path.parent
+        with open(custom_path, "r") as f:
+            config_data = json.load(f)
+        return Config._from_dict(config_data, base_path)
+
+    # Shared constructor from dictionary data + base path
+    @staticmethod
+    def _from_dict(config_data: dict, base_path: Path) -> "Config":
+        """
+        Internal shared method to construct the Config object from a dictionary and base path.
+        """
+
+        # Ensure all required fields are present
+        required_keys = [
+            "CONFIG_PATH", "DATA_PATH", "LOG_PATH", "CHECKPOINT_PATH", "RESULT_PATH", "MODEL_PATH",
+            "HISTORY_PATH", "ERROR_PATH",
+            "EPOCHS_COUNT", "BATCH_SIZE",
+            "CLEAN_LOG", "CLEAN_CHECKPOINT", "CLEAN_RESULT", "CLEAN_MODEL", "CLEAN_HISTORY", "CLEAN_ERROR", "LIGHT_MODE"
+        ]
+        missing = [key for key in required_keys if key not in config_data]
+        if missing:
+            raise ValueError(f"❌ ValueError:\nmissing={missing}\n")
+
+        # Return populated frozen dataclass
         return Config(
-            CONFIG_PATH=current_dir / config_data["CONFIG_PATH"],
-            DATA_PATH=current_dir / config_data["DATA_PATH"],
-            LOG_PATH=current_dir / config_data["LOG_PATH"],
-            CHECKPOINT_PATH=current_dir / config_data["CHECKPOINT_PATH"],
-            RESULT_PATH=current_dir / config_data["RESULT_PATH"],
-            MODEL_PATH=current_dir / config_data["MODEL_PATH"],
+            CONFIG_PATH=base_path / config_data["CONFIG_PATH"],
+            DATA_PATH=base_path / config_data["DATA_PATH"],
+            LOG_PATH=base_path / config_data["LOG_PATH"],
+            CHECKPOINT_PATH=base_path / config_data["CHECKPOINT_PATH"],
+            RESULT_PATH=base_path / config_data["RESULT_PATH"],
+            MODEL_PATH=base_path / config_data["MODEL_PATH"],
+            HISTORY_PATH=base_path / config_data["HISTORY_PATH"],
+            ERROR_PATH=base_path / config_data["ERROR_PATH"],
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"],
             CLEAN_LOG=config_data["CLEAN_LOG"],
             CLEAN_CHECKPOINT=config_data["CLEAN_CHECKPOINT"],
             CLEAN_RESULT=config_data["CLEAN_RESULT"],
             CLEAN_MODEL=config_data["CLEAN_MODEL"],
+            CLEAN_HISTORY=config_data["CLEAN_HISTORY"],
+            CLEAN_ERROR=config_data["CLEAN_ERROR"],
             LIGHT_MODE=config_data["LIGHT_MODE"]
         )
 
 
-# Load the configurations from config.json
-CONFIG = Config.load_from_json()
+# Load the configurations from default.json
+CONFIG = Config.load_default_config()
 
 # Print confirmation message
 print("\n✅ config.py successfully executed")

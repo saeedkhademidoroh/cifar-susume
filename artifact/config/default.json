@@ -8,7 +8,7 @@
   "HISTORY_PATH": "artifact/history",
   "ERROR_PATH": "artifact/error",
   "CLEAN_LOG": true,
-  "CLEAN_CHECKPOINT": true,
+  "CLEAN_CHECKPOINT": false,
   "CLEAN_RESULT": true,
   "CLEAN_MODEL": true,
   "CLEAN_HISTORY": true,

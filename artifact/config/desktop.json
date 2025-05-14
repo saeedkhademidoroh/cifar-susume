@@ -1,15 +1,19 @@
 {
-  "CONFIG_PATH": "artifact/config.json",
+  "CONFIG_PATH": "artifact/config",
   "DATA_PATH": "artifact/data",
   "LOG_PATH": "artifact/log",
   "CHECKPOINT_PATH": "artifact/checkpoint",
   "RESULT_PATH": "artifact/result",
   "MODEL_PATH": "artifact/model/",
-  "EPOCHS_COUNT": 16,
-  "BATCH_SIZE": 16,
+  "HISTORY_PATH": "artifact/history",
+  "ERROR_PATH": "artifact/error",
   "CLEAN_LOG": false,
-  "CLEAN_CHECKPOINT": true,
+  "CLEAN_CHECKPOINT": false,
   "CLEAN_RESULT": false,
   "CLEAN_MODEL": false,
-  "LIGHT_MODE": false
+  "CLEAN_HISTORY": false,
+  "CLEAN_ERROR": false,
+  "LIGHT_MODE": false,
+  "EPOCHS_COUNT": 16,
+  "BATCH_SIZE": 16
 }
