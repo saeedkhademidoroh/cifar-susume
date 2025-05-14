@@ -85,8 +85,7 @@ def train_model(train_data, train_labels, model, model_number, timestamp, verbos
 
 
     # Return the trained model and history
-    return model, history
-
+    return model, history, resumed_model is not None
 
 # Function to define a custom recovery callback that saves the model and state after each epoch
 class RecoveryCheckpoint(Callback):

@@ -3,6 +3,7 @@ import shutil
 import datetime
 import sys
 import json
+from collections import Counter
 
 # Import project-specific libraries
 from config import CONFIG
@@ -46,7 +47,16 @@ def run_experiment(model_numbers=0, runs=1):
         # Create result path and file
         CONFIG.RESULT_PATH.mkdir(parents=True, exist_ok=True)
         result_file = CONFIG.RESULT_PATH / f"result_{timestamp}.json"
-        all_results = []
+
+        # Load existing results if file exists (e.g., on resume)
+        if result_file.exists():
+            with open(result_file, "r") as jf:
+                all_results = json.load(jf)
+        else:
+            all_results = []
+
+        # Track already completed model numbers
+        completed_runs = Counter(entry["model"] for entry in all_results)
 
         # Normalize model_numbers input
         if isinstance(model_numbers, int):
@@ -56,7 +66,13 @@ def run_experiment(model_numbers=0, runs=1):
 
         # Iterate through all specified models and runs
         for model_number in model_numbers:
+            if completed_runs[model_number] >= runs:
+                print(f"\n⏩ Skipping m{model_number} — {completed_runs[model_number]}/{runs} run(s) already completed")
+                continue
+
             for run in range(1, runs + 1):
+                if run <= completed_runs[model_number]:
+                    continue
                 print(f"\n🚀 Launching m{model_number} ({run}/{runs}) ...")
 
                 # Load dataset
@@ -64,12 +80,32 @@ def run_experiment(model_numbers=0, runs=1):
 
                 # Build and train model
                 model = build_model(model_number)
-                trained_model, history = train_model(
+                trained_model, history, resumed = train_model(
                     train_data, train_labels, model, model_number, timestamp
                 )
 
-                # Record results for current run
-                evaluation = evaluate_model(trained_model, history, test_data, test_labels)
+                if resumed:
+                    print(f"\n⚠️ Resumed m{model_number} — no training history available")
+                    evaluation = {
+                        "train_loss_min": None,
+                        "train_loss_min_epoch": None,
+                        "train_accuracy_max": None,
+                        "train_accuracy_max_epoch": None,
+                        "val_loss_min": None,
+                        "val_loss_min_epoch": None,
+                        "val_accuracy_max": None,
+                        "val_accuracy_max_epoch": None
+                    }
+
+                    # Run test-only evaluation
+                    final_test_loss, final_test_accuracy = trained_model.evaluate(test_data, test_labels, batch_size=CONFIG.BATCH_SIZE, verbose=0)
+                    evaluation.update({
+                        "test_loss_final": final_test_loss,
+                        "test_accuracy_final": final_test_accuracy
+                    })
+
+                else:
+                    evaluation = evaluate_model(trained_model, history, test_data, test_labels)
 
                 evaluation.update({
                     "model": model_number,
@@ -85,11 +121,12 @@ def run_experiment(model_numbers=0, runs=1):
                 print("\n📊 Summary JSON:")
                 print(json.dumps([evaluation_clean], indent=2))
 
-                # Save clean JSON to results
+                # Save it immediately
                 all_results.append(evaluation_clean)
+                with open(result_file, "w") as jf:
+                    json.dump(all_results, jf, indent=2)
 
-
-        # Save all run results into a timestamped result file
+        # Save all run results into a timestamped result file (optional safety write)
         with open(result_file, "w") as jf:
             json.dump(all_results, jf, indent=2)
 
