@@ -22,7 +22,6 @@ class Config:
     CHECKPOINT_PATH: Path
     RESULT_PATH: Path
     MODEL_PATH: Path
-    HISTORY_PATH: Path
     ERROR_PATH: Path
     EPOCHS_COUNT: int
     BATCH_SIZE: int
@@ -30,7 +29,6 @@ class Config:
     CLEAN_CHECKPOINT: bool
     CLEAN_RESULT: bool
     CLEAN_MODEL: bool
-    CLEAN_HISTORY: bool
     CLEAN_ERROR: bool
     LIGHT_MODE: bool
 
@@ -56,11 +54,30 @@ class Config:
 
         # Validate required keys
         required_keys = [
-            "CONFIG_PATH", "DATA_PATH", "LOG_PATH", "CHECKPOINT_PATH", "RESULT_PATH", "MODEL_PATH",
-            "HISTORY_PATH", "ERROR_PATH",
-            "EPOCHS_COUNT", "BATCH_SIZE",
-            "CLEAN_LOG", "CLEAN_CHECKPOINT", "CLEAN_RESULT", "CLEAN_MODEL", "CLEAN_HISTORY", "CLEAN_ERROR", "LIGHT_MODE"
+            # Path-related
+            "CONFIG_PATH",
+            "DATA_PATH",
+            "LOG_PATH",
+            "CHECKPOINT_PATH",
+            "RESULT_PATH",
+            "MODEL_PATH",
+            "ERROR_PATH",
+
+            # Training parameters
+            "EPOCHS_COUNT",
+            "BATCH_SIZE",
+
+            # Cleaning flags
+            "CLEAN_LOG",
+            "CLEAN_CHECKPOINT",
+            "CLEAN_RESULT",
+            "CLEAN_MODEL",
+            "CLEAN_ERROR",
+
+            # Runtime behavior
+            "LIGHT_MODE"
         ]
+
         missing = [key for key in required_keys if key not in config_data]
         if missing:
             raise ValueError(f"❌ ValueError:\nmissing={missing}\n")
@@ -69,11 +86,13 @@ class Config:
 
     # Function to load an experiment-specific config from custom path
     @staticmethod
-    def load_from_custom_path(custom_path: Path) -> "Config":
+    def load_custom_config(custom_path: Path) -> "Config":
         """
         Loads configuration from a user-defined .json file (e.g. colab.json, desktop.json)
         """
-        print("\n🎯 load_from_custom_path")
+
+        # Print header for function execution
+        print("\n🎯 load_custom_config")
         print(f"\n📂 Loading custom configuration:\n{custom_path}")
         base_path = custom_path.parent
         with open(custom_path, "r") as f:
@@ -87,37 +106,58 @@ class Config:
         Internal shared method to construct the Config object from a dictionary and base path.
         """
 
-        # Ensure all required fields are present
+        # Validate required keys
         required_keys = [
-            "CONFIG_PATH", "DATA_PATH", "LOG_PATH", "CHECKPOINT_PATH", "RESULT_PATH", "MODEL_PATH",
-            "HISTORY_PATH", "ERROR_PATH",
-            "EPOCHS_COUNT", "BATCH_SIZE",
-            "CLEAN_LOG", "CLEAN_CHECKPOINT", "CLEAN_RESULT", "CLEAN_MODEL", "CLEAN_HISTORY", "CLEAN_ERROR", "LIGHT_MODE"
+            # Path-related
+            "CONFIG_PATH",
+            "DATA_PATH",
+            "LOG_PATH",
+            "CHECKPOINT_PATH",
+            "RESULT_PATH",
+            "MODEL_PATH",
+            "ERROR_PATH",
+
+            # Training parameters
+            "EPOCHS_COUNT",
+            "BATCH_SIZE",
+
+            # Cleaning flags
+            "CLEAN_LOG",
+            "CLEAN_CHECKPOINT",
+            "CLEAN_RESULT",
+            "CLEAN_MODEL",
+            "CLEAN_ERROR",
+
+            # Runtime behavior
+            "LIGHT_MODE"
         ]
+
         missing = [key for key in required_keys if key not in config_data]
         if missing:
             raise ValueError(f"❌ ValueError:\nmissing={missing}\n")
 
+        # Resolve all paths relative to the project root (assumed to be cifar/)
+        root_path = Path(__file__).parent
+
         # Return populated frozen dataclass
         return Config(
-            CONFIG_PATH=base_path / config_data["CONFIG_PATH"],
-            DATA_PATH=base_path / config_data["DATA_PATH"],
-            LOG_PATH=base_path / config_data["LOG_PATH"],
-            CHECKPOINT_PATH=base_path / config_data["CHECKPOINT_PATH"],
-            RESULT_PATH=base_path / config_data["RESULT_PATH"],
-            MODEL_PATH=base_path / config_data["MODEL_PATH"],
-            HISTORY_PATH=base_path / config_data["HISTORY_PATH"],
-            ERROR_PATH=base_path / config_data["ERROR_PATH"],
+            CONFIG_PATH=root_path / config_data["CONFIG_PATH"],
+            DATA_PATH=root_path / config_data["DATA_PATH"],
+            LOG_PATH=root_path / config_data["LOG_PATH"],
+            CHECKPOINT_PATH=root_path / config_data["CHECKPOINT_PATH"],
+            RESULT_PATH=root_path / config_data["RESULT_PATH"],
+            MODEL_PATH=root_path / config_data["MODEL_PATH"],
+            ERROR_PATH=root_path / config_data["ERROR_PATH"],
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"],
             CLEAN_LOG=config_data["CLEAN_LOG"],
             CLEAN_CHECKPOINT=config_data["CLEAN_CHECKPOINT"],
             CLEAN_RESULT=config_data["CLEAN_RESULT"],
             CLEAN_MODEL=config_data["CLEAN_MODEL"],
-            CLEAN_HISTORY=config_data["CLEAN_HISTORY"],
             CLEAN_ERROR=config_data["CLEAN_ERROR"],
             LIGHT_MODE=config_data["LIGHT_MODE"]
         )
+
 
 
 # Load the configurations from default.json

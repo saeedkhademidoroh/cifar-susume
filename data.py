@@ -35,7 +35,7 @@ def load_dataset_m0():
     """
 
     # Print header for function execution
-    print(f"\n🎯 load_dataset_m0\n")
+    print(f"\n🎯 load_dataset_m0")
 
     # Load CIFAR-10 training and test sets
     train_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=True, download=True)
