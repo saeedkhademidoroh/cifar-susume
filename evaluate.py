@@ -1,9 +1,9 @@
-# Import project-specific libraries
-from config import CONFIG
+# Import standard libraries
+import json
 
 
 # Function to evaluate model
-def evaluate_model(model, history, test_data, test_labels, verbose=0):
+def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
     """
     Evaluates the model on test data, extracts training history, and displays key metrics.
 
@@ -12,6 +12,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
         history (tf.keras.callbacks.History or dict): Training history.
         test_data (numpy.ndarray): Feature set for test data.
         test_labels (numpy.ndarray): True labels for test data.
+        config (Config): Configuration object containing BATCH_SIZE and CHECKPOINT_PATH.
         verbose (int): Verbosity level for model evaluation (default: 1).
 
     Returns:
@@ -23,8 +24,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
 
     # Fallback: Load saved history if not in memory (resumed run)
     if history is None:
-        from pathlib import Path
-        history_path = CONFIG.CHECKPOINT_PATH / f"m{model.model_id}/history.json"
+        history_path = config.CHECKPOINT_PATH / f"m{model.model_id}/history.json"
         if history_path.exists():
             try:
                 with open(history_path, "r") as f:
@@ -41,7 +41,7 @@ def evaluate_model(model, history, test_data, test_labels, verbose=0):
     metrics = extract_history_metrics(history)
 
     # Evaluate model
-    final_test_loss, final_test_accuracy = model.evaluate(test_data, test_labels, batch_size=CONFIG.BATCH_SIZE, verbose=verbose)
+    final_test_loss, final_test_accuracy = model.evaluate(test_data, test_labels, batch_size=config.BATCH_SIZE, verbose=verbose)
 
     # Predict values
     predictions = model.predict(test_data, verbose=verbose)

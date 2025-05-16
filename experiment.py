@@ -4,342 +4,272 @@ import datetime
 import sys
 import json
 import time
-from collections import Counter
-from pathlib import Path
 import traceback
+from pathlib import Path
 
 # Import project-specific libraries
 from config import CONFIG
-from data import load_dataset
+from data import dispatch_load_dataset
 from evaluate import extract_history_metrics
 from model import build_model
 from train import train_model
 from log import log_to_json
 
 
-# Function to run experiments on models
-def run_experiment(model_numbers=0, runs=None, config_map=None):
+# Function to run all experiments given a pipeline of (model, config_name) pairs
+def run_pipeline(pipeline):
     """
-    Runs one or more training experiments, logs output to both terminal and log file,
-    and saves results to a timestamped JSON file.
+    Main function to execute a list of model/config experiments.
 
     Args:
-        model_numbers (int or tuple): Single model ID or a range of IDs (e.g. 1 or (1, 3)).
-        runs (int): Number of repetitions per model (default: 1).
-        config_map (dict): Optional mapping of model_number to config file path.
+        pipeline (list of tuples): Each entry is (model_number: int, config_name: str)
     """
+    print("\n🎯 run_pipeline")
 
-    # Print header for function execution
-    print("\n🎯 run_experiment")
-
-    # Normalize model_numbers to a list of integers
-    if isinstance(model_numbers, int):
-        model_numbers = [model_numbers]
-    elif isinstance(model_numbers, tuple) and len(model_numbers) == 2:
-        model_numbers = list(range(model_numbers[0], model_numbers[1] + 1))
-    elif not isinstance(model_numbers, list):
-        raise ValueError(f"❌ Invalid model_numbers: {model_numbers}")
-
-    # If config_map exists, filter it down to relevant models
-    if config_map:
-        config_map = {m: config_map[m] for m in model_numbers if m in config_map}
-        if not config_map:
-            raise ValueError(f"❌ No matching models found in config_map for: {model_numbers}")
-    else:
-        # Fallback to default config for all models
-        config_map = {
-            model: {1: CONFIG.CONFIG_PATH / "default.json"}
-            for model in model_numbers
-        }
-
-    # Infer number of runs if not explicitly provided
-    if runs is None:
-        runs = max(
-            max(runs_dict.keys(), default=0)
-            for runs_dict in config_map.values()
-            if isinstance(runs_dict, dict)
-        )
-
-    # Generate timestamp for result/log filenames
+    # Generate timestamp for naming logs/results
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Setup dual logging: terminal + log file
-    CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
-    log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
-    log_stream = open(log_file, "a", buffering=1)
-    original_stdout = sys.stdout
-    original_stderr = sys.stderr
-    sys.stdout = Tee(sys.stdout, log_stream)
-    sys.stderr = Tee(sys.stderr, log_stream)
-    print(f"\n📝 Logging:\n{log_file}", flush=True)
+    # Load config for initial output path creation
+    first_model, first_config_name = pipeline[0]
+    first_config_path = CONFIG.CONFIG_PATH / f"{first_config_name}.json"
+    first_config = CONFIG.load_config(first_config_path)
+
+    # Create required folders before logging starts
+    ensure_output_paths(first_config)
+
+    # Start logging and result tracking
+    log_file, log_stream, result_file, all_results = _initialize_logging(timestamp)
+    print(f"\n🪵 Log file ready at: {log_file}")
 
     try:
-        # Create result path and file
-        CONFIG.RESULT_PATH.mkdir(parents=True, exist_ok=True)
-        result_file = CONFIG.RESULT_PATH / f"result_{timestamp}.json"
+        completed_triplets = _load_previous_results(result_file, all_results)
 
-        # Load existing results if file exists (e.g., on resume)
-        if result_file.exists():
-            with open(result_file, "r") as jf:
-                all_results = json.load(jf)
-        else:
-            all_results = []
+        # Iterate through each pipeline task
+        for i, (model_number, config_name) in enumerate(pipeline):
+            print(f"\n⚙️  Pipeline Entry {i+1}/{len(pipeline)} ---")
+            config_path = CONFIG.CONFIG_PATH / f"{config_name}.json"
+            result_file = _run_single_pipeline_entry(
+                model_number=model_number,
+                config_path=config_path,
+                config_name=config_name,
+                run=i + 1,
+                timestamp=timestamp,
+                all_results=all_results,
+                result_file=result_file
+            )
 
-        # Track already completed (model, run, config) based on logged results
-        completed_triplets = {
-            (entry["model"], entry.get("run", 1), entry.get("config", "default"))
-            for entry in all_results
-        }
-
-        cleaned_configs = set()
-
-        # Iterate through all specified models and their runs (with auto-incrementing run numbers)
-        for model_number in model_numbers:
-            model_runs = config_map.get(model_number, {})
-            for run_counter in sorted(model_runs.keys()):
-
-                # Resolve config name before checking skip list
-                run_config_path = config_map.get(model_number, {}).get(run_counter) if config_map else None
-                if run_config_path:
-                    custom_config_path = Path(run_config_path)
-                    config_name = custom_config_path.stem
-                    dynamic_config = CONFIG.load_custom_config(custom_config_path)
-                else:
-                    config_name = "default"
-                    dynamic_config = CONFIG
-
-                clean_old_output(dynamic_config)
-                ensure_output_paths(dynamic_config)
-
-                # Skip if this model-run-config combination already exists in results
-                if (model_number, run_counter, config_name) in completed_triplets:
-                    print(f"\n⏩ Skipping m{model_number}_r{run_counter} — already logged with config '{config_name}'")
-                    continue
-
-                # Determine total declared runs for this model from config_map
-                total_runs = len(config_map.get(model_number, {}))
-
-                # Skip if this model-run-config combination already exists in results
-                if (model_number, run_counter, config_name) in completed_triplets:
-                    print(f"\n⏩ Skipping m{model_number}_r{run_counter} — already logged with config '{config_name}'")
-                    continue
-
-                # Announce this run is launching
-                print(f"\n🚀 Launching m{model_number}_r{run_counter} ({run_counter}/{total_runs}) ...")
-                run = run_counter
-
-                # Track training start time (currently unused, may be used for logging or profiling later)
-                start_time = time.time()
-                duration = None
-
-                try:
-                    # Load dataset
-                    train_data, train_labels, test_data, test_labels = load_dataset(model_number)
-
-                    # Build and train model
-                    model = build_model(model_number)
-                    trained_model, history, resumed = train_model(
-                        train_data, train_labels, model, model_number, run, dynamic_config, timestamp
-                    )
-
-                    # Handle resumed runs with no in-memory history
-                    if resumed and (history is None or not hasattr(history, "history") or "loss" not in history.history):
-                        print(f"\n⚠️  Resumed m{model_number} — attempting to reload history")
-                        history_file = CONFIG.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}/history.json"
-                        if history_file.exists():
-                            try:
-                                with open(history_file, "r") as f:
-                                    history_data = json.load(f)
-                                    class DummyHistory: pass
-                                    history = DummyHistory()
-                                    history.history = history_data
-                                print(f"\n📄 Loaded history from checkpoint for m{model_number}_r{run}_{config_name}")
-                                metrics = extract_history_metrics(history)
-                            except Exception as e:
-                                print(f"\n⚠️  Failed to load or parse history:\n{e}")
-                                metrics = {
-                                    "min_train_loss": None, "min_train_loss_epoch": None,
-                                    "max_train_acc": None, "max_train_acc_epoch": None,
-                                    "min_val_loss": None, "min_val_loss_epoch": None,
-                                    "max_val_acc": None, "max_val_acc_epoch": None
-                                }
-                        else:
-                            print(f"\n⚠️  No history file found for m{model_number}_r{run}_{config_name}")
-                            metrics = {
-                                "min_train_loss": None, "min_train_loss_epoch": None,
-                                "max_train_acc": None, "max_train_acc_epoch": None,
-                                "min_val_loss": None, "min_val_loss_epoch": None,
-                                "max_val_acc": None, "max_val_acc_epoch": None
-                            }
-
-                        final_test_loss, final_test_accuracy = trained_model.evaluate(
-                            test_data, test_labels, batch_size=dynamic_config.BATCH_SIZE, verbose=0)
-
-                    else:
-                        # Standard case — extract metrics from live history
-                        metrics = extract_history_metrics(history)
-                        final_test_loss, final_test_accuracy = trained_model.evaluate(
-                            test_data, test_labels, batch_size=dynamic_config.BATCH_SIZE, verbose=0)
-
-                    # Done with training — measure time now
-                    duration = time.time() - start_time
-                    print(f"\n⏱️  Duration: {str(datetime.timedelta(seconds=int(duration)))}")
-
-                    # Construct structured evaluation dictionary
-                    evaluation = {
-                        "model": model_number,
-                        "run": run,
-                        "config": config_name,
-                        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
-                        "time": datetime.datetime.now().strftime("%H:%M:%S"),
-                        "duration": str(datetime.timedelta(seconds=int(duration))) if duration is not None else None,
-                        "parameters": {
-                            "EPOCHS_COUNT": dynamic_config.EPOCHS_COUNT,
-                            "BATCH_SIZE": dynamic_config.BATCH_SIZE
-                        },
-                        "min_train_loss": metrics["min_train_loss"],
-                        "min_train_loss_epoch": metrics["min_train_loss_epoch"],
-                        "max_train_acc": metrics["max_train_acc"],
-                        "max_train_acc_epoch": metrics["max_train_acc_epoch"],
-                        "min_val_loss": metrics.get("min_val_loss"),
-                        "min_val_loss_epoch": metrics.get("min_val_loss_epoch"),
-                        "max_val_acc": metrics.get("max_val_acc"),
-                        "max_val_acc_epoch": metrics.get("max_val_acc_epoch"),
-                        "final_test_loss": final_test_loss,
-                        "final_test_accuracy": final_test_accuracy
-                    }
-
-                    # Print JSON-formatted summary
-                    print("\n📊 Summary JSON:")
-                    print(json.dumps([evaluation], indent=2))
-
-                    # Save result
-                    all_results.append(evaluation)
-                    with open(result_file, "w") as jf:
-                        json.dump(all_results, jf, indent=2)
-
-                    print(f"\n✅ m{model_number} run {run} completed and result logged")
-
-                # Catch and log any unexpected errors per run
-                except Exception as e:
-                    log_to_json(
-                        CONFIG.ERROR_PATH,
-                        key=None,
-                        record={
-                            "model": model_number,
-                            "run": run,
-                            "config_name": config_name,
-                            "error": str(e),
-                            "exception_type": type(e).__name__,
-                            "trace": traceback.format_exc()
-                        },
-                        error=True
-                    )
-                    raise
-
-        # Final write to result JSON file
+        # Final write of results
         with open(result_file, "w") as jf:
             json.dump(all_results, jf, indent=2)
 
     finally:
-        # Restore stdout/stderr and close log stream
-        sys.stdout = original_stdout
-        sys.stderr = original_stderr
-        log_stream.close()
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        if log_stream:
+            log_stream.close()
 
 
-# Function to ensure all required output directories exist
+# Executes a single training run given model, config, and run ID
+def _run_single_pipeline_entry(model_number, config_path, config_name, run, timestamp, all_results, result_file):
+    # Load dynamic configuration for this run
+    config = CONFIG.load_config(config_path)
+
+    # Create output folders if missing
+    ensure_output_paths(config)
+
+    # Skip if already completed
+    completed_triplets = _load_previous_results(result_file, all_results)
+    if (model_number, run, config_name) in completed_triplets:
+        print(f"\n⏩ Skipping m{model_number}_r{run} — already logged with config '{config_name}'")
+        return result_file
+
+    # Announce launch
+    print(f"\n🚀 Launching m{model_number}_r{run} with '{config_name}'")
+    start_time = time.time()
+
+    try:
+        # Load dataset for this model
+        train_data, train_labels, test_data, test_labels = dispatch_load_dataset(model_number, config)
+
+        # Build model
+        model = build_model(model_number)
+
+        # Train model
+        trained_model, history, resumed = train_model(
+            train_data, train_labels,
+            model, model_number, run, config_name,
+            timestamp, config
+        )
+
+        # Recover history if training resumed without in-memory history
+        if resumed and (history is None or not hasattr(history, "history")):
+            history = _recover_history(config, model_number, run, config_name)
+
+        # Extract metrics from training history
+        metrics = extract_history_metrics(history)
+
+        # Evaluate final model
+        final_test_loss, final_test_accuracy = trained_model.evaluate(
+            test_data, test_labels,
+            batch_size=config.BATCH_SIZE, verbose=0
+        )
+
+        # Create result dict
+        evaluation = _create_evaluation_dict(
+            model_number, run, config_name,
+            time.time() - start_time, config,
+            metrics, final_test_loss, final_test_accuracy
+        )
+
+        # Print JSON result
+        print("\n📊 Summary JSON:")
+        print(json.dumps([evaluation], indent=2))
+
+        # Save to results
+        all_results.append(evaluation)
+        with open(result_file, "w") as jf:
+            json.dump(all_results, jf, indent=2)
+
+        print(f"\n✅ m{model_number} run {run} completed and result logged")
+
+    except Exception as e:
+        log_to_json(
+            config.ERROR_PATH, key=None,
+            record={
+                "model": model_number,
+                "run": run,
+                "config_name": config_name,
+                "error": str(e),
+                "exception_type": type(e).__name__,
+                "trace": traceback.format_exc()
+            },
+            error=True
+        )
+        raise
+
+    return result_file
+
+
+
+# Helper to load previous result records from file
+def _load_previous_results(result_file, all_results):
+    if result_file.exists():
+        with open(result_file, "r") as jf:
+            existing = json.load(jf)
+            all_results.extend(existing)
+            return {
+                (entry["model"], entry.get("run", 1), entry.get("config", "default"))
+                for entry in existing
+            }
+    return set()
+
+
+# Construct result JSON from metrics and metadata
+def _create_evaluation_dict(model_number, run, config_name, duration, config, metrics, loss, acc):
+    return {
+        "model": model_number,
+        "run": run,
+        "config": config_name,
+        "date": datetime.datetime.now().strftime("%Y-%m-%d"),
+        "time": datetime.datetime.now().strftime("%H:%M:%S"),
+        "duration": str(datetime.timedelta(seconds=int(duration))),
+        "parameters": {
+            "EPOCHS_COUNT": config.EPOCHS_COUNT,
+            "BATCH_SIZE": config.BATCH_SIZE
+        },
+        "min_train_loss": metrics["min_train_loss"],
+        "min_train_loss_epoch": metrics["min_train_loss_epoch"],
+        "max_train_acc": metrics["max_train_acc"],
+        "max_train_acc_epoch": metrics["max_train_acc_epoch"],
+        "min_val_loss": metrics.get("min_val_loss"),
+        "min_val_loss_epoch": metrics.get("min_val_loss_epoch"),
+        "max_val_acc": metrics.get("max_val_acc"),
+        "max_val_acc_epoch": metrics.get("max_val_acc_epoch"),
+        "final_test_loss": loss,
+        "final_test_accuracy": acc
+    }
+
+
+# Recover training history from disk if needed
+def _recover_history(config, model_number, run, config_name):
+    history_file = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}/history.json"
+    if history_file.exists():
+        try:
+            with open(history_file, "r") as f:
+                history_data = json.load(f)
+                class DummyHistory: pass
+                h = DummyHistory()
+                h.history = history_data
+                return h
+        except Exception as e:
+            print(f"\n⚠️  Failed to load or parse history:\n{e}")
+    else:
+        print(f"\n⚠️  No history file found for m{model_number}_r{run}_{config_name}")
+    return {}
+
+
+# Setup logging and result path
+def _initialize_logging(timestamp):
+    """
+    Initializes dual logging to both console and log file.
+
+    Creates a timestamped log file in LOG_PATH and redirects stdout and stderr
+    using the Tee class. Also prepares the result file path and structure.
+
+    Args:
+        timestamp (str): Current timestamp used for naming files.
+
+    Returns:
+        tuple: (log_file, log_stream, result_file, all_results_list)
+    """
+
+    # Ensure log directory exists
+    CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
+
+    # Create new log file with timestamp
+    log_file = CONFIG.LOG_PATH / f"log_{timestamp}.txt"
+    log_stream = open(log_file, "a", buffering=1)
+
+    # Redirect output streams to both terminal and log file
+    sys.stdout = Tee(sys.__stdout__, log_stream)
+    sys.stderr = Tee(sys.__stderr__, log_stream)
+
+    # Confirm logging path
+    print(f"\n📜 Logging:\n{log_file}", flush=True)
+
+    # Ensure result directory exists and define result file path
+    CONFIG.RESULT_PATH.mkdir(parents=True, exist_ok=True)
+    result_file = CONFIG.RESULT_PATH / f"result_{timestamp}.json"
+
+    # Return the logging and result handles
+    return log_file, log_stream, result_file, []
+
+
+# Ensures required output directories exist
 def ensure_output_paths(config):
-    """
-    Ensures that all essential output directories defined in the configuration
-    are recreated after cleanup. Logs each path ensured.
-    """
-
-    # Print header for function execution
     print("\n🎯 ensure_output_paths")
-
-    paths = [
-        config.LOG_PATH,
-        config.CHECKPOINT_PATH,
-        config.RESULT_PATH,
-        config.MODEL_PATH,
-        config.ERROR_PATH
-    ]
-
-    for path in paths:
+    for path in [config.LOG_PATH, config.CHECKPOINT_PATH, config.RESULT_PATH, config.MODEL_PATH, config.ERROR_PATH]:
         path.mkdir(parents=True, exist_ok=True)
         print(f"\n📂 Ensured:\n{path}")
 
 
-# Function to ensure all required output directories exist
-def ensure_output_paths(config):
-    """
-    Ensures that all essential output directories defined in the configuration
-    are recreated after cleanup. Logs each path ensured.
-    """
-
-    # Print header for function execution
-    print("\n🎯 ensure_output_paths")
-
-    paths = [
-        config.LOG_PATH,
-        config.CHECKPOINT_PATH,
-        config.RESULT_PATH,
-        config.MODEL_PATH,
-        config.ERROR_PATH
-    ]
-
-    for path in paths:
-        path.mkdir(parents=True, exist_ok=True)
-        print(f"\n📂 Ensured:\n{path}")
-
-
-# Function to clean output
-def clean_old_output(config):
-    """
-    Cleans output directories specified in the configuration.
-
-    Each directory is cleaned only if its corresponding CLEAN_* flag is set to True.
-    """
-
-    # Print header for function execution
-    print("\n🎯 clean_old_output")
-
-    # Define cleanup targets and corresponding flags
-    targets = [
-        (config.LOG_PATH, config.CLEAN_LOG),
-        (config.CHECKPOINT_PATH, config.CLEAN_CHECKPOINT),
-        (config.RESULT_PATH, config.CLEAN_RESULT),
-        (config.MODEL_PATH, config.CLEAN_MODEL),
-        (config.ERROR_PATH, config.CLEAN_ERROR),
-    ]
-
-    # Iterate through paths and clean if flag is set and path exists
-    for path, clean_flag in targets:
-        if clean_flag and path.exists():
-            try:
-                shutil.rmtree(path)
-                print(f"\n🗑️  Cleaning:\n{path}")
-            except Exception as e:
-                print(f"\n❌ Exception:\n{path}\n{e}")
-        else:
-            print(f"\n⚪ Skipped: (clean_flag={clean_flag}, exists={path.exists()})\n{path}")
-
-
-# Class to tee output to both terminal and log file
+# Logging class to write to both stdout and log file
 class Tee:
     def __init__(self, *streams):
         self.streams = streams
 
     def write(self, data):
         for s in self.streams:
-            s.write(data)
-            s.flush()
+            try:
+                s.write(data)
+                s.flush()
+            except Exception as e:
+                print(f"\n❌ Tee write failed: {e}")
 
     def flush(self):
         for s in self.streams:
             s.flush()
 
 
-# Print confirmation message
+# Print module confirmation
 print("\n✅ experiment.py successfully executed")

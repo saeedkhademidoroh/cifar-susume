@@ -2,33 +2,34 @@
 import numpy as np
 from torchvision import datasets
 
-# Import project-specific libraries
-from config import CONFIG
 
 # Function to load dataset
-def load_dataset_m4():
-    return load_dataset_m0()
-
-# Function to load dataset
-def load_dataset_m3():
-    return load_dataset_m0()
-
-# Function to load dataset
-def load_dataset_m2():
-    return load_dataset_m0()
-
-# Function to load dataset
-def load_dataset_m1():
-    return load_dataset_m0()
+def load_dataset_m4(config):
+    return load_dataset_m0(config)
 
 
 # Function to load dataset
-def load_dataset_m0():
+def load_dataset_m3(config):
+    return load_dataset_m0(config)
+
+
+# Function to load dataset
+def load_dataset_m2(config):
+    return load_dataset_m0(config)
+
+
+# Function to load dataset
+def load_dataset_m1(config):
+    return load_dataset_m0(config)
+
+
+# Function to load dataset
+def load_dataset_m0(config):
     """
     Loads CIFAR-10, normalizes pixel values, and optionally trims for LIGHT_MODE.
 
     Args:
-        path (Path): Directory to store or load CIFAR-10.
+        config (Config): Configuration object with DATA_PATH and LIGHT_MODE.
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
@@ -38,8 +39,8 @@ def load_dataset_m0():
     print(f"\n🎯 load_dataset_m0")
 
     # Load CIFAR-10 training and test sets
-    train_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=True, download=True)
-    test_set = datasets.CIFAR10(root=CONFIG.DATA_PATH, train=False, download=True)
+    train_set = datasets.CIFAR10(root=config.DATA_PATH, train=True, download=True)
+    test_set = datasets.CIFAR10(root=config.DATA_PATH, train=False, download=True)
 
     # Normalize image pixel values to range [0, 1]
     train_data = train_set.data.astype(np.float32) / 255.0
@@ -50,7 +51,7 @@ def load_dataset_m0():
     test_labels = np.array(test_set.targets)
 
     # Reduce dataset size for local/light runs
-    if CONFIG.LIGHT_MODE:
+    if config.LIGHT_MODE:
         train_data = train_data[:1000]
         train_labels = train_labels[:1000]
         test_data = test_data[:200]
@@ -64,29 +65,30 @@ def load_dataset_m0():
     return train_data, train_labels, test_data, test_labels
 
 
-# Function to dispatch dataset loaders
-def load_dataset(model_number):
+def dispatch_load_dataset(model_number, config):
     """
     Routes dataset loading based on model number.
 
     Args:
         model_number (int): Model variant identifier (e.g., 1, 2)
+        config (Config): Configuration object to use
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
     # Print header for function execution
-    print(f"\n🎯 load_dataset")
+    print(f"\n🎯 dispatch_load_dataset")
 
-    # Dispatch dataset loader
+    # Resolve the appropriate function dynamically from globals by name
     try:
-        # Construct function name and resolve dynamically
+        # Construct the loader function name dynamically based on model number
         loader_fn = globals()[f"load_dataset_m{model_number}"]
-        return loader_fn()
+
+        # Call the resolved function and return dataset
+        return loader_fn(config)
     except KeyError:
         raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
-
 
 
 # Print confirmation message

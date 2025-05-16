@@ -6,11 +6,6 @@
   "RESULT_PATH": "artifact/result",
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
-  "CLEAN_LOG": false,
-  "CLEAN_CHECKPOINT": false,
-  "CLEAN_RESULT": false,
-  "CLEAN_MODEL": false,
-  "CLEAN_ERROR": false,
   "LIGHT_MODE": false,
   "EPOCHS_COUNT": 16,
   "BATCH_SIZE": 16
