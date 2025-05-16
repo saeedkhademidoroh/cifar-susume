@@ -4,7 +4,10 @@ from pathlib import Path
 import time
 import json
 from datetime import datetime, timezone
+import shutil
 
+# Import project-specific libraries
+from config import CONFIG
 
 # Function to log to json
 def log_to_json(path, key, record=None, error=False):
@@ -65,6 +68,35 @@ def log_to_json(path, key, record=None, error=False):
 
     # Confirm logging action
     print(f"\n📝 Logged: key='{key}', file='{log_file.name}'")
+
+
+
+# Function to clean output folders if CLEAN_MODE is enabled
+def clean_old_outputs(flag=False):
+    """
+    Deletes standard output folders before starting experiments.
+    This includes: RESULT, MODEL, LOG, ERROR, CHECKPOINT directories.
+    Triggered only if flag is True.
+    """
+    print("\n🧹 Checking CLEAN_MODE setting...")
+
+    if flag:
+        print("\n🧼 CLEAN_MODE is ON — removing output folders...\n")
+        targets = [
+            CONFIG.RESULT_PATH,
+            CONFIG.MODEL_PATH,
+            CONFIG.LOG_PATH,
+            CONFIG.ERROR_PATH,
+            CONFIG.CHECKPOINT_PATH,
+        ]
+        for path in targets:
+            if path.exists():
+                print(f"🗑️  Removing: {path}")
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                print(f"⚪ Skipped: {path} (not found)")
+    else:
+        print("\n🚫 CLEAN_MODE is OFF — skipping deletion.")
 
 
 # Print confirmation message

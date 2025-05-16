@@ -29,31 +29,46 @@ def run_pipeline(pipeline):
     # Generate timestamp for naming logs/results
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Load config for initial output path creation
+    # Pre-cleaning based on the first config in the pipeline
     first_model, first_config_name = pipeline[0]
     first_config_path = CONFIG.CONFIG_PATH / f"{first_config_name}.json"
     first_config = CONFIG.load_config(first_config_path)
 
-    # Create required folders before logging starts
+    # Create output folders if missing
     ensure_output_paths(first_config)
 
-    # Start logging and result tracking
+    # Start logging after path check
     log_file, log_stream, result_file, all_results = _initialize_logging(timestamp)
-    print(f"\n🪵 Log file ready at: {log_file}")
+    print(f"\n📝 Log file ready at: {log_file}")
 
     try:
+        # Load completed entries from result file to skip them
         completed_triplets = _load_previous_results(result_file, all_results)
+
+        # ✅ Initialize per-model run tracker
+        model_run_counter = {}
 
         # Iterate through each pipeline task
         for i, (model_number, config_name) in enumerate(pipeline):
-            print(f"\n⚙️  Pipeline Entry {i+1}/{len(pipeline)} ---")
+            print(f"\n⚙️ Pipeline Entry {i+1}/{len(pipeline)} ---")
             config_path = CONFIG.CONFIG_PATH / f"{config_name}.json"
-            result_file = _run_single_pipeline_entry(
+
+            # ✅ Track run per model (not per pipeline index)
+            if model_number not in model_run_counter:
+                model_run_counter[model_number] = 1
+            else:
+                model_run_counter[model_number] += 1
+
+            run = model_run_counter[model_number]
+
+            # Run single experiment
+            _run_single_pipeline_entry(
                 model_number=model_number,
                 config_path=config_path,
                 config_name=config_name,
-                run=i + 1,
+                run=run,
                 timestamp=timestamp,
+                completed_triplets=completed_triplets,
                 all_results=all_results,
                 result_file=result_file
             )
@@ -63,6 +78,7 @@ def run_pipeline(pipeline):
             json.dump(all_results, jf, indent=2)
 
     finally:
+        # Restore stdout and close log file
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         if log_stream:
@@ -70,7 +86,7 @@ def run_pipeline(pipeline):
 
 
 # Executes a single training run given model, config, and run ID
-def _run_single_pipeline_entry(model_number, config_path, config_name, run, timestamp, all_results, result_file):
+def _run_single_pipeline_entry(model_number, config_path, config_name, run, timestamp, completed_triplets, all_results, result_file):
     # Load dynamic configuration for this run
     config = CONFIG.load_config(config_path)
 
@@ -78,7 +94,6 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
     ensure_output_paths(config)
 
     # Skip if already completed
-    completed_triplets = _load_previous_results(result_file, all_results)
     if (model_number, run, config_name) in completed_triplets:
         print(f"\n⏩ Skipping m{model_number}_r{run} — already logged with config '{config_name}'")
         return result_file
