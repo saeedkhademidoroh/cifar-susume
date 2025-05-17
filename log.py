@@ -30,7 +30,7 @@ def log_to_json(path, key, record=None, error=False):
     """
 
     # Print header for function execution
-    print("\n🎯 log_to_json")
+    print("\n🎯  log_to_json")
 
     # Create empty record if not provided
     if record is None:
@@ -50,7 +50,7 @@ def log_to_json(path, key, record=None, error=False):
         error_file = Path(path) / f"error_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
         with open(error_file, "w") as f:
             json.dump(record, f, indent=2)
-        print(f"\n❌ Error: {error_file}")
+        print(f"\n❌ Error from log.py at log_to_json():\n{error_file}\n")
         return
 
     # Standard result logging mode
@@ -75,7 +75,7 @@ def log_to_json(path, key, record=None, error=False):
         json.dump(data, f, indent=2)
 
     # Confirm successful logging
-    print(f"\n📝 Logged: key='{key}', file='{log_file.name}'")
+    print(f"\n📝 Logging experiment result: key='{key}', file='{log_file.name}'")
 
 
 # Function to clean old outputs
@@ -94,12 +94,10 @@ def clean_old_outputs(flag=False):
     """
 
     # Print header for function execution
-    print("\n🎯 clean_old_outputs")
-
-    print("\n🧹 Checking CLEAN_MODE setting...")
+    print("\n🎯  clean_old_outputs")
 
     if flag:
-        print("\n🧼 CLEAN_MODE is ON — removing output folders...\n")
+        print("\n🧼  CLEAN_MODE is ON - Cleaning old output directories")
         targets = [
             CONFIG.RESULT_PATH,
             CONFIG.MODEL_PATH,
@@ -109,13 +107,13 @@ def clean_old_outputs(flag=False):
         ]
         for path in targets:
             if path.exists():
-                print(f"🗑️  Removing: {path}")
+                print(f"\n🗑️   Cleaning old experiment output:\n{path}")
                 shutil.rmtree(path, ignore_errors=True)
             else:
-                print(f"⚪ Skipped: {path} (not found)")
+                print(f"❌  Failing to clean old output:\n{path}")
     else:
-        print("\n🚫 CLEAN_MODE is OFF — skipping deletion.")
+        print("\n🚫 CLEAN_MODE is OFF — skipping old output directories")
 
 
 # Print module successfully executed
-print("\n✅ log.py successfully executed")
+print("\n✅  log.py successfully executed")

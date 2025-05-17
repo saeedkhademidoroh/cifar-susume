@@ -23,7 +23,7 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
     """
 
     # Print header for function execution
-    print("\n🎯 evaluate_model")
+    print("\n🎯  evaluate_model")
 
     # Fallback: attempt to load history from saved JSON if not provided
     if history is None:
@@ -38,9 +38,9 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
 
                 history = DummyHistory()
                 history.history = history_data
-                print(f"\n📄 Loaded fallback history from:\n{history_path}")
+                print(f"\n📄 Loading fallback history:\n{history_path}")
             except Exception as e:
-                print(f"\n⚠️ Failed to load fallback history:\n{e}")
+                print(f"\n⚠️ Failing to load fallback history:\n{e}")
                 history = {}
 
     # Extract metrics from training history
@@ -91,7 +91,7 @@ def extract_history_metrics(history):
     """
 
     # Print header for function execution
-    print("\n🎯 extract_history_metrics")
+    print("\n🎯  extract_history_metrics")
 
     # Convert to raw dict if History object is provided
     history = history.history if hasattr(history, "history") else history
@@ -120,4 +120,4 @@ def extract_history_metrics(history):
 
 
 # Print module successfully executed
-print("\n✅ evaluate.py successfully executed\n")
+print("\n✅  evaluate.py successfully executed")

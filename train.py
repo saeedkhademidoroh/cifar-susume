@@ -5,7 +5,7 @@ from pathlib import Path
 import pytz
 
 # Import third-party libraries
-from keras.api.callbacks import Callback, ModelCheckpoint
+from keras.api.callbacks import Callback, ModelCheckpoint, ReduceLROnPlateau
 from keras.api.models import load_model
 
 
@@ -33,7 +33,7 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     """
 
     # Print header for function execution
-    print("\n🎯 train_model")
+    print("\n🎯  train_model")
 
     # Create directory for model checkpointing
     model_checkpoint_path = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}"
@@ -58,13 +58,25 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     )
 
     # Prepare training callbacks (standard + custom recovery)
-    callbacks = _prepare_checkpoint_callback(model_checkpoint_path, verbose)
+    callbacks = _prepare_checkpoint_callback(model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
     try:
         # Only fit if no prior history recovered
         if history is None:
             model.model_id = model_number
+
+            # Print training configuration to log file before training begins
+            print("🧠  Printing training configuration:")
+            print(f"Optimizer:       {config.OPTIMIZER['type']} (lr={config.OPTIMIZER['learning_rate']})")  # Optimizer and learning rate
+            print(f"Momentum:        {config.OPTIMIZER.get('momentum', 0.0)}")                             # Momentum value (only relevant for SGD)
+            print(f"Augmentation:    {'ON' if config.AUGMENT_MODE else 'OFF'}")                         # Augmentation toggle
+            print(f"LR Scheduler:    {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}")            # Learning rate scheduler toggle
+            print(f"Early Stopping:  {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}")          # Early stopping toggle
+            print(f"Epochs:          {config.EPOCHS_COUNT}")                                           # Total training epochs
+            print(f"Batch Size:      {config.BATCH_SIZE}\n")                                             # Batch size for training
+
+            # Begin model training
             history = model.fit(
                 x=train_data,
                 y=train_labels,
@@ -115,7 +127,7 @@ def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, ru
     """
 
     # Print header for function execution
-    print("\n🎯 _resume_from_checkpoint")
+    print("\n🎯  _resume_from_checkpoint")
 
     # Define path to the stored training history
     history_file = checkpoint_path / "history.json"
@@ -126,11 +138,11 @@ def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, ru
 
     # Log resume status and handle early exit
     if resumed_model:
-        print(f"\n🔁 Resumed: epoch_{initial_epoch}")
+        print(f"\n🔁  Resuming experiment at epoch_{initial_epoch}")
 
         # If training was already completed, return early
         if initial_epoch >= config.EPOCHS_COUNT:
-            print(f"\n⏩ Training already completed for m{model_number}_r{run}_{config_name}")
+            print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
             return resumed_model, initial_epoch, None  # Early return: training complete
 
         # Attempt to load saved training history
@@ -163,7 +175,7 @@ def _split_dataset(train_data, train_labels, light_mode):
     """
 
     # Print header for function execution
-    print("\n🎯 _split_dataset")
+    print("\n🎯  _split_dataset")
 
     # Determine split size and perform slicing
     if light_mode:
@@ -194,14 +206,14 @@ def _save_training_history(history_file: Path, history_obj):
     """
 
     # Print header for function execution
-    print("\n🎯 _save_training_history")
+    print("\n🎯  _save_training_history")
 
     # Attempt to write training history to file
     try:
         with open(history_file, "w") as f:
             json.dump(history_obj.history, f)  # Serialize and write history data
     except Exception as e:
-        print(f"\n⚠️ Failed to save history:\n{e}")  # Log failure if saving fails
+        print(f"\n⚠️ Failing to save history:\n{e}")  # Log failure if saving fails
 
 
 # Class for saving model state
@@ -227,7 +239,7 @@ class RecoveryCheckpoint(Callback):
         """
 
         # Print header for constructor execution
-        print("\n🎯 __init__ (RecoveryCheckpoint)\n")
+        print("\n🎯  __init__ (RecoveryCheckpoint)\n")
 
         # Initialize the base Callback class
         super().__init__()
@@ -254,7 +266,7 @@ class RecoveryCheckpoint(Callback):
         """
 
         # Print execution header for epoch end
-        print("\n🎯 on_epoch_end")
+        print("\n🎯  on_epoch_end")
 
         # Save model after this epoch
         self.model.save(self.model_path)
@@ -264,54 +276,93 @@ class RecoveryCheckpoint(Callback):
             json.dump({"initial_epoch": epoch + 1}, f)
 
         # Confirm checkpoint write
-        print(f"\n💾 Checkpoint: epoch_{epoch + 1}\n")
+        print(f"\n💾  Checkpointing experiment at epoch_{epoch + 1}\n")
 
         # Print timestamp for freeze detection
-        print(f"🕒 Time: {datetime.datetime.now(pytz.timezone('Asia/Tehran')).strftime('%H:%M')}\n")
+        print(f"🕒  Recording time at {datetime.datetime.now(pytz.timezone('Asia/Tehran')).strftime('%H:%M')}\n")
 
 
-
-# Function to prepare checkpoint callback
-def _prepare_checkpoint_callback(model_checkpoint_path: Path, verbose: int):
+# Function to prepare checkpoint, LR scheduling, and early stopping callbacks
+def _prepare_checkpoint_callback(model_checkpoint_path: Path, config):
     """
-    Creates a list of Keras ModelCheckpoint callbacks:
-      - One for saving the best model based on validation accuracy.
-      - One for saving a model at the end of every epoch.
+    Creates a list of Keras callbacks:
+    - Saves the best model based on validation accuracy
+    - Saves a model after each epoch
+    - Reduces LR when validation accuracy plateaus (if SCHEDULE_MODE is enabled)
+    - Stops training early if validation stagnates (if EARLY_STOP_MODE is enabled)
 
     Args:
-        model_checkpoint_path (Path): Directory where models will be saved.
-        verbose (int): Verbosity level for checkpoint logging.
+        model_checkpoint_path (Path): Output directory for model checkpoints
+        config (Config): Configuration object containing SCHEDULE_MODE and EARLY_STOP_MODE blocks
 
     Returns:
-        list: A list of Keras callback objects.
+        list: A list of Keras callback objects
     """
 
     # Print header for function execution
-    print("\n🎯 _prepare_checkpoint_callback")
+    print("\n🎯  _prepare_checkpoint_callback")
 
-    # Define file paths for saving best and per-epoch models
-    best_model_path = model_checkpoint_path / "best.keras"
-    per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"
+    # Define checkpoint file paths
+    best_model_path = model_checkpoint_path / "best.keras"               # best-performing model
+    per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"   # all models per epoch
 
-    # Return list of ModelCheckpoint callbacks
-    return [
-        # Save the best model according to validation accuracy
+    # Extract verbosity levels for both scheduler and early stop
+    verbose_lr = config.SCHEDULE_MODE.get("verbose", 1)
+    verbose_es = config.EARLY_STOP_MODE.get("verbose", 1)
+
+    # Initialize callback list with core checkpointing callbacks
+    callbacks = [
+        # Save only the best model based on validation accuracy
         ModelCheckpoint(
             filepath=best_model_path,
-            monitor='val_accuracy',
+            monitor="val_accuracy",
             save_best_only=True,
             save_weights_only=False,
-            verbose=verbose
+            verbose=verbose_lr
         ),
 
-        # Save a model at the end of every epoch
+        # Save model at the end of every epoch regardless of performance
         ModelCheckpoint(
             filepath=per_epoch_path,
             save_best_only=False,
             save_weights_only=False,
-            verbose=verbose
+            verbose=verbose_lr
         )
     ]
+
+    # Append ReduceLROnPlateau if SCHEDULE_MODE is enabled
+    if config.SCHEDULE_MODE.get("enabled", False):
+        from keras.api.callbacks import ReduceLROnPlateau
+
+        # Dynamically reduce learning rate when performance stagnates
+        reduce_lr = ReduceLROnPlateau(
+            monitor=config.SCHEDULE_MODE.get("monitor", "val_accuracy"),  # metric to watch
+            factor=config.SCHEDULE_MODE.get("factor", 0.5),               # LR decay factor
+            patience=config.SCHEDULE_MODE.get("patience", 3),             # how many stagnant epochs before decay
+            min_lr=config.SCHEDULE_MODE.get("min_lr", 1e-5),              # LR floor
+            verbose=verbose_lr                                            # verbosity
+        )
+
+        # Add LR scheduler to callback list
+        callbacks.append(reduce_lr)
+
+    # Append EarlyStopping if EARLY_STOP_MODE is enabled
+    if config.EARLY_STOP_MODE.get("enabled", False):
+        from keras.api.callbacks import EarlyStopping
+
+        # Stop training early if no improvement after X epochs
+        early_stop = EarlyStopping(
+            monitor=config.EARLY_STOP_MODE.get("monitor", "val_accuracy"),          # metric to watch
+            patience=config.EARLY_STOP_MODE.get("patience", 5),                     # how long to wait before stopping
+            restore_best_weights=config.EARLY_STOP_MODE.get("restore_best_weights", True),  # reload best model
+            verbose=verbose_es
+        )
+
+        # Add early stopping to callback list
+        callbacks.append(early_stop)
+
+    # Return the full list of callbacks
+    return callbacks
 
 
 # Function to resume model from checkpoint
@@ -329,7 +380,7 @@ def _load_from_checkpoint(model_checkpoint_path: Path):
     """
 
     # Print header for function execution
-    print("\n🎯 _load_from_checkpoint")
+    print("\n🎯  _load_from_checkpoint")
 
     # Define paths to the saved model and training state
     state_path = model_checkpoint_path / "state.json"
@@ -351,6 +402,5 @@ def _load_from_checkpoint(model_checkpoint_path: Path):
     return None, 0
 
 
-
 # Print confirmation message
-print("\n✅ train.py successfully executed")
+print("\n✅  train.py successfully executed")

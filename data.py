@@ -1,7 +1,7 @@
 # Import third-party libraries
 import numpy as np
-from torchvision import datasets
-
+from torchvision import datasets, transforms
+from torchvision import transforms
 
 # Function to load dataset for model 5
 def _load_dataset_m5(config):
@@ -34,17 +34,19 @@ def _load_dataset_m0(config):
     Function to load and preprocess the CIFAR-10 dataset.
 
     Loads CIFAR-10 from the specified data path, normalizes pixel values,
-    and trims the dataset based on LIGHT_MODE flag.
+    and trims the dataset based on LIGHT_MODE flag. Optionally applies
+    data augmentation to training samples if augment=True.
 
     Args:
         config (Config): Configuration object containing DATA_PATH and LIGHT_MODE
+        augment (bool): Whether to apply data augmentation on training set
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
     # Print header for function execution
-    print(f"\n🎯 _load_dataset_m0")
+    print(f"\n🎯  _load_dataset_m0")
 
     # Download CIFAR-10 dataset
     train_set = datasets.CIFAR10(root=config.DATA_PATH, train=True, download=True)
@@ -69,6 +71,10 @@ def _load_dataset_m0(config):
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
+    # Apply augmentation if enabled
+    if config.AUGMENT_MODE:
+        train_data = _augment_dataset(train_data)
+
     # Return processed dataset
     return train_data, train_labels, test_data, test_labels
 
@@ -91,7 +97,7 @@ def dispatch_load_dataset(model_number, config):
     """
 
     # Print header for function execution
-    print("\n🎯 dispatch_load_dataset")
+    print("\n🎯  dispatch_load_dataset")
 
     try:
         # Dynamically resolve the dataset loader function by model number
@@ -100,8 +106,44 @@ def dispatch_load_dataset(model_number, config):
 
     except KeyError:
         # Raise clear error if the loader function is not defined
-        raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
+        raise ValueError(f"❌ ValueError from data.py at dispatch_load_dataset():\nmodel_number={model_number}\n")
+
+
+# Function to apply torchvision-style augmentations to a NumPy image batch
+def _augment_dataset(images):
+    """
+    Applies CIFAR-10 style augmentation using torchvision.transforms.
+
+    Augmentations:
+    - Random crop with padding
+    - Random horizontal flip
+    - Color jitter (brightness and contrast)
+
+    Args:
+        images (np.ndarray): Array of images (float32 in [0, 1], shape: [N, 32, 32, 3])
+
+    Returns:
+        np.ndarray: Augmented images (same shape)
+    """
+
+    # Print header for function execution
+    print("\n🎯  _augment_dataset")
+
+    # Define CIFAR-10 augmentation pipeline
+    transform = transforms.Compose([
+        transforms.ToPILImage(),                              # Convert to PIL for torchvision compatibility
+        transforms.RandomCrop(32, padding=4),                 # Random crop with padding
+        transforms.RandomHorizontalFlip(),                    # Random horizontal flip
+        transforms.ColorJitter(brightness=0.1, contrast=0.1), # Slight brightness and contrast jitter
+        transforms.ToTensor()                                 # Convert back to tensor [C, H, W]
+    ])
+
+    # Apply augmentation to each image and restore [H, W, C] format
+    augmented = [transform(img).permute(1, 2, 0).numpy() for img in images]
+
+    # Return stacked NumPy array with same shape as input
+    return np.stack(augmented, axis=0)
 
 
 # Print module successfully executed
-print("\n✅ data.py successfully executed")
+print("\n✅  data.py successfully executed")

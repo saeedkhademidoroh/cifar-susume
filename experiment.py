@@ -1,19 +1,17 @@
 # Import standard libraries
-import shutil
 import datetime
 import sys
 import json
 import time
 import traceback
-from pathlib import Path
 
 # Import project-specific libraries
 from config import CONFIG
 from data import dispatch_load_dataset
 from evaluate import extract_history_metrics
+from log import log_to_json
 from model import build_model
 from train import train_model
-from log import log_to_json
 
 
 # Function to run all experiments in pipeline
@@ -35,7 +33,7 @@ def run_pipeline(pipeline):
     """
 
     # Print header for function execution
-    print("\n🎯 run_pipeline")
+    print("\n🎯  run_pipeline")
 
     # Generate timestamp for consistent filenames
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -45,12 +43,8 @@ def run_pipeline(pipeline):
     first_config_path = CONFIG.CONFIG_PATH / f"{first_config_name}.json"
     first_config = CONFIG.load_config(first_config_path)
 
-    # Ensure output directories exist
-    _ensure_output_directories(first_config)
-
     # Initialize logging and result tracking
     log_file, log_stream, result_file, all_results = _initialize_logging(timestamp)
-    print(f"\n📜 Log file ready at: {log_file}")
 
     try:
         # Load previously completed (model, config) combinations
@@ -61,7 +55,7 @@ def run_pipeline(pipeline):
 
         # Loop through each (model_number, config_name) in the pipeline
         for i, (model_number, config_name) in enumerate(pipeline):
-            print(f"\n⚙️ Pipeline Entry {i+1}/{len(pipeline)} ---")
+            print(f"\n⚙️   Piplining experiment {i+1}/{len(pipeline)}")
 
             # Build full path to the selected config file
             config_path = CONFIG.CONFIG_PATH / f"{config_name}.json"
@@ -122,7 +116,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
     """
 
     # Print header for function execution
-    print("\n🎯 _run_single_pipeline_entry")
+    print("\n🎯  _run_single_pipeline_entry")
 
     # Load dynamic configuration for this run
     config = CONFIG.load_config(config_path)
@@ -132,11 +126,11 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
     # Skip if already completed
     if (model_number, run, config_name) in completed_triplets:
-        print(f"\n⏩ Skipping m{model_number}_r{run} — already logged with config '{config_name}'")
+        print(f"\n⏩  Skipping experiment m{model_number}_r{run} with '{config_name}'")
         return result_file  # Return early since result already exists
 
     # Announce launch
-    print(f"\n🚀 Launching m{model_number}_r{run} with '{config_name}'")
+    print(f"\n🚀  Launching experiment m{model_number}_r{run} with '{config_name}'")
     start_time = time.time()
 
     try:
@@ -144,7 +138,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
         train_data, train_labels, test_data, test_labels = dispatch_load_dataset(model_number, config)
 
         # Build model architecture
-        model = build_model(model_number)
+        model = build_model(model_number, config)
 
         # Train model (resumable)
         trained_model, history, resumed = train_model(
@@ -174,7 +168,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
         )
 
         # Print summary to console
-        print("\n📊 Summary JSON:")
+        print("\n📊  Dumping experiment results:")
         print(json.dumps([evaluation], indent=2))
 
         # Append to in-memory result list and save to disk
@@ -182,7 +176,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
         with open(result_file, "w") as jf:
             json.dump(all_results, jf, indent=2)
 
-        print(f"\n✅ m{model_number} run {run} completed and result logged")
+        print(f"\n✅   m{model_number} run {run} with '{config_name}' successfully executed")
 
     except Exception as e:
         # On failure, log error details to error file
@@ -217,7 +211,7 @@ def _load_previous_results(result_file, all_results):
     """
 
     # Print header for function execution
-    print("\n🎯 _load_previous_results")
+    print("\n🎯  _load_previous_results")
 
     if result_file.exists():
         with open(result_file, "r") as jf:
@@ -256,7 +250,7 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
     """
 
     # Print header for function execution
-    print("\n🎯 _create_evaluation_dictionary")
+    print("\n🎯  _create_evaluation_dictionary")
 
     return {
         "model": model_number,
@@ -267,7 +261,13 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
         "duration": str(datetime.timedelta(seconds=int(duration))),
         "parameters": {
             "EPOCHS_COUNT": config.EPOCHS_COUNT,
-            "BATCH_SIZE": config.BATCH_SIZE
+            "BATCH_SIZE": config.BATCH_SIZE,
+            "OPTIMIZER_TYPE": config.OPTIMIZER["type"],
+            "LEARNING_RATE": config.OPTIMIZER["learning_rate"],
+            "MOMENTUM": config.OPTIMIZER.get("momentum", 0.0),
+            "AUGMENT_MODE": config.AUGMENT_MODE,
+            "SCHEDULE_MODE": config.SCHEDULE_MODE["enabled"],
+            "EARLY_STOP_MODE": config.EARLY_STOP_MODE["enabled"]
         },
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
@@ -279,7 +279,7 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
         "max_val_acc_epoch": metrics.get("max_val_acc_epoch"),
         "final_test_loss": test_loss,
         "final_test_acc": test_accuracy
-    }  # Return complete result dictionary for evaluation logging
+    }
 
 
 # Function to recover training history
@@ -301,7 +301,7 @@ def _recover_training_history(config, model_number, run, config_name):
     """
 
     # Print header for function execution
-    print("\n🎯 _recover_training_history")
+    print("\n🎯  _recover_training_history")
 
     history_file = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}/history.json"
 
@@ -314,9 +314,9 @@ def _recover_training_history(config, model_number, run, config_name):
                 h.history = history_data
                 return h  # Return dummy object with recovered history
         except Exception as e:
-            print(f"\n⚠️  Failed to load or parse history:\n{e}")
+            print(f"\n⚠️  Failing to recover training history:\n{e}")
     else:
-        print(f"\n⚠️  No history file found for m{model_number}_r{run}_{config_name}")
+        print(f"\n⚠️  Failing to find history for m{model_number}_r{run}_{config_name}")
 
     return {}  # Return empty dict as fallback if recovery fails
 
@@ -337,7 +337,7 @@ def _initialize_logging(timestamp):
     """
 
     # Print header for function execution
-    print("\n🎯 _initialize_logging")
+    print("\n🎯  _initialize_logging")
 
     # Ensure log directory exists
     CONFIG.LOG_PATH.mkdir(parents=True, exist_ok=True)
@@ -351,7 +351,7 @@ def _initialize_logging(timestamp):
     sys.stderr = Tee(sys.__stderr__, log_stream)
 
     # Confirm logging path
-    print(f"\n📜 Logging:\n{log_file}", flush=True)
+    print(f"\n📜  Logging experiment output:\n{log_file}", flush=True)
 
     # Ensure result directory exists and define result file path
     CONFIG.RESULT_PATH.mkdir(parents=True, exist_ok=True)
@@ -377,7 +377,7 @@ def _ensure_output_directories(config):
     """
 
     # Print header for function execution
-    print("\n🎯 _ensure_output_directories")
+    print("\n🎯  _ensure_output_directories")
 
     # Iterate through each required directory path and ensure it exists
     for path in [
@@ -388,7 +388,7 @@ def _ensure_output_directories(config):
         config.ERROR_PATH
     ]:
         path.mkdir(parents=True, exist_ok=True)  # Create directory if missing
-        print(f"\n📂 Ensured:\n{path}")  # Confirm creation or existence
+        print(f"\n📂  Ensuring output directories:\n{path}")  # Confirm creation or existence
 
 
 # # Class for parallel writing in stdout and log
@@ -434,4 +434,4 @@ class Tee:
 
 
 # Print module confirmation
-print("\n✅ experiment.py successfully executed")
+print("\n✅  experiment.py successfully executed")
