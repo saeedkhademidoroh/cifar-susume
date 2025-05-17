@@ -4,16 +4,16 @@ from pathlib import Path
 import json
 
 
-# Dataclass for immutable config
+# Class for immutable configuration
 @dataclass(frozen=True)
 class Config:
     """
     Immutable configuration object for the CIFAR experiment system.
 
-    This dataclass is loaded from a config.json file at runtime and contains:
-    - Paths for data, logs, results, and checkpoints
+    Loaded from a config.json file, it contains:
+    - Directory paths for data, logs, results, and checkpoints
     - Training hyperparameters
-    - Flags to control runtime mode
+    - Execution mode flags
     """
 
     CONFIG_PATH: Path
@@ -27,35 +27,56 @@ class Config:
     BATCH_SIZE: int
     LIGHT_MODE: bool
 
-    # Function to load configuration file
+    # Function to load configuration from file
     @staticmethod
     def load_config(path: Path) -> "Config":
         """
-        Loads configuration from a user-defined .json file
+        Function to load configuration from a JSON file.
+
+        Loads and parses the specified config.json file, resolves its path,
+        and constructs an immutable Config dataclass.
+
+        Args:
+            path (Path): Full path to the JSON configuration file.
+
+        Returns:
+            Config: An initialized and validated Config dataclass instance.
         """
 
         # Print header for function execution
         print("\n🎯 load_config")
 
-
+        # Announce which file is being loaded
         print(f"\n📂 Loading custom configuration:\n{path}")
+
+        # Get the parent directory of the config path
         base_path = path.parent
+
+        # Read the config JSON into a dictionary
         with open(path, "r") as f:
             config_data = json.load(f)
-        return Config._from_dict(config_data, base_path)
+
+        # Return validated and resolved Config object
+        return Config._from_dict(config_data, base_path)  # Return initialized config object
 
 
-    # Function to construct config object
+
+    # Function to initialize Config object from dictionary
     @staticmethod
     def _from_dict(config_data: dict, base_path: Path) -> "Config":
         """
-        Internal shared method to construct the Config object from a dictionary and base path.
+        Function to build a Config instance from a dictionary.
+
+        Args:
+            config_data (dict): Parsed JSON dictionary
+            base_path (Path): Base directory for resolving relative paths
+
+        Returns:
+            Config: Fully populated configuration object
         """
 
-        # Validate required keys
+        # Define required keys for validation
         required_keys = [
-
-            # Paths
             "CONFIG_PATH",
             "DATA_PATH",
             "LOG_PATH",
@@ -63,24 +84,20 @@ class Config:
             "RESULT_PATH",
             "MODEL_PATH",
             "ERROR_PATH",
-
-            # Parameters
             "EPOCHS_COUNT",
             "BATCH_SIZE",
-
-            # Modes
             "LIGHT_MODE"
         ]
 
-        # Check for missing keys
+        # Validate all required keys are present
         missing = [key for key in required_keys if key not in config_data]
         if missing:
             raise ValueError(f"❌ ValueError:\nmissing={missing}\n")
 
-        # Resolve all paths relative to the project root
+        # Resolve all paths relative to module location
         root_path = Path(__file__).parent
 
-        # Return populated frozen dataclass
+        # Return immutable configuration object
         return Config(
             CONFIG_PATH=root_path / config_data["CONFIG_PATH"],
             DATA_PATH=root_path / config_data["DATA_PATH"],
@@ -99,5 +116,6 @@ class Config:
 default_path = Path(__file__).parent / "artifact/config/default.json"
 CONFIG = Config.load_config(default_path)
 
-# Print module successfuly executed
+
+# Print module successfully executed
 print("\n✅ config.py successfully executed")

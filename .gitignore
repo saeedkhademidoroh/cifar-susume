@@ -1,7 +1,7 @@
-# Ignore Python cache files
+# Ignore python caches
 __pycache__/
 
-# Ignore all artifacts
+# Ignore listed artifacts
 artifact/checkpoint
 artifact/data
 artifact/error

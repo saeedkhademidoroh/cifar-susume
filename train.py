@@ -1,16 +1,21 @@
 # Import standard libraries
+import datetime
 import json
 from pathlib import Path
+import pytz
 
 # Import third-party libraries
 from keras.api.callbacks import Callback, ModelCheckpoint
 from keras.api.models import load_model
 
 
-# Function to train a model with checkpointing and optional resumption
+# Function to train a model
 def train_model(train_data, train_labels, model, model_number, run, config_name, timestamp, config, verbose=2):
     """
     Trains a model using given data and logs all key metrics after training.
+
+    If a checkpoint exists, training resumes from the last saved epoch.
+    Stores final model and history to disk.
 
     Args:
         train_data (np.ndarray): Training images.
@@ -30,34 +35,34 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     # Print header for function execution
     print("\n🎯 train_model")
 
-    # Create model checkpoint directory for saving progress and results
+    # Create directory for model checkpointing
     model_checkpoint_path = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}"
     model_checkpoint_path.mkdir(parents=True, exist_ok=True)
 
-    # Attempt to load model and training history if a checkpoint exists
+    # Attempt to resume training from checkpoint if available
     resumed_model, initial_epoch, history = _resume_from_checkpoint(
         model_checkpoint_path, config, model_number, run, config_name
     )
 
-    # If training was already completed (resumed model with no need to train), return early
+    # If model was resumed and training is already complete, skip training
     if resumed_model is not None and history is None:
-        return resumed_model, None, True
+        return resumed_model, None, True  # Return early with resumed model and no new training
 
-    # If a model was successfully resumed, use it; otherwise keep the passed-in model
+    # Use the resumed model if available
     if resumed_model is not None:
         model = resumed_model
 
-    # Partition dataset into training and validation sets
-    train_data, train_labels, val_data, val_labels = _split_train_validation(
+    # Partition dataset into train/validation subsets
+    train_data, train_labels, val_data, val_labels = _split_dataset(
         train_data, train_labels, config.LIGHT_MODE
     )
 
-    # Prepare list of training callbacks
-    callbacks = get_checkpoint_callbacks(model_checkpoint_path, verbose)
+    # Prepare training callbacks (standard + custom recovery)
+    callbacks = _prepare_checkpoint_callback(model_checkpoint_path, verbose)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
-    # Begin training only if history was not previously resumed
     try:
+        # Only fit if no prior history recovered
         if history is None:
             model.model_id = model_number
             history = model.fit(
@@ -70,107 +75,157 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
                 verbose=verbose,
                 initial_epoch=initial_epoch
             )
-            # Save training history after successful training
+            # Save full history after training completes
             _save_training_history(model_checkpoint_path / "history.json", history)
 
-    # If training fails mid-run, save partial history if available
     except Exception as e:
+        # On failure, attempt to save partial history if available
         if hasattr(model, "history") and model.history:
             _save_training_history(model_checkpoint_path / "history.json", model.history)
         raise e
 
-    # Save final trained model
+    # Save the trained model to disk
     model_path = config.MODEL_PATH / f"m{model_number}_r{run}_{config_name}.keras"
     model_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_path)
 
-    return model, history, False
+    return model, history, False  # Return fully trained model, history, and resumption flag
 
 
-# Resume training from checkpoint if available
+# Function to resume training from checkpoint if available
 def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, run: int, config_name: str):
+    """
+    Attempts to resume training from a saved checkpoint and training history.
+
+    If a valid checkpoint and training history file are found, this function loads
+    the saved model, restores the training epoch, and reattaches the history.
+
+    Args:
+        checkpoint_path (Path): Directory where checkpoint files are stored.
+        config (Config): Configuration object with training parameters.
+        model_number (int): Model identifier.
+        run (int): Run ID number.
+        config_name (str): Configuration name used for this run.
+
+    Returns:
+        tuple:
+            - resumed_model (Model or None): Loaded Keras model if resume was possible.
+            - initial_epoch (int): Epoch to resume from.
+            - history (object or None): Dummy object with training history.
+    """
+
+    # Print header for function execution
+    print("\n🎯 _resume_from_checkpoint")
+
+    # Define path to the stored training history
     history_file = checkpoint_path / "history.json"
-    resumed_model, initial_epoch = load_training_state(checkpoint_path)
+
+    # Load model and resume epoch if checkpoint exists
+    resumed_model, initial_epoch = _load_from_checkpoint(checkpoint_path)
     history = None
 
-    # Log resume status
+    # Log resume status and handle early exit
     if resumed_model:
         print(f"\n🔁 Resumed: epoch_{initial_epoch}")
+
+        # If training was already completed, return early
         if initial_epoch >= config.EPOCHS_COUNT:
             print(f"\n⏩ Training already completed for m{model_number}_r{run}_{config_name}")
-            return resumed_model, initial_epoch, None
+            return resumed_model, initial_epoch, None  # Early return: training complete
 
-        # Try loading history
+        # Attempt to load saved training history
         if history_file.exists():
             with open(history_file, "r") as f:
                 history_data = json.load(f)
                 class DummyHistory: pass
                 history = DummyHistory()
-                history.history = history_data
+                history.history = history_data  # Attach history data to dummy object
 
-    return None, initial_epoch, history
+    return None if not resumed_model else resumed_model, initial_epoch, history  # Return resume state
 
 
-# Helper function: split dataset into training and validation sets
-def _split_train_validation(train_data, train_labels, light_mode):
+# Function to split dataset
+def _split_dataset(train_data, train_labels, light_mode):
     """
     Splits the dataset into training and validation sets.
+
+    If light_mode is enabled, uses 20% of the dataset for validation.
+    Otherwise, reserves the last 5000 samples.
 
     Args:
         train_data (np.ndarray): Input training data.
         train_labels (np.ndarray): Labels for the training data.
-        light_mode (bool): If True, use 20% of data as validation; otherwise use last 5000 samples.
+        light_mode (bool): If True, use 20% of data as validation;
+                           otherwise use last 5000 samples.
 
     Returns:
         tuple: (train_data, train_labels, val_data, val_labels)
     """
 
-    # Determine validation size based on LIGHT_MODE
+    # Print header for function execution
+    print("\n🎯 _split_dataset")
+
+    # Determine split size and perform slicing
     if light_mode:
-        val_split = int(0.2 * len(train_data))
+        val_split = int(0.2 * len(train_data))  # Use 20% for validation
         val_data = train_data[-val_split:]
         val_labels = train_labels[-val_split:]
         train_data = train_data[:-val_split]
         train_labels = train_labels[:-val_split]
     else:
-        val_data = train_data[-5000:]
+        val_data = train_data[-5000:]  # Fixed-size validation set
         val_labels = train_labels[-5000:]
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
-    # Return split dataset
-    return train_data, train_labels, val_data, val_labels
+    return train_data, train_labels, val_data, val_labels  # Return split subsets
 
 
-# Helper function: save history object to disk
+# Function to save training history
 def _save_training_history(history_file: Path, history_obj):
     """
     Saves the Keras training history to a specified JSON file.
+
+    Converts the History object to a dictionary and writes it to disk.
 
     Args:
         history_file (Path): Path to the history JSON file.
         history_obj (History): Keras History object containing training metrics.
     """
 
+    # Print header for function execution
+    print("\n🎯 _save_training_history")
+
     # Attempt to write training history to file
     try:
         with open(history_file, "w") as f:
-            json.dump(history_obj.history, f)
+            json.dump(history_obj.history, f)  # Serialize and write history data
     except Exception as e:
-        print(f"\n⚠️ Failed to save history:\n{e}")
+        print(f"\n⚠️ Failed to save history:\n{e}")  # Log failure if saving fails
 
 
-# Callback class to save model and state.json after each epoch
+# Class for saving model state
 class RecoveryCheckpoint(Callback):
     """
     Custom Keras Callback that saves the model and a JSON state file after each epoch.
-    Used to enable training resumption from the last completed epoch.
+
+    This ensures that training progress can be resumed from the last saved state.
 
     Args:
         checkpoint_path (Path): Directory to store model and state.
     """
 
     def __init__(self, checkpoint_path: Path):
+        """
+        Constructor for the RecoveryCheckpoint callback.
+
+        Sets up the checkpoint directory and target paths for saving the model
+        and training state after each epoch.
+
+        Args:
+            checkpoint_path (Path): Directory to save model and state.
+        """
+
         # Print header for constructor execution
         print("\n🎯 __init__ (RecoveryCheckpoint)\n")
 
@@ -211,9 +266,13 @@ class RecoveryCheckpoint(Callback):
         # Confirm checkpoint write
         print(f"\n💾 Checkpoint: epoch_{epoch + 1}\n")
 
+        # Print timestamp for freeze detection
+        print(f"🕒 Time: {datetime.datetime.now(pytz.timezone('Asia/Tehran')).strftime('%H:%M')}\n")
 
-# Function to prepare callbacks that save best model and per-epoch models
-def get_checkpoint_callbacks(model_checkpoint_path: Path, verbose: int):
+
+
+# Function to prepare checkpoint callback
+def _prepare_checkpoint_callback(model_checkpoint_path: Path, verbose: int):
     """
     Creates a list of Keras ModelCheckpoint callbacks:
       - One for saving the best model based on validation accuracy.
@@ -228,7 +287,7 @@ def get_checkpoint_callbacks(model_checkpoint_path: Path, verbose: int):
     """
 
     # Print header for function execution
-    print("\n🎯 get_checkpoint_callbacks")
+    print("\n🎯 _prepare_checkpoint_callback")
 
     # Define file paths for saving best and per-epoch models
     best_model_path = model_checkpoint_path / "best.keras"
@@ -255,8 +314,8 @@ def get_checkpoint_callbacks(model_checkpoint_path: Path, verbose: int):
     ]
 
 
-# Function to resume model and epoch number from previously saved checkpoint
-def load_training_state(model_checkpoint_path: Path):
+# Function to resume model from checkpoint
+def _load_from_checkpoint(model_checkpoint_path: Path):
     """
     Attempts to resume training by loading the latest saved model and training state.
 
@@ -270,7 +329,7 @@ def load_training_state(model_checkpoint_path: Path):
     """
 
     # Print header for function execution
-    print("\n🎯 load_training_state")
+    print("\n🎯 _load_from_checkpoint")
 
     # Define paths to the saved model and training state
     state_path = model_checkpoint_path / "state.json"

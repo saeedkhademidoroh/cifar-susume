@@ -6,32 +6,40 @@ import json
 from datetime import datetime, timezone
 import shutil
 
+
 # Import project-specific libraries
 from config import CONFIG
 
-# Function to log to json
+
+# Function to log structured data to JSON
 def log_to_json(path, key, record=None, error=False):
     """
-    Logs a dictionary to a JSON file.
+    Function to log structured data to a JSON file.
+
+    Handles both standard result logging and timestamped error logging.
+    Automatically adds a UTC timestamp to the record if not present.
 
     Args:
-        path (Path or str): Directory where log should be written.
-        key (str): Top-level key in result.json (ignored for error logs).
-        record (dict): Dictionary of information to log.
-        error (bool): If True, logs to a separate error_<timestamp>.json file.
+        path (Path or str): Target directory for the log file.
+        key (str): Top-level key in result.json (ignored if error=True).
+        record (dict, optional): Data to log (default is empty dict).
+        error (bool): If True, creates a timestamped error_<timestamp>.json file.
+
+    Returns:
+        None
     """
 
     # Print header for function execution
     print("\n🎯 log_to_json")
 
-    # Create empty record if none is provided
+    # Create empty record if not provided
     if record is None:
         record = {}
 
-    # Ensure the directory exists
+    # Ensure target directory exists
     os.makedirs(path, exist_ok=True)
 
-    # Automatically attach timestamp metadata if missing
+    # Auto-append timestamps if missing
     if "timestamp" not in record:
         ts = time.time()
         record["timestamp"] = ts
@@ -45,39 +53,49 @@ def log_to_json(path, key, record=None, error=False):
         print(f"\n❌ Error: {error_file}")
         return
 
-    # Handle standard result logging mode
+    # Standard result logging mode
     log_file = Path(path) / "result.json"
 
-    # Load existing log file or start new
+    # Load or initialize result file
     if log_file.exists():
         with open(log_file, "r") as f:
             data = json.load(f)
     else:
         data = {}
 
-    # Create new list for key if not already present
+    # Initialize log list under key if needed
     if key not in data:
         data[key] = []
 
-    # Append new record under key
+    # Append new record
     data[key].append(record)
 
-    # Write updated log to disk
+    # Save updated log
     with open(log_file, "w") as f:
         json.dump(data, f, indent=2)
 
-    # Confirm logging action
+    # Confirm successful logging
     print(f"\n📝 Logged: key='{key}', file='{log_file.name}'")
 
 
-
-# Function to clean output folders if CLEAN_MODE is enabled
+# Function to clean old outputs
 def clean_old_outputs(flag=False):
     """
-    Deletes standard output folders before starting experiments.
-    This includes: RESULT, MODEL, LOG, ERROR, CHECKPOINT directories.
-    Triggered only if flag is True.
+    Function to clean output folders if CLEAN_MODE is enabled.
+
+    Deletes RESULT, MODEL, LOG, ERROR, and CHECKPOINT directories.
+    Only triggered if flag is True.
+
+    Args:
+        flag (bool): Whether to perform cleanup
+
+    Returns:
+        None
     """
+
+    # Print header for function execution
+    print("\n🎯 clean_old_outputs")
+
     print("\n🧹 Checking CLEAN_MODE setting...")
 
     if flag:
@@ -99,5 +117,5 @@ def clean_old_outputs(flag=False):
         print("\n🚫 CLEAN_MODE is OFF — skipping deletion.")
 
 
-# Print confirmation message
+# Print module successfully executed
 print("\n✅ log.py successfully executed")

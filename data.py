@@ -3,46 +3,54 @@ import numpy as np
 from torchvision import datasets
 
 
-# Function to load dataset
-def load_dataset_m4(config):
-    return load_dataset_m0(config)
+# Function to load dataset for model 5
+def _load_dataset_m5(config):
+    return _load_dataset_m0(config)
 
 
-# Function to load dataset
-def load_dataset_m3(config):
-    return load_dataset_m0(config)
+# Function to load dataset for model 4
+def _load_dataset_m4(config):
+    return _load_dataset_m0(config)
 
 
-# Function to load dataset
-def load_dataset_m2(config):
-    return load_dataset_m0(config)
+# Function to load dataset for model 3
+def _load_dataset_m3(config):
+    return _load_dataset_m0(config)
 
 
-# Function to load dataset
-def load_dataset_m1(config):
-    return load_dataset_m0(config)
+# Function to load dataset for model 2
+def _load_dataset_m2(config):
+    return _load_dataset_m0(config)
 
 
-# Function to load dataset
-def load_dataset_m0(config):
+# Function to load dataset for model 1
+def _load_dataset_m1(config):
+    return _load_dataset_m0(config)
+
+
+# Function to load dataset for model 0 (shared logic)
+def _load_dataset_m0(config):
     """
-    Loads CIFAR-10, normalizes pixel values, and optionally trims for LIGHT_MODE.
+    Function to load and preprocess the CIFAR-10 dataset.
+
+    Loads CIFAR-10 from the specified data path, normalizes pixel values,
+    and trims the dataset based on LIGHT_MODE flag.
 
     Args:
-        config (Config): Configuration object with DATA_PATH and LIGHT_MODE.
+        config (Config): Configuration object containing DATA_PATH and LIGHT_MODE
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
     # Print header for function execution
-    print(f"\n🎯 load_dataset_m0")
+    print(f"\n🎯 _load_dataset_m0")
 
-    # Load CIFAR-10 training and test sets
+    # Download CIFAR-10 dataset
     train_set = datasets.CIFAR10(root=config.DATA_PATH, train=True, download=True)
     test_set = datasets.CIFAR10(root=config.DATA_PATH, train=False, download=True)
 
-    # Normalize image pixel values to range [0, 1]
+    # Normalize pixel values to [0, 1]
     train_data = train_set.data.astype(np.float32) / 255.0
     test_data = test_set.data.astype(np.float32) / 255.0
 
@@ -50,46 +58,50 @@ def load_dataset_m0(config):
     train_labels = np.array(train_set.targets)
     test_labels = np.array(test_set.targets)
 
-    # Reduce dataset size for local/light runs
+    # Subsample if LIGHT_MODE is enabled
     if config.LIGHT_MODE:
         train_data = train_data[:1000]
         train_labels = train_labels[:1000]
         test_data = test_data[:200]
         test_labels = test_labels[:200]
     else:
-        # Use all but last 5000 as training
+        # Exclude last 5000 training samples
         train_data = train_data[:-5000]
         train_labels = train_labels[:-5000]
 
-    # Return dataset split as train and test
+    # Return processed dataset
     return train_data, train_labels, test_data, test_labels
 
 
+# Function to dispatch dataset loader by model number
 def dispatch_load_dataset(model_number, config):
     """
-    Routes dataset loading based on model number.
+    Function to route dataset loading based on the model variant number.
+
+    Dynamically constructs the appropriate function name (e.g., load_dataset_m2)
+    and invokes it using the global namespace. Raises ValueError if the function
+    is not defined.
 
     Args:
-        model_number (int): Model variant identifier (e.g., 1, 2)
-        config (Config): Configuration object to use
+        model_number (int): Model identifier (e.g., 0 to 5)
+        config (Config): Configuration object to pass to the loader
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
     # Print header for function execution
-    print(f"\n🎯 dispatch_load_dataset")
+    print("\n🎯 dispatch_load_dataset")
 
-    # Resolve the appropriate function dynamically from globals by name
     try:
-        # Construct the loader function name dynamically based on model number
-        loader_fn = globals()[f"load_dataset_m{model_number}"]
+        # Dynamically resolve the dataset loader function by model number
+        loader_fn = globals()[f"_load_dataset_m{model_number}"]
+        return loader_fn(config)  # Return loaded dataset from resolved function
 
-        # Call the resolved function and return dataset
-        return loader_fn(config)
     except KeyError:
+        # Raise clear error if the loader function is not defined
         raise ValueError(f"❌ ValueError:\nmodel_number={model_number}\n")
 
 
-# Print confirmation message
+# Print module successfully executed
 print("\n✅ data.py successfully executed")
