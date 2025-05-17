@@ -7,6 +7,6 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
   "LIGHT_MODE": false,
-  "EPOCHS_COUNT": 32,
-  "BATCH_SIZE": 32
+  "EPOCHS_COUNT": 16,
+  "BATCH_SIZE": 64
 }
