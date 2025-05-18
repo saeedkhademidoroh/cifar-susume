@@ -260,14 +260,29 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
         "time": datetime.datetime.now().strftime("%H:%M:%S"),
         "duration": str(datetime.timedelta(seconds=int(duration))),
         "parameters": {
-            "EPOCHS_COUNT": config.EPOCHS_COUNT,
-            "BATCH_SIZE": config.BATCH_SIZE,
-            "OPTIMIZER_TYPE": config.OPTIMIZER["type"],
-            "LEARNING_RATE": config.OPTIMIZER["learning_rate"],
-            "MOMENTUM": config.OPTIMIZER.get("momentum", 0.0),
+            "LIGHT_MODE": config.LIGHT_MODE,
             "AUGMENT_MODE": config.AUGMENT_MODE,
+
+            "L2_MODE": {
+                "enabled": config.L2_MODE["enabled"],
+                "lambda": config.L2_MODE["lambda"]
+            },
+            "DROPOUT_MODE": {
+                "enabled": config.DROPOUT_MODE["enabled"],
+                "rate": config.DROPOUT_MODE["rate"]
+            },
+
+            "OPTIMIZER": {
+                "type": config.OPTIMIZER["type"],
+                "learning_rate": config.OPTIMIZER["learning_rate"],
+                "momentum": config.OPTIMIZER.get("momentum", 0.0)
+            },
+
             "SCHEDULE_MODE": config.SCHEDULE_MODE["enabled"],
-            "EARLY_STOP_MODE": config.EARLY_STOP_MODE["enabled"]
+            "EARLY_STOP_MODE": config.EARLY_STOP_MODE["enabled"],
+
+            "EPOCHS_COUNT": config.EPOCHS_COUNT,
+            "BATCH_SIZE": config.BATCH_SIZE
         },
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
@@ -280,6 +295,7 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
         "final_test_loss": test_loss,
         "final_test_acc": test_accuracy
     }
+
 
 
 # Function to recover training history

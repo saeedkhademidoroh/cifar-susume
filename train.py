@@ -68,13 +68,21 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
 
             # Print training configuration to log file before training begins
             print("🧠  Printing training configuration:")
-            print(f"Optimizer:       {config.OPTIMIZER['type']} (lr={config.OPTIMIZER['learning_rate']})")  # Optimizer and learning rate
-            print(f"Momentum:        {config.OPTIMIZER.get('momentum', 0.0)}")                             # Momentum value (only relevant for SGD)
-            print(f"Augmentation:    {'ON' if config.AUGMENT_MODE else 'OFF'}")                         # Augmentation toggle
-            print(f"LR Scheduler:    {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}")            # Learning rate scheduler toggle
-            print(f"Early Stopping:  {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}")          # Early stopping toggle
-            print(f"Epochs:          {config.EPOCHS_COUNT}")                                           # Total training epochs
-            print(f"Batch Size:      {config.BATCH_SIZE}\n")                                             # Batch size for training
+            print(f"Light Mode:       {'ON' if config.LIGHT_MODE else 'OFF'}")                                   # Light mode toggle
+            print(f"Augmentation:     {'ON' if config.AUGMENT_MODE else 'OFF'}")                                 # Augmentation toggle
+
+            print(f"L2 Regularization: {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ={config.L2_MODE['lambda']})")   # L2 setting
+            print(f"Dropout:           {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate={config.DROPOUT_MODE['rate']})")  # Dropout setting
+
+            print(f"Optimizer:         {config.OPTIMIZER['type']} (lr={config.OPTIMIZER['learning_rate']})")      # Optimizer and learning rate
+            print(f"Momentum:          {config.OPTIMIZER.get('momentum', 0.0)}")                                  # Momentum value (if any)
+
+            print(f"LR Scheduler:      {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}")                     # Learning rate scheduler toggle
+            print(f"Early Stopping:    {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}")                   # Early stopping toggle
+
+            print(f"Epochs:            {config.EPOCHS_COUNT}")                                                    # Total training epochs
+            print(f"Batch Size:        {config.BATCH_SIZE}\n")                                                    # Training batch size
+                                                # Batch size for training
 
             # Begin model training
             history = model.fit(

@@ -12,10 +12,11 @@ class Config:
 
     Loaded from a config.json file, it contains:
     - Directory paths for data, logs, results, and checkpoints
+    - Data loading and augmentation flags
+    - Model-level regularization flags
+    - Optimizer parameters
+    - Learning rate scheduling and early stopping
     - Training hyperparameters
-    - Execution mode flags
-    - Learning rate scheduler and early stopping settings
-    - Optimizer configuration block
     """
 
     CONFIG_PATH: Path              # Path to the folder containing config files
@@ -25,13 +26,18 @@ class Config:
     RESULT_PATH: Path              # Path for final result.json outputs
     MODEL_PATH: Path               # Path to store serialized models
     ERROR_PATH: Path               # Path to store structured error logs
+
     LIGHT_MODE: bool               # Flag to reduce dataset size for fast debugging
-    AUGMENT_MODE: bool             # Flag to toggle on-the-fly image augmentation
+    AUGMENT_MODE: bool            # Flag to toggle on-the-fly image augmentation
+
+    L2_MODE: dict                  # L2 weight regularization config block
+    DROPOUT_MODE: dict            # Dropout regularization config block
+
+    OPTIMIZER: dict                # Optimizer selection and parameter config
 
     SCHEDULE_MODE: dict            # Learning rate scheduler config block
     EARLY_STOP_MODE: dict          # Early stopping config block
 
-    OPTIMIZER: dict                # Optimizer selection and parameter config
     EPOCHS_COUNT: int              # Number of training epochs
     BATCH_SIZE: int                # Batch size for training
 
@@ -93,9 +99,11 @@ class Config:
             "ERROR_PATH",
             "LIGHT_MODE",
             "AUGMENT_MODE",
+            "L2_MODE",
+            "DROPOUT_MODE",
+            "OPTIMIZER",
             "SCHEDULE_MODE",
             "EARLY_STOP_MODE",
-            "OPTIMIZER",
             "EPOCHS_COUNT",
             "BATCH_SIZE"
         ]
@@ -119,9 +127,11 @@ class Config:
             ERROR_PATH=root_path / config_data["ERROR_PATH"],
             LIGHT_MODE=config_data["LIGHT_MODE"],
             AUGMENT_MODE=config_data["AUGMENT_MODE"],
+            L2_MODE=config_data["L2_MODE"],
+            DROPOUT_MODE=config_data["DROPOUT_MODE"],
+            OPTIMIZER=config_data["OPTIMIZER"],
             SCHEDULE_MODE=config_data["SCHEDULE_MODE"],
             EARLY_STOP_MODE=config_data["EARLY_STOP_MODE"],
-            OPTIMIZER=config_data["OPTIMIZER"],
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"]
         )

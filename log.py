@@ -116,4 +116,4 @@ def clean_old_outputs(flag=False):
 
 
 # Print module successfully executed
-print("\n✅  log.py successfully executed")
+print("\n✅  log.py successfully executed\n")
