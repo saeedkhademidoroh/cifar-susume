@@ -112,7 +112,7 @@ def clean_old_outputs(flag=False):
             else:
                 print(f"❌  Failing to clean old output:\n{path}")
     else:
-        print("\n🚫 CLEAN_MODE is OFF — skipping old output directories")
+        print("\n🚫  CLEAN_MODE is OFF — skipping old output directories")
 
 
 # Print module successfully executed
