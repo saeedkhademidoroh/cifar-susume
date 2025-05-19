@@ -82,7 +82,6 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
 
             print(f"Epochs:            {config.EPOCHS_COUNT}")                                                    # Total training epochs
             print(f"Batch Size:        {config.BATCH_SIZE}\n")                                                    # Training batch size
-                                                # Batch size for training
 
             # Begin model training
             history = model.fit(
@@ -95,6 +94,17 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
                 verbose=verbose,
                 initial_epoch=initial_epoch
             )
+
+            # Merge old history if training resumed
+            if initial_epoch > 0:
+                old_history_file = model_checkpoint_path / "history.json"
+                if old_history_file.exists():
+                    with open(old_history_file, "r") as f:
+                        old_history = json.load(f)
+                    for key in history.history:
+                        history.history[key] = old_history.get(key, []) + history.history[key]
+
+
             # Save full history after training completes
             _save_training_history(model_checkpoint_path / "history.json", history)
 
