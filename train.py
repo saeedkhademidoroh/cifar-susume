@@ -35,29 +35,35 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     # Print header for function execution
     print("\n🎯  train_model")
 
-    # Create directory for model checkpointing
+    # Define and create model checkpoint directory for this run
     model_checkpoint_path = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}"
     model_checkpoint_path.mkdir(parents=True, exist_ok=True)
 
-    # Attempt to resume training from checkpoint if available
+    # Attempt to resume model, epoch, and history from previous checkpoint
     resumed_model, initial_epoch, history = _resume_from_checkpoint(
         model_checkpoint_path, config, model_number, run, config_name
     )
 
-    # If model was resumed and training is already complete, skip training
-    if resumed_model is not None and history is None:
-        return resumed_model, None, True  # Return early with resumed model and no new training
+    # If model resumed and training is fully complete, skip training
+    if resumed_model is not None and initial_epoch >= config.EPOCHS_COUNT:
+        print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
+        return resumed_model, None, True
 
-    # Use the resumed model if available
+    # If training is incomplete but a fake or partial history exists, discard it
+    if resumed_model is not None and initial_epoch < config.EPOCHS_COUNT and history is not None:
+        print("\n⚠️  Continuing training and rebuilding partial history")
+        history = None  # Force retraining from the resumed model
+
+    # Use resumed model if available
     if resumed_model is not None:
         model = resumed_model
 
-    # Partition dataset into train/validation subsets
+    # Split dataset into training and validation sets
     train_data, train_labels, val_data, val_labels = _split_dataset(
         train_data, train_labels, config.LIGHT_MODE
     )
 
-    # Prepare training callbacks (standard + custom recovery)
+    # Prepare checkpoint, scheduler, and early stop callbacks
     callbacks = _prepare_checkpoint_callback(model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
