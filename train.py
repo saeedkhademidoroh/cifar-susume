@@ -5,7 +5,7 @@ from pathlib import Path
 import pytz
 
 # Import third-party libraries
-from keras.api.callbacks import Callback, ModelCheckpoint, ReduceLROnPlateau
+from keras.api.callbacks import Callback, ModelCheckpoint
 from keras.api.models import load_model
 
 

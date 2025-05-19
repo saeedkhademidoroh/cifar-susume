@@ -17,11 +17,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Define experiment pipeline: (model_number, config_name)
 pipeline = [
-    (1, "m1_base"),
-    (1, "m1_l2"),
-    (1, "m1_drop"),
-    (1, "m1_light"),
-    (1, "m1_reg"),
+    (1, "m1_sgd"),
+    (1, "m1_drop↑"),
+    (2, "m2_base"),
+    (2, "m2_drop"),
+    (2, "m2_l2"),
+    (2, "m2_reg"),
+    (2, "m2_light"),
 ]
 
 # Run experiments through pipeline
