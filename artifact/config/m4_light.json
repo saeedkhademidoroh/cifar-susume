@@ -30,7 +30,7 @@
     "verbose": 1
   },
   "EARLY_STOP_MODE": {
-    "enabled": false,
+    "enabled": true,
     "monitor": "val_accuracy",
     "patience": 5,
     "restore_best_weights": false,
