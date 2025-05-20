@@ -395,6 +395,8 @@ def _ensure_output_directories(config):
     # Print header for function execution
     print("\n🎯  _ensure_output_directories")
 
+    print(f"\n📂  Ensuring output directories")  # Confirm creation or existence
+
     # Iterate through each required directory path and ensure it exists
     for path in [
         config.LOG_PATH,
@@ -404,7 +406,7 @@ def _ensure_output_directories(config):
         config.ERROR_PATH
     ]:
         path.mkdir(parents=True, exist_ok=True)  # Create directory if missing
-        print(f"\n📂  Ensuring output directories:\n{path}")  # Confirm creation or existence
+        print(f"{path}")  # Confirm creation or existence
 
 
 # # Class for parallel writing in stdout and log

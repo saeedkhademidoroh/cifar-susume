@@ -3,6 +3,12 @@ import numpy as np
 from torchvision import datasets, transforms
 from torchvision import transforms
 
+
+# Function to load dataset for model 5
+def _load_dataset_m6(config):
+    return _load_dataset_m0(config)
+
+
 # Function to load dataset for model 5
 def _load_dataset_m5(config):
     return _load_dataset_m0(config)

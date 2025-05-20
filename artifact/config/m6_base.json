@@ -7,35 +7,35 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
   "LIGHT_MODE": false,
-  "AUGMENT_MODE": false,
+  "AUGMENT_MODE": true,
   "L2_MODE": {
     "enabled": true,
     "lambda": 0.0005
   },
   "DROPOUT_MODE": {
     "enabled": true,
-    "rate": 0.5
+    "rate": 0.3
   },
   "OPTIMIZER": {
-    "type": "adam",
-    "learning_rate": 0.01,
+    "type": "sgd",
+    "learning_rate": 0.05,
     "momentum": 0.9
   },
   "SCHEDULE_MODE": {
-    "enabled": false,
+    "enabled": true,
     "monitor": "val_accuracy",
     "factor": 0.5,
-    "patience": 3,
+    "patience": 5,
     "min_lr": 1e-05,
     "verbose": 1
   },
   "EARLY_STOP_MODE": {
-    "enabled": false,
+    "enabled": true,
     "monitor": "val_accuracy",
-    "patience": 5,
-    "restore_best_weights": false,
+    "patience": 10,
+    "restore_best_weights": true,
     "verbose": 1
   },
-  "EPOCHS_COUNT": 8,
-  "BATCH_SIZE": 8
+  "EPOCHS_COUNT": 100,
+  "BATCH_SIZE": 32
 }
