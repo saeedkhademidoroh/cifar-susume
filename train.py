@@ -46,7 +46,7 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
 
     # If model resumed and training is fully complete, skip training
     if resumed_model is not None and initial_epoch >= config.EPOCHS_COUNT:
-        print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
+        print(f"\n⏩  Skipping training for m{model_number}_r{run}_{config_name}")
         return resumed_model, None, True
 
     # If training is incomplete but a fake or partial history exists, discard it
