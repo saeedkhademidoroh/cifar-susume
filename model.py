@@ -20,7 +20,7 @@ def build_model(model_number: int, config) -> Model:
     and configurable regularization (L2 and Dropout).
 
     Args:
-        model_number (int): Identifier for architecture variant (0–5)
+        model_number (int): Identifier for architecture variant
 
     Returns:
         Model: A compiled Keras model instance
@@ -36,15 +36,15 @@ def build_model(model_number: int, config) -> Model:
     momentum = optimizer_config.get("momentum", 0.0)
 
     # Initialize optimizer according to config
-    if optimizer_type == "sgd":
-        optimizer = SGD(learning_rate=learning_rate, momentum=momentum)
-    elif optimizer_type == "adam":
+    if optimizer_type == "adam":
         optimizer = Adam(learning_rate=learning_rate)
+    elif optimizer_type == "sgd":
+        optimizer = SGD(learning_rate=learning_rate, momentum=momentum)
     else:
-        raise ValueError(f"❌ ValueError from model.py in build_model():\noptimizer_type={optimizer_type}\n")
+        raise ValueError(f"❌  ValueError from model.py in build_model():\noptimizer_type={optimizer_type}\n")
 
     # Define L2 regularizer if enabled
-    reg = l2(config.L2_MODE["lambda"]) if config.L2_MODE.get("enabled", False) else None
+    regularizer = l2(config.L2_MODE["lambda"]) if config.L2_MODE.get("enabled", False) else None
 
     # Dropout utility for optional injection
     def maybe_dropout(x):
@@ -52,229 +52,79 @@ def build_model(model_number: int, config) -> Model:
 
     input_layer = Input(shape=(32, 32, 3))
 
-    # Model 0: VGG-style with two Conv blocks and Dense(128), no BatchNorm
-    if model_number == 0:
-        # Block 1: Conv(32) x2 + MaxPool
-        x = Conv2D(32, (3, 3), activation="relu", padding="same", kernel_regularizer=reg)(input_layer)
-        x = Conv2D(32, (3, 3), activation="relu", padding="same", kernel_regularizer=reg)(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: Conv(64) x2 + MaxPool
-        x = Conv2D(64, (3, 3), activation="relu", padding="same", kernel_regularizer=reg)(x)
-        x = Conv2D(64, (3, 3), activation="relu", padding="same", kernel_regularizer=reg)(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Flatten + Dense(128)
-        x = Flatten()(x)
-        x = Dense(128, activation="relu", kernel_regularizer=reg)(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 1: Model 0 + Batch Normalization
-    elif model_number == 1:
-        # Block 1: Conv(32) x2 + BN + ReLU + MaxPool
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: Conv(64) x2 + BN + ReLU + MaxPool
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Flatten + Dense(128)
-        x = Flatten()(x)
-        x = Dense(128, activation="relu", kernel_regularizer=reg)(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 2: Model 1 with fewer filters, no Dense(128), use GAP
-    elif model_number == 2:
-        # Block 1: Conv(16) x2 + BN + ReLU + MaxPool
-        x = Conv2D(16, (3, 3), padding="same", kernel_regularizer=reg)(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(16, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: Conv(32) x2 + BN + ReLU + MaxPool
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        x = GlobalAveragePooling2D()(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 3: Like model 1 but no Dense(128), keep original filters
-    elif model_number == 3:
-        # Block 1: Conv(32) x2 + BN + ReLU + MaxPool
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: Conv(64) x2 + BN + ReLU + MaxPool
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        x = GlobalAveragePooling2D()(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 4: Depthwise separable convolution blocks
-    elif model_number == 4:
-        # Block 1: (Depthwise + Pointwise Conv) x2 + BN + ReLU + MaxPool
-        x = DepthwiseConv2D((3, 3), padding="same")(input_layer)
-        x = Conv2D(32, (1, 1), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-
-        x = DepthwiseConv2D((3, 3), padding="same")(x)
-        x = Conv2D(32, (1, 1), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: (Depthwise + Pointwise Conv) x2 + BN + ReLU + MaxPool
-        x = DepthwiseConv2D((3, 3), padding="same")(x)
-        x = Conv2D(64, (1, 1), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-
-        x = DepthwiseConv2D((3, 3), padding="same")(x)
-        x = Conv2D(64, (1, 1), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        x = GlobalAveragePooling2D()(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 5: Residual connections (Add) + original filters + GAP
-    elif model_number == 5:
-        # Block 1: Conv(32) x2 + BN + Add shortcut + ReLU + MaxPool
-        shortcut = Conv2D(32, (1, 1), padding="same", kernel_regularizer=reg)(input_layer)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(input_layer)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Add()([x, shortcut])
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        # Block 2: Conv(64) x2 + BN + Add shortcut + ReLU + MaxPool
-        shortcut = Conv2D(64, (1, 1), padding="same", kernel_regularizer=reg)(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Activation("relu")(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
-        x = BatchNormalization()(x)
-        x = Add()([x, shortcut])
-        x = Activation("relu")(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-
-        x = GlobalAveragePooling2D()(x)
-        x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
-
-    # Model 6: Deeper ResNet-style architecture with 6 residual blocks and GAP
-    elif model_number == 6:
+    # Model 6
+    if model_number == 6:
         # Initial Conv(32)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(input_layer)
+        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=regularizer)(input_layer)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
 
         # Residual Block 1a: Conv(32) x2 + Add + ReLU
         shortcut = x
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         # Residual Block 1b: same as 1a
         shortcut = x
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(32, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         # Residual Block 2a: downsample + increase filters to 64
-        shortcut = Conv2D(64, (1, 1), strides=2, padding="same", kernel_regularizer=reg)(x)
-        x = Conv2D(64, (3, 3), strides=2, padding="same", kernel_regularizer=reg)(x)
+        shortcut = Conv2D(64, (1, 1), strides=2, padding="same", kernel_regularizer=regularizer)(x)
+        x = Conv2D(64, (3, 3), strides=2, padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         # Residual Block 2b: Conv(64) x2 + Add + ReLU
         shortcut = x
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(64, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         # Residual Block 3a: downsample + increase filters to 128
-        shortcut = Conv2D(128, (1, 1), strides=2, padding="same", kernel_regularizer=reg)(x)
-        x = Conv2D(128, (3, 3), strides=2, padding="same", kernel_regularizer=reg)(x)
+        shortcut = Conv2D(128, (1, 1), strides=2, padding="same", kernel_regularizer=regularizer)(x)
+        x = Conv2D(128, (3, 3), strides=2, padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         # Residual Block 3b: Conv(128) x2 + Add + ReLU
         shortcut = x
-        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=reg)(x)
+        x = Conv2D(128, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
         x = BatchNormalization()(x)
         x = Add()([x, shortcut])
         x = Activation("relu")(x)
 
         x = GlobalAveragePooling2D()(x)
         x = maybe_dropout(x)
-        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=reg)(x)
+        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=regularizer)(x)
 
     else:
-        raise ValueError(f"❌ ValueError from model.py at build_model():\nmodel_number={model_number}\n")
+        raise ValueError(f"❌  ValueError from model.py at build_model():\nmodel_number={model_number}\n")
 
     # Compile model with selected optimizer and loss/metrics
     model = Model(inputs=input_layer, outputs=prediction_layer)
@@ -284,6 +134,23 @@ def build_model(model_number: int, config) -> Model:
     model.summary()
 
     return model  # Return compiled Keras model instance
+
+
+def res_block(x, filters, regularizer, downsample=False):
+    stride = 2 if downsample else 1
+    shortcut = x
+    x = Conv2D(filters, (3, 3), strides=stride, padding="same", kernel_regularizer=regularizer)(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Conv2D(filters, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
+    x = BatchNormalization()(x)
+
+    if downsample or shortcut.shape[-1] != filters:
+        shortcut = Conv2D(filters, (1, 1), strides=stride, padding="same", kernel_regularizer=regularizer)(shortcut)
+
+    x = Add()([x, shortcut])
+    x = Activation("relu")(x)
+    return x
 
 
 # Print module successfully executed

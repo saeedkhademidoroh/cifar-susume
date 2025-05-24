@@ -7,7 +7,7 @@ import traceback
 
 # Import project-specific libraries
 from config import CONFIG
-from data import dispatch_load_dataset
+from data import load_dataset
 from evaluate import extract_history_metrics
 from log import log_to_json
 from model import build_model
@@ -135,7 +135,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
     try:
         # Load dataset for this model variant
-        train_data, train_labels, test_data, test_labels = dispatch_load_dataset(model_number, config)
+        train_data, train_labels, test_data, test_labels = load_dataset(model_number, config)
 
         # Build model architecture
         model = build_model(model_number, config)

@@ -1,121 +1,88 @@
 # Import third-party libraries
 import numpy as np
 from torchvision import datasets, transforms
-from torchvision import transforms
 
 
-# Function to load dataset for model 5
-def _load_dataset_m6(config):
-    return _load_dataset_m0(config)
+# CIFAR-10 mean/std (for normalization)
+_CIFAR10_MEAN = [0.4914, 0.4822, 0.4465]
+_CIFAR10_STD  = [0.2023, 0.1994, 0.2010]
 
-
-# Function to load dataset for model 5
-def _load_dataset_m5(config):
-    return _load_dataset_m0(config)
-
-
-# Function to load dataset for model 4
-def _load_dataset_m4(config):
-    return _load_dataset_m0(config)
-
-
-# Function to load dataset for model 3
-def _load_dataset_m3(config):
-    return _load_dataset_m0(config)
-
-
-# Function to load dataset for model 2
-def _load_dataset_m2(config):
-    return _load_dataset_m0(config)
-
-
-# Function to load dataset for model 1
-def _load_dataset_m1(config):
-    return _load_dataset_m0(config)
-
-
-# Function to load dataset for model 0 (shared logic)
-def _load_dataset_m0(config):
+# Function to load and preprocess CIFAR-10 based on model_number
+def load_dataset(model_number: int, config):
     """
-    Function to load and preprocess the CIFAR-10 dataset.
+    Function to load and preprocess the CIFAR-10 dataset based on the model_number.
 
-    Loads CIFAR-10 from the specified data path, normalizes pixel values,
-    and trims the dataset based on LIGHT_MODE flag. Optionally applies
-    data augmentation to training samples if augment=True.
+    Applies variant-specific preprocessing and augmentation depending on the model.
+    Supports LIGHT_MODE subsampling and AUGMENT_MODE augmentation toggle.
 
     Args:
-        config (Config): Configuration object containing DATA_PATH and LIGHT_MODE
-        augment (bool): Whether to apply data augmentation on training set
+        model_number (int): Identifier for architecture variant
+        config (Config): Configuration object with toggles and path
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
     """
 
     # Print header for function execution
-    print(f"\n🎯  _load_dataset_m0")
+    print("\n🎯  load_dataset")
 
-    # Download CIFAR-10 dataset
+    # Load CIFAR-10 dataset
     train_set = datasets.CIFAR10(root=config.DATA_PATH, train=True, download=True)
     test_set = datasets.CIFAR10(root=config.DATA_PATH, train=False, download=True)
 
-    # Normalize pixel values to [0, 1]
-    train_data = train_set.data.astype(np.float32) / 255.0
-    test_data = test_set.data.astype(np.float32) / 255.0
-
-    # Convert labels to numpy arrays
+    train_images = train_set.data
+    test_images = test_set.data
     train_labels = np.array(train_set.targets)
     test_labels = np.array(test_set.targets)
 
-    # Subsample if LIGHT_MODE is enabled
     if config.LIGHT_MODE:
-        train_data = train_data[:1000]
+        train_images = train_images[:1000]
         train_labels = train_labels[:1000]
-        test_data = test_data[:200]
+        test_images = test_images[:200]
         test_labels = test_labels[:200]
     else:
-        # Exclude last 5000 training samples
-        train_data = train_data[:-5000]
+        train_images = train_images[:-5000]
         train_labels = train_labels[:-5000]
 
-    # Apply augmentation if enabled
-    if config.AUGMENT_MODE:
-        train_data = _augment_dataset(train_data)
+    # Models 0–5: Rescale to [0,1] + optional augmentation
+    if model_number in [0, 1, 2, 3, 4, 5]:
+        train_data = train_images.astype(np.float32) / 255.0
+        if config.AUGMENT_MODE:
+            train_data = _augment_dataset(train_data)
 
-    # Return processed dataset
+    # Models 6–7: Standardize + optional augmentation
+    elif model_number in [6, 7]:
+        train_data = _standardize(train_images)
+        if config.AUGMENT_MODE:
+            train_data = _augment_dataset(train_data)
+
+    # Model 8
+    elif model_number == 8:
+        if config.AUGMENT_MODE:
+            transform = transforms.Compose([
+                transforms.ToPILImage(),
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)
+            ])
+            augmented = [transform(img).permute(1, 2, 0).numpy() for img in train_images]
+            train_data = np.stack(augmented, axis=0)
+        else:
+            train_data = _standardize(train_images)
+
+    else:
+        raise ValueError(f"❌  ValueError from data.py in load_dataset():\nmodel_number={model_number}\n")
+
+    # Standardize test data (always)
+    test_data = test_images.astype(np.float32) / 255.0
+    for i in range(3):
+        test_data[..., i] = (test_data[..., i] - _CIFAR10_MEAN[i]) / _CIFAR10_STD[i]
+
     return train_data, train_labels, test_data, test_labels
 
 
-# Function to dispatch dataset loader by model number
-def dispatch_load_dataset(model_number, config):
-    """
-    Function to route dataset loading based on the model variant number.
-
-    Dynamically constructs the appropriate function name (e.g., load_dataset_m2)
-    and invokes it using the global namespace. Raises ValueError if the function
-    is not defined.
-
-    Args:
-        model_number (int): Model identifier (e.g., 0 to 5)
-        config (Config): Configuration object to pass to the loader
-
-    Returns:
-        tuple: (train_data, train_labels, test_data, test_labels)
-    """
-
-    # Print header for function execution
-    print("\n🎯  dispatch_load_dataset")
-
-    try:
-        # Dynamically resolve the dataset loader function by model number
-        loader_fn = globals()[f"_load_dataset_m{model_number}"]
-        return loader_fn(config)  # Return loaded dataset from resolved function
-
-    except KeyError:
-        # Raise clear error if the loader function is not defined
-        raise ValueError(f"❌ ValueError from data.py at dispatch_load_dataset():\nmodel_number={model_number}\n")
-
-
-# Function to apply torchvision-style augmentations to a NumPy image batch
+# Function to augment dataset
 def _augment_dataset(images):
     """
     Applies CIFAR-10 style augmentation using torchvision.transforms.
@@ -144,11 +111,39 @@ def _augment_dataset(images):
         transforms.ToTensor()                                 # Convert back to tensor [C, H, W]
     ])
 
-    # Apply augmentation to each image and restore [H, W, C] format
-    augmented = [transform(img).permute(1, 2, 0).numpy() for img in images]
+    # Apply transform to each image and permute from [C, H, W] to [H, W, C], then convert to NumPy
+    augmented = [transform(img).numpy().transpose(1, 2, 0) for img in images]
 
-    # Return stacked NumPy array with same shape as input
+    # Stack list of transformed images into a single NumPy array with shape (N, 32, 32, 3)
     return np.stack(augmented, axis=0)
+
+
+
+# Function to standardize CIFAR-10 input images using global dataset statistics
+def _standardize(images):
+    """
+    Normalize image pixels to [0, 1] then standardize each RGB channel
+    using CIFAR-10 mean and standard deviation.
+
+    Args:
+        images (np.ndarray): Image array in uint8 format, shape (N, 32, 32, 3)
+
+    Returns:
+        np.ndarray: Standardized float32 array of the same shape
+    """
+
+    # Print header to indicate function execution
+    print("\n🎯  _standardize")
+
+    # Convert uint8 images (0–255) to float32 and rescale to [0.0, 1.0]
+    images = images.astype(np.float32) / 255.0
+
+    # Apply per-channel standardization: subtract mean and divide by std
+    for i in range(3):
+        images[..., i] = (images[..., i] - _CIFAR10_MEAN[i]) / _CIFAR10_STD[i]
+
+    # Return standardized image array
+    return images
 
 
 # Print module successfully executed

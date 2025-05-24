@@ -6,7 +6,6 @@ import json
 from datetime import datetime, timezone
 import shutil
 
-
 # Import project-specific libraries
 from config import CONFIG
 
