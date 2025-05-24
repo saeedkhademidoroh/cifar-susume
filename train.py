@@ -2,10 +2,10 @@
 import datetime
 import json
 from pathlib import Path
-import pytz
 
 # Import third-party libraries
-from keras.api.callbacks import Callback, ModelCheckpoint
+import pytz
+from keras.api.callbacks import Callback, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.api.models import load_model
 
 
@@ -64,7 +64,7 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     )
 
     # Prepare checkpoint, scheduler, and early stop callbacks
-    callbacks = _prepare_checkpoint_callback(model_checkpoint_path, config)
+    callbacks = _prepare_callback(model, model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
     try:
@@ -74,20 +74,41 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
 
             # Print training configuration to log file before training begins
             print("🧠  Printing training configuration:")
-            print(f"Light Mode:       {'ON' if config.LIGHT_MODE else 'OFF'}")                                   # Light mode toggle
-            print(f"Augmentation:     {'ON' if config.AUGMENT_MODE else 'OFF'}")                                 # Augmentation toggle
+            print(f"Light Mode:         {'ON' if config.LIGHT_MODE else 'OFF'} — Using reduced dataset for fast testing")
+            print(f"Augmentation:       {'ON' if config.AUGMENT_MODE else 'OFF'} — Random crop, flip, and Cutout enabled")
 
-            print(f"L2 Regularization: {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ={config.L2_MODE['lambda']})")   # L2 setting
-            print(f"Dropout:           {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate={config.DROPOUT_MODE['rate']})")  # Dropout setting
+            print(f"L2 Regularization:  {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ = {config.L2_MODE['lambda']})")
+            print(f"Dropout:            {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate = {config.DROPOUT_MODE['rate']})")
 
-            print(f"Optimizer:         {config.OPTIMIZER['type']} (lr={config.OPTIMIZER['learning_rate']})")      # Optimizer and learning rate
-            print(f"Momentum:          {config.OPTIMIZER.get('momentum', 0.0)}")                                  # Momentum value (if any)
+            print(f"Optimizer:          {config.OPTIMIZER['type'].upper()} (lr = {config.OPTIMIZER['learning_rate']})")
+            print(f"Momentum:           {config.OPTIMIZER.get('momentum', 0.0)}")
 
-            print(f"LR Scheduler:      {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}")                     # Learning rate scheduler toggle
-            print(f"Early Stopping:    {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}")                   # Early stopping toggle
+            print(f"LR Scheduler:       {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}", end="")
+            if config.SCHEDULE_MODE['enabled']:
+                print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('factor', 0.5)}")
+            else:
+                print()
 
-            print(f"Epochs:            {config.EPOCHS_COUNT}")                                                    # Total training epochs
-            print(f"Batch Size:        {config.BATCH_SIZE}\n")                                                    # Training batch size
+            print(f"Early Stopping:     {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}", end="")
+            if config.EARLY_STOP_MODE['enabled']:
+                print(f" — patience {config.EARLY_STOP_MODE.get('patience', '?')} epochs, restore best weights: {config.EARLY_STOP_MODE.get('restore_best_weights', False)}")
+            else:
+                print()
+
+            print(f"Weight Averaging:   {'ON' if config.AVERAGE_MODE['enabled'] else 'OFF'}", end="")
+            if config.AVERAGE_MODE['enabled']:
+                print(f" — starting at epoch {config.AVERAGE_MODE.get('start_epoch', '?')}")
+            else:
+                print()
+
+            print(f"Test-Time Augment:  {'ON' if config.TTA_MODE['enabled'] else 'OFF'}", end="")
+            if config.TTA_MODE['enabled']:
+                print(f" — running {config.TTA_MODE.get('runs', 1)} augmented passes per sample")
+            else:
+                print()
+
+            print(f"Epochs:             {config.EPOCHS_COUNT}")
+            print(f"Batch Size:         {config.BATCH_SIZE}\n")
 
             # Begin model training
             history = model.fit(
@@ -128,116 +149,110 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     return model, history, False  # Return fully trained model, history, and resumption flag
 
 
-# Function to resume training from checkpoint if available
-def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, run: int, config_name: str):
+# Function to prepare callback
+def _prepare_callback(model, model_checkpoint_path: Path, config):
     """
-    Attempts to resume training from a saved checkpoint and training history.
-
-    If a valid checkpoint and training history file are found, this function loads
-    the saved model, restores the training epoch, and reattaches the history.
+    Creates a list of Keras callbacks:
+    - Saves the best model based on validation accuracy
+    - Saves a model after each epoch
+    - Applies manual StepLR and linear warmup (if SCHEDULE_MODE is enabled)
+    - Stops training early if validation stagnates (if EARLY_STOP_MODE is enabled)
 
     Args:
-        checkpoint_path (Path): Directory where checkpoint files are stored.
-        config (Config): Configuration object with training parameters.
-        model_number (int): Model identifier.
-        run (int): Run ID number.
-        config_name (str): Configuration name used for this run.
+        model (keras.Model): The compiled model to access optimizer
+        model_checkpoint_path (Path): Output directory for model checkpoints
+        config (Config): Configuration object with scheduler and early stopping settings
 
     Returns:
-        tuple:
-            - resumed_model (Model or None): Loaded Keras model if resume was possible.
-            - initial_epoch (int): Epoch to resume from.
-            - history (object or None): Dummy object with training history.
+        list: A list of Keras callback objects
     """
 
-    # Print header for function execution
-    print("\n🎯  _resume_from_checkpoint")
+    print("\n🎯  _prepare_checkpoint_callback")
 
-    # Define path to the stored training history
-    history_file = checkpoint_path / "history.json"
+    # Define checkpoint file paths
+    best_model_path = model_checkpoint_path / "best.keras"
+    per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"
 
-    # Load model and resume epoch if checkpoint exists
-    resumed_model, initial_epoch = _load_from_checkpoint(checkpoint_path)
-    history = None
+    verbose_lr = config.SCHEDULE_MODE.get("verbose", 1)
+    verbose_es = config.EARLY_STOP_MODE.get("verbose", 1)
 
-    # Log resume status and handle early exit
-    if resumed_model:
-        print(f"\n🔁  Resuming experiment at epoch_{initial_epoch}")
+    # Initialize core checkpoint callbacks
+    callbacks = [
+        ModelCheckpoint(
+            filepath=best_model_path,
+            monitor="val_accuracy",
+            save_best_only=True,
+            save_weights_only=False,
+            verbose=verbose_lr
+        ),
+        ModelCheckpoint(
+            filepath=per_epoch_path,
+            save_best_only=False,
+            save_weights_only=False,
+            verbose=verbose_lr
+        )
+    ]
 
-        # If training was already completed, return early
-        if initial_epoch >= config.EPOCHS_COUNT:
-            print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
-            return resumed_model, initial_epoch, None  # Early return: training complete
+    # Append EarlyStopping if enabled
+    if config.EARLY_STOP_MODE.get("enabled", False):
+        early_stop = EarlyStopping(
+            monitor=config.EARLY_STOP_MODE.get("monitor", "val_accuracy"),
+            patience=config.EARLY_STOP_MODE.get("patience", 5),
+            restore_best_weights=config.EARLY_STOP_MODE.get("restore_best_weights", True),
+            verbose=verbose_es
+        )
+        callbacks.append(early_stop)
 
-        # Attempt to load saved training history
-        if history_file.exists():
-            with open(history_file, "r") as f:
-                history_data = json.load(f)
-                class DummyHistory: pass
-                history = DummyHistory()
-                history.history = history_data  # Attach history data to dummy object
+    # Append StepLR and Warmup if scheduler enabled
+    if config.SCHEDULE_MODE.get("enabled", False):
 
-    return None if not resumed_model else resumed_model, initial_epoch, history  # Return resume state
+        # StepLR scheduler
+        class StepDecayScheduler(Callback):
+            def __init__(self, optimizer, initial_lr, milestones, gamma):
+                super().__init__()
+                self.optimizer = optimizer
+                self.initial_lr = initial_lr
+                self.milestones = milestones
+                self.gamma = gamma
 
+            def on_epoch_begin(self, epoch, logs=None):
+                lr = self.initial_lr
+                for milestone in self.milestones:
+                    if epoch >= milestone:
+                        lr *= self.gamma
+                self.model.optimizer.learning_rate.assign(lr)
+                print(f"\n🔁  StepLR applied — epoch {epoch}, learning rate set to {lr:.5f}\n")
 
-# Function to split dataset
-def _split_dataset(train_data, train_labels, light_mode):
-    """
-    Splits the dataset into training and validation sets.
+        step_scheduler = StepDecayScheduler(
+            optimizer=model.optimizer,
+            initial_lr=config.OPTIMIZER.get("learning_rate", 0.1),
+            milestones=[100, 150],
+            gamma=0.1
+        )
+        callbacks.append(step_scheduler)
 
-    If light_mode is enabled, uses 20% of the dataset for validation.
-    Otherwise, reserves the last 5000 samples.
+        # Linear Warmup scheduler
+        class LinearWarmupScheduler(Callback):
+            def __init__(self, optimizer, warmup_epochs, target_lr):
+                super().__init__()
+                self.optimizer = optimizer
+                self.warmup_epochs = warmup_epochs
+                self.target_lr = target_lr
 
-    Args:
-        train_data (np.ndarray): Input training data.
-        train_labels (np.ndarray): Labels for the training data.
-        light_mode (bool): If True, use 20% of data as validation;
-                           otherwise use last 5000 samples.
+            def on_epoch_begin(self, epoch, logs=None):
+                if epoch < self.warmup_epochs:
+                    warmup_lr = self.target_lr * (epoch + 1) / self.warmup_epochs
+                    self.model.optimizer.learning_rate.assign(warmup_lr)
+                    print(f"⏫  Warmup applied — epoch {epoch}, learning rate set to {warmup_lr:.5f}\n")
 
-    Returns:
-        tuple: (train_data, train_labels, val_data, val_labels)
-    """
+        warmup_scheduler = LinearWarmupScheduler(
+            optimizer=model.optimizer,
+            warmup_epochs=config.SCHEDULE_MODE.get("warmup_epochs", 5),
+            target_lr=config.OPTIMIZER.get("learning_rate", 0.1)
+        )
+        callbacks.append(warmup_scheduler)
 
-    # Print header for function execution
-    print("\n🎯  _split_dataset")
-
-    # Determine split size and perform slicing
-    if light_mode:
-        val_split = int(0.2 * len(train_data))  # Use 20% for validation
-        val_data = train_data[-val_split:]
-        val_labels = train_labels[-val_split:]
-        train_data = train_data[:-val_split]
-        train_labels = train_labels[:-val_split]
-    else:
-        val_data = train_data[-5000:]  # Fixed-size validation set
-        val_labels = train_labels[-5000:]
-        train_data = train_data[:-5000]
-        train_labels = train_labels[:-5000]
-
-    return train_data, train_labels, val_data, val_labels  # Return split subsets
-
-
-# Function to save training history
-def _save_training_history(history_file: Path, history_obj):
-    """
-    Saves the Keras training history to a specified JSON file.
-
-    Converts the History object to a dictionary and writes it to disk.
-
-    Args:
-        history_file (Path): Path to the history JSON file.
-        history_obj (History): Keras History object containing training metrics.
-    """
-
-    # Print header for function execution
-    print("\n🎯  _save_training_history")
-
-    # Attempt to write training history to file
-    try:
-        with open(history_file, "w") as f:
-            json.dump(history_obj.history, f)  # Serialize and write history data
-    except Exception as e:
-        print(f"\n⚠️ Failing to save history:\n{e}")  # Log failure if saving fails
+    return callbacks
 
 
 # Class for saving model state
@@ -306,87 +321,56 @@ class RecoveryCheckpoint(Callback):
         print(f"🕒  Recording time at {datetime.datetime.now(pytz.timezone('Asia/Tehran')).strftime('%H:%M')}\n")
 
 
-# Function to prepare checkpoint, LR scheduling, and early stopping callbacks
-def _prepare_checkpoint_callback(model_checkpoint_path: Path, config):
+# Function to resume training from checkpoint if available
+def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, run: int, config_name: str):
     """
-    Creates a list of Keras callbacks:
-    - Saves the best model based on validation accuracy
-    - Saves a model after each epoch
-    - Reduces LR when validation accuracy plateaus (if SCHEDULE_MODE is enabled)
-    - Stops training early if validation stagnates (if EARLY_STOP_MODE is enabled)
+    Attempts to resume training from a saved checkpoint and training history.
+
+    If a valid checkpoint and training history file are found, this function loads
+    the saved model, restores the training epoch, and reattaches the history.
 
     Args:
-        model_checkpoint_path (Path): Output directory for model checkpoints
-        config (Config): Configuration object containing SCHEDULE_MODE and EARLY_STOP_MODE blocks
+        checkpoint_path (Path): Directory where checkpoint files are stored.
+        config (Config): Configuration object with training parameters.
+        model_number (int): Model identifier.
+        run (int): Run ID number.
+        config_name (str): Configuration name used for this run.
 
     Returns:
-        list: A list of Keras callback objects
+        tuple:
+            - resumed_model (Model or None): Loaded Keras model if resume was possible.
+            - initial_epoch (int): Epoch to resume from.
+            - history (object or None): Dummy object with training history.
     """
 
     # Print header for function execution
-    print("\n🎯  _prepare_checkpoint_callback")
+    print("\n🎯  _resume_from_checkpoint")
 
-    # Define checkpoint file paths
-    best_model_path = model_checkpoint_path / "best.keras"               # best-performing model
-    per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"   # all models per epoch
+    # Define path to the stored training history
+    history_file = checkpoint_path / "history.json"
 
-    # Extract verbosity levels for both scheduler and early stop
-    verbose_lr = config.SCHEDULE_MODE.get("verbose", 1)
-    verbose_es = config.EARLY_STOP_MODE.get("verbose", 1)
+    # Load model and resume epoch if checkpoint exists
+    resumed_model, initial_epoch = _load_from_checkpoint(checkpoint_path)
+    history = None
 
-    # Initialize callback list with core checkpointing callbacks
-    callbacks = [
-        # Save only the best model based on validation accuracy
-        ModelCheckpoint(
-            filepath=best_model_path,
-            monitor="val_accuracy",
-            save_best_only=True,
-            save_weights_only=False,
-            verbose=verbose_lr
-        ),
+    # Log resume status and handle early exit
+    if resumed_model:
+        print(f"\n🔁  Resuming experiment at epoch_{initial_epoch}")
 
-        # Save model at the end of every epoch regardless of performance
-        ModelCheckpoint(
-            filepath=per_epoch_path,
-            save_best_only=False,
-            save_weights_only=False,
-            verbose=verbose_lr
-        )
-    ]
+        # If training was already completed, return early
+        if initial_epoch >= config.EPOCHS_COUNT:
+            print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
+            return resumed_model, initial_epoch, None  # Early return: training complete
 
-    # Append ReduceLROnPlateau if SCHEDULE_MODE is enabled
-    if config.SCHEDULE_MODE.get("enabled", False):
-        from keras.api.callbacks import ReduceLROnPlateau
+        # Attempt to load saved training history
+        if history_file.exists():
+            with open(history_file, "r") as f:
+                history_data = json.load(f)
+                class DummyHistory: pass
+                history = DummyHistory()
+                history.history = history_data  # Attach history data to dummy object
 
-        # Dynamically reduce learning rate when performance stagnates
-        reduce_lr = ReduceLROnPlateau(
-            monitor=config.SCHEDULE_MODE.get("monitor", "val_accuracy"),  # metric to watch
-            factor=config.SCHEDULE_MODE.get("factor", 0.5),               # LR decay factor
-            patience=config.SCHEDULE_MODE.get("patience", 3),             # how many stagnant epochs before decay
-            min_lr=config.SCHEDULE_MODE.get("min_lr", 1e-5),              # LR floor
-            verbose=verbose_lr                                            # verbosity
-        )
-
-        # Add LR scheduler to callback list
-        callbacks.append(reduce_lr)
-
-    # Append EarlyStopping if EARLY_STOP_MODE is enabled
-    if config.EARLY_STOP_MODE.get("enabled", False):
-        from keras.api.callbacks import EarlyStopping
-
-        # Stop training early if no improvement after X epochs
-        early_stop = EarlyStopping(
-            monitor=config.EARLY_STOP_MODE.get("monitor", "val_accuracy"),          # metric to watch
-            patience=config.EARLY_STOP_MODE.get("patience", 5),                     # how long to wait before stopping
-            restore_best_weights=config.EARLY_STOP_MODE.get("restore_best_weights", True),  # reload best model
-            verbose=verbose_es
-        )
-
-        # Add early stopping to callback list
-        callbacks.append(early_stop)
-
-    # Return the full list of callbacks
-    return callbacks
+    return None if not resumed_model else resumed_model, initial_epoch, history  # Return resume state
 
 
 # Function to resume model from checkpoint
@@ -424,6 +408,66 @@ def _load_from_checkpoint(model_checkpoint_path: Path):
 
     # Return default values if checkpoint files are not found
     return None, 0
+
+
+# Function to split dataset
+def _split_dataset(train_data, train_labels, light_mode):
+    """
+    Splits the dataset into training and validation sets.
+
+    If light_mode is enabled, uses 20% of the dataset for validation.
+    Otherwise, reserves the last 5000 samples.
+
+    Args:
+        train_data (np.ndarray): Input training data.
+        train_labels (np.ndarray): Labels for the training data.
+        light_mode (bool): If True, use 20% of data as validation;
+                           otherwise use last 5000 samples.
+
+    Returns:
+        tuple: (train_data, train_labels, val_data, val_labels)
+    """
+
+    # Print header for function execution
+    print("\n🎯  _split_dataset")
+
+    # Determine split size and perform slicing
+    if light_mode:
+        val_split = int(0.2 * len(train_data))  # Use 20% for validation
+        val_data = train_data[-val_split:]
+        val_labels = train_labels[-val_split:]
+        train_data = train_data[:-val_split]
+        train_labels = train_labels[:-val_split]
+    else:
+        val_data = train_data[-5000:]  # Fixed-size validation set
+        val_labels = train_labels[-5000:]
+        train_data = train_data[:-5000]
+        train_labels = train_labels[:-5000]
+
+    return train_data, train_labels, val_data, val_labels  # Return split subsets
+
+
+# Function to save training history
+def _save_training_history(history_file: Path, history_obj):
+    """
+    Saves the Keras training history to a specified JSON file.
+
+    Converts the History object to a dictionary and writes it to disk.
+
+    Args:
+        history_file (Path): Path to the history JSON file.
+        history_obj (History): Keras History object containing training metrics.
+    """
+
+    # Print header for function execution
+    print("\n🎯  _save_training_history")
+
+    # Attempt to write training history to file
+    try:
+        with open(history_file, "w") as f:
+            json.dump(history_obj.history, f)  # Serialize and write history data
+    except Exception as e:
+        print(f"\n⚠️ Failing to save history:\n{e}")  # Log failure if saving fails
 
 
 # Print confirmation message

@@ -6,36 +6,54 @@
   "RESULT_PATH": "artifact/result",
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
+
   "LIGHT_MODE": false,
   "AUGMENT_MODE": true,
+
   "L2_MODE": {
     "enabled": true,
     "lambda": 0.0005
   },
+
   "DROPOUT_MODE": {
-    "enabled": true,
+    "enabled": false,
     "rate": 0.3
   },
+
   "OPTIMIZER": {
     "type": "sgd",
     "learning_rate": 0.05,
     "momentum": 0.9
   },
+
   "SCHEDULE_MODE": {
     "enabled": true,
+    "warmup_epochs": 5,
     "monitor": "val_accuracy",
-    "factor": 0.5,
-    "patience": 5,
-    "min_lr": 1e-05,
+    "factor": 0.1,
+    "patience": 3,
+    "min_lr": 1e-5,
     "verbose": 1
   },
+
   "EARLY_STOP_MODE": {
-    "enabled": true,
+    "enabled": false,
     "monitor": "val_accuracy",
     "patience": 10,
     "restore_best_weights": true,
     "verbose": 1
   },
-  "EPOCHS_COUNT": 100,
-  "BATCH_SIZE": 32
+
+  "AVERAGE_MODE": {
+    "enabled": true,
+    "start_epoch": 170
+  },
+
+  "TTA_MODE": {
+    "enabled": true,
+    "runs": 5
+  },
+
+  "EPOCHS_COUNT": 200,
+  "BATCH_SIZE": 128
 }

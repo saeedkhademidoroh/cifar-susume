@@ -55,7 +55,24 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
     )
 
     # Predict outputs on test data
-    predictions = model.predict(test_data, verbose=verbose)
+    if config.TTA_MODE.get("enabled", False):
+        from data import build_transform  # Make sure it's importable
+
+        runs = config.TTA_MODE.get("runs", 5)
+        transform = build_transform(augment=True)  # Always augment during TTA
+
+        tta_preds = []
+        for _ in range(runs):
+            augmented = [transform(img).permute(1, 2, 0).numpy() for img in test_data]
+            augmented = np.stack(augmented).astype(np.float32)
+            preds = model.predict(augmented, verbose=verbose)
+            tta_preds.append(preds)
+
+        predictions = np.mean(tta_preds, axis=0)
+        print(f"\n📈  TTA applied — averaged over {runs} augmented predictions")
+    else:
+        predictions = model.predict(test_data, verbose=verbose)
+
 
     # Package all metrics into a dictionary
     return {

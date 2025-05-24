@@ -77,12 +77,12 @@ def log_to_json(path, key, record=None, error=False):
     print(f"\n📝 Logging experiment result: key='{key}', file='{log_file.name}'")
 
 
-# Function to clean old outputs
-def clean_old_outputs(flag=False):
+# Function to clean old output
+def clean_old_output(flag=False):
     """
     Function to clean output folders if CLEAN_MODE is enabled.
 
-    Deletes RESULT, MODEL, LOG, ERROR, and CHECKPOINT directories.
+    Deletes old checkpoint directories.
     Only triggered if flag is True.
 
     Args:
@@ -93,14 +93,12 @@ def clean_old_outputs(flag=False):
     """
 
     # Print header for function execution
-    print("\n🎯  clean_old_outputs")
+    print("\n🎯  clean_old_output")
 
     if flag:
         print("\n🧼  CLEAN_MODE is ON - Cleaning old output directories")
         targets = [
-            CONFIG.RESULT_PATH,
             CONFIG.MODEL_PATH,
-            CONFIG.LOG_PATH,
             CONFIG.ERROR_PATH,
             CONFIG.CHECKPOINT_PATH,
         ]

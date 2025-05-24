@@ -7,7 +7,7 @@ import traceback
 
 # Import project-specific libraries
 from config import CONFIG
-from data import load_dataset
+from data import build_dataset
 from evaluate import extract_history_metrics
 from log import log_to_json
 from model import build_model
@@ -135,7 +135,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
     try:
         # Load dataset for this model variant
-        train_data, train_labels, test_data, test_labels = load_dataset(model_number, config)
+        train_data, train_labels, test_data, test_labels = build_dataset(config)
 
         # Build model architecture
         model = build_model(model_number, config)
@@ -255,10 +255,11 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
     return {
         "model": model_number,
         "run": run,
-        "config": config_name,
+        "config_name": config_name,
         "date": datetime.datetime.now().strftime("%Y-%m-%d"),
         "time": datetime.datetime.now().strftime("%H:%M:%S"),
         "duration": str(datetime.timedelta(seconds=int(duration))),
+
         "parameters": {
             "LIGHT_MODE": config.LIGHT_MODE,
             "AUGMENT_MODE": config.AUGMENT_MODE,
@@ -278,12 +279,34 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
                 "momentum": config.OPTIMIZER.get("momentum", 0.0)
             },
 
-            "SCHEDULE_MODE": config.SCHEDULE_MODE["enabled"],
-            "EARLY_STOP_MODE": config.EARLY_STOP_MODE["enabled"],
+            "SCHEDULE_MODE": {
+                "enabled": config.SCHEDULE_MODE["enabled"],
+                "warmup_epochs": config.SCHEDULE_MODE.get("warmup_epochs", 0),
+                "factor": config.SCHEDULE_MODE.get("factor", None),
+                "patience": config.SCHEDULE_MODE.get("patience", None),
+                "min_lr": config.SCHEDULE_MODE.get("min_lr", None)
+            },
+
+            "EARLY_STOP_MODE": {
+                "enabled": config.EARLY_STOP_MODE["enabled"],
+                "patience": config.EARLY_STOP_MODE.get("patience", None),
+                "restore_best_weights": config.EARLY_STOP_MODE.get("restore_best_weights", None)
+            },
+
+            "AVERAGE_MODE": {
+                "enabled": config.AVERAGE_MODE["enabled"],
+                "start_epoch": config.AVERAGE_MODE.get("start_epoch", None)
+            },
+
+            "TTA_MODE": {
+                "enabled": config.TTA_MODE["enabled"],
+                "runs": config.TTA_MODE.get("runs", 1)
+            },
 
             "EPOCHS_COUNT": config.EPOCHS_COUNT,
             "BATCH_SIZE": config.BATCH_SIZE
         },
+
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
         "max_train_acc": metrics["max_train_acc"],

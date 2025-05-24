@@ -123,6 +123,30 @@ def build_model(model_number: int, config) -> Model:
         x = maybe_dropout(x)
         prediction_layer = Dense(10, activation="softmax", kernel_regularizer=regularizer)(x)
 
+    if model_number == 9:
+        # Initial Conv(16)
+        x = Conv2D(16, (3, 3), padding="same", kernel_regularizer=regularizer)(input_layer)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+
+        # Stage 1: 3 residual blocks with 16 filters
+        for _ in range(3):
+            x = _res_block(x, filters=16, regularizer=regularizer, downsample=False)
+
+        # Stage 2: 3 residual blocks with 32 filters (first block downsamples)
+        x = _res_block(x, filters=32, regularizer=regularizer, downsample=True)
+        for _ in range(2):
+            x = _res_block(x, filters=32, regularizer=regularizer, downsample=False)
+
+        # Stage 3: 3 residual blocks with 64 filters (first block downsamples)
+        x = _res_block(x, filters=64, regularizer=regularizer, downsample=True)
+        for _ in range(2):
+            x = _res_block(x, filters=64, regularizer=regularizer, downsample=False)
+
+        x = GlobalAveragePooling2D()(x)
+        x = maybe_dropout(x)
+        prediction_layer = Dense(10, activation="softmax", kernel_regularizer=regularizer)(x)
+
     else:
         raise ValueError(f"❌  ValueError from model.py at build_model():\nmodel_number={model_number}\n")
 
@@ -136,20 +160,45 @@ def build_model(model_number: int, config) -> Model:
     return model  # Return compiled Keras model instance
 
 
-def res_block(x, filters, regularizer, downsample=False):
+# Function to create a residual block
+def _res_block(x, filters, regularizer, downsample=False):
+    """
+    Function to apply a 2-layer residual block with identity or projection shortcut.
+
+    Implements the standard ResNet block (conv → BN → ReLU → conv → BN + shortcut → ReLU),
+    where the shortcut is either identity (with optional zero-padding) or projection via 1×1 conv.
+
+    Args:
+        x (Tensor): Input tensor to the block.
+        filters (int): Number of filters for the Conv2D layers.
+        regularizer: L2 regularizer instance or None.
+        downsample (bool): If True, applies stride=2 to downsample the input.
+
+    Returns:
+        Tensor: Output tensor after applying the residual block.
+    """
+
+    # Set stride=2 if downsampling is requested
     stride = 2 if downsample else 1
+
+    # Main path: two 3×3 convolutions
     shortcut = x
     x = Conv2D(filters, (3, 3), strides=stride, padding="same", kernel_regularizer=regularizer)(x)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
+
     x = Conv2D(filters, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
     x = BatchNormalization()(x)
 
+    # Shortcut path
     if downsample or shortcut.shape[-1] != filters:
+        # Projection shortcut (1×1 conv) to match dimensions
         shortcut = Conv2D(filters, (1, 1), strides=stride, padding="same", kernel_regularizer=regularizer)(shortcut)
 
+    # Element-wise addition + final ReLU
     x = Add()([x, shortcut])
     x = Activation("relu")(x)
+
     return x
 
 

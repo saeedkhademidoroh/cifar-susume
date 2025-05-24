@@ -27,19 +27,21 @@ class Config:
     MODEL_PATH: Path               # Path to store serialized models
     ERROR_PATH: Path               # Path to store structured error logs
 
-    LIGHT_MODE: bool               # Flag to reduce dataset size for fast debugging
-    AUGMENT_MODE: bool            # Flag to toggle on-the-fly image augmentation
+    LIGHT_MODE: bool               # Enable reduced dataset (e.g. 5k train, 1k test) for fast iteration
+    AUGMENT_MODE: bool             # Enable augmentation pipeline (crop, flip, Cutout)
 
-    L2_MODE: dict                  # L2 weight regularization config block
-    DROPOUT_MODE: dict            # Dropout regularization config block
+    L2_MODE: dict                  # L2 regularization config (enabled + lambda)
+    DROPOUT_MODE: dict             # Dropout config (enabled + dropout rate, often disabled for ResNet)
 
-    OPTIMIZER: dict                # Optimizer selection and parameter config
+    OPTIMIZER: dict                # Optimizer settings: type, learning rate, momentum
 
-    SCHEDULE_MODE: dict            # Learning rate scheduler config block
-    EARLY_STOP_MODE: dict          # Early stopping config block
+    SCHEDULE_MODE: dict            # LR scheduler config (manual StepLR + optional warmup)
+    EARLY_STOP_MODE: dict          # Early stopping config (usually disabled for 200-epoch ResNet runs)
+    AVERAGE_MODE: dict             # Model weight averaging config (SWA-style, enabled near end of training)
+    TTA_MODE: dict                 # Test-time augmentation config (enabled + runs count)
 
-    EPOCHS_COUNT: int              # Number of training epochs
-    BATCH_SIZE: int                # Batch size for training
+    EPOCHS_COUNT: int              # Total number of training epochs (e.g. 200)
+    BATCH_SIZE: int                # Training batch size (e.g. 128)
 
     # Function to load configuration from file
     @staticmethod
@@ -104,6 +106,8 @@ class Config:
             "OPTIMIZER",
             "SCHEDULE_MODE",
             "EARLY_STOP_MODE",
+            "AVERAGE_MODE",
+            "TTA_MODE",
             "EPOCHS_COUNT",
             "BATCH_SIZE"
         ]
@@ -132,6 +136,8 @@ class Config:
             OPTIMIZER=config_data["OPTIMIZER"],
             SCHEDULE_MODE=config_data["SCHEDULE_MODE"],
             EARLY_STOP_MODE=config_data["EARLY_STOP_MODE"],
+            AVERAGE_MODE=config_data["AVERAGE_MODE"],
+            TTA_MODE=config_data["TTA_MODE"],
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"]
         )
