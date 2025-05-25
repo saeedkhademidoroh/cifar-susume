@@ -2,56 +2,126 @@
 import datetime
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 # Import third-party libraries
 import pytz
+import tensorflow as tf
+from tensorflow.python.client import device_lib
 from keras.api.callbacks import Callback, ModelCheckpoint, EarlyStopping
 from keras.api.models import load_model
 
-from tensorflow.python.client import device_lib
-import tensorflow as tf
 
+
+def _print_training_context(config):
+    """
+    Prints available compute devices and training configuration details.
+
+    Args:
+        config (Config): Loaded configuration object.
+    """
+
+    # Print header for function execution
+    print("\n🎯  _print_training_context")
+
+    # Print available devices
+    print("\n🖥️   Available compute devices:")
+    for device in device_lib.list_local_devices():
+        print(f"  • {device.name} ({device.device_type})")
+
+    gpus = tf.config.list_physical_devices("GPU")
+    print(f"\n🧮  GPU detected: {len(gpus) > 0}")
+    for gpu in gpus:
+        print(f"  • {gpu.name}")
+
+    # Print configuration summary
+    print("\n🧠  Printing training configuration:")
+    print(f"Light Mode:         {'ON' if config.LIGHT_MODE else 'OFF'} — Using reduced dataset for fast testing")
+
+    print(f"Augmentation:       {'ON' if config.AUGMENT_MODE['enabled'] else 'OFF'}", end="")
+    if config.AUGMENT_MODE['enabled']:
+        print(" —", end=" ")
+        flags = []
+        if config.AUGMENT_MODE.get("random_crop", False):
+            flags.append("Random Crop")
+        if config.AUGMENT_MODE.get("random_flip", False):
+            flags.append("Horizontal Flip")
+        if config.AUGMENT_MODE.get("cutout", False):
+            flags.append("Cutout")
+        print(", ".join(flags))
+    else:
+        print()
+
+    print(f"L2 Regularization:  {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ = {config.L2_MODE['lambda']})")
+    print(f"Dropout:            {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate = {config.DROPOUT_MODE['rate']})")
+    print(f"Optimizer:          {config.OPTIMIZER['type'].upper()} (lr = {config.OPTIMIZER['learning_rate']})")
+    print(f"Momentum:           {config.OPTIMIZER.get('momentum', 0.0)}")
+    print(f"LR Scheduler:       {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}", end="")
+    if config.SCHEDULE_MODE['enabled']:
+        print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('factor', 0.5)}")
+    else:
+        print()
+
+    print(f"Early Stopping:     {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}", end="")
+    if config.EARLY_STOP_MODE['enabled']:
+        print(f" — patience {config.EARLY_STOP_MODE.get('patience', '?')} epochs, restore best weights: {config.EARLY_STOP_MODE.get('restore_best_weights', False)}")
+    else:
+        print()
+
+    print(f"Weight Averaging:   {'ON' if config.AVERAGE_MODE['enabled'] else 'OFF'}", end="")
+    if config.AVERAGE_MODE['enabled']:
+        print(f" — starting at epoch {config.AVERAGE_MODE.get('start_epoch', '?')}")
+    else:
+        print()
+
+    print(f"Test-Time Augment:  {'ON' if config.TTA_MODE['enabled'] else 'OFF'}", end="")
+    if config.TTA_MODE['enabled']:
+        print(f" — running {config.TTA_MODE.get('runs', 1)} augmented passes per sample")
+    else:
+        print()
+
+    print(f"Epochs:             {config.EPOCHS_COUNT}")
+    print(f"Batch Size:         {config.BATCH_SIZE}\n")
 
 
 # Function to train a model
-def train_model(train_data, train_labels, model, model_number, run, config_name, timestamp, config, verbose=2):
+def train_model(train_data, train_labels, model, model_number, run, config_name, config, verbose=2):
     """
-    Trains a model using given data and logs all key metrics after training.
+    Trains a model using the given data and logs key training metrics.
 
-    If a checkpoint exists, training resumes from the last saved epoch.
-    Stores final model and history to disk.
+    Resumes training from the last saved checkpoint if available.
+    Saves the final model and full training history to disk.
 
     Args:
-        train_data (np.ndarray): Training images.
-        train_labels (np.ndarray): Integer class labels.
-        model (tf.keras.Model): Compiled Keras model.
-        model_number (int): Model version number.
-        run (int): Run number.
+        train_data (np.ndarray): Training image tensors.
+        train_labels (np.ndarray): Integer class labels for training data.
+        model (tf.keras.Model): Compiled Keras model instance.
+        model_number (int): Model version number used to construct run_id.
+        run (int): Current run number for this model.
         config_name (str): Name of the configuration used.
-        timestamp (str): Unique timestamp for this training session.
-        config (Config): Dynamic configuration object.
-        verbose (int): Keras verbosity level.
+        config (Config): Loaded configuration object containing paths and hyperparameters.
+        verbose (int): Verbosity level for Keras model.fit().
 
     Returns:
-        tuple: (trained model, Keras History object, was resumed)
+        tuple: (trained_model, training_history, was_resumed)
     """
 
     # Print header for function execution
     print("\n🎯  train_model")
 
     # Define and create model checkpoint directory for this run
-    model_checkpoint_path = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}"
+    run_id = f"m{model_number}_r{run}_{config_name}"
+    model_checkpoint_path = config.CHECKPOINT_PATH / run_id
     model_checkpoint_path.mkdir(parents=True, exist_ok=True)
 
     # Attempt to resume model, epoch, and history from previous checkpoint
-    resumed_model, initial_epoch, history = _resume_from_checkpoint(
-        model_checkpoint_path, config, model_number, run, config_name
-    )
+    resumed_model, initial_epoch, history = _resume_from_checkpoint(run_id, config)
 
-    # If model resumed and training is fully complete, skip training
-    if resumed_model is not None and initial_epoch >= config.EPOCHS_COUNT:
-        print(f"\n⏩  Skipping training for m{model_number}_r{run}_{config_name}")
+    # Skip training if model is already complete
+    if resumed_model and initial_epoch >= config.EPOCHS_COUNT:
+        print(f"\n📦  Training already complete — skipping m{model_number}_r{run}_{config_name}")
         return resumed_model, None, True
+
 
     # If training is incomplete but a fake or partial history exists, discard it
     if resumed_model is not None and initial_epoch < config.EPOCHS_COUNT and history is not None:
@@ -71,67 +141,16 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     callbacks = _prepare_callback(model, model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
+    # Always assign model metadata
+    model.model_id = model_number
+    model.run_id = f"m{model_number}_r{run}_{config_name}"
+
     try:
-        # Only fit if no prior history recovered
+        # Only fit if no prior history was recovered
         if history is None:
-            model.model_id = model_number
 
-            # Check available devices and GPU status
-            print("\n🖥️  Available compute devices:")
-            for device in device_lib.list_local_devices():
-                print(f"  • {device.name} ({device.device_type})")
-            gpus = tf.config.list_physical_devices("GPU")
-            print(f"\n🧮  GPU detected: {len(gpus) > 0}")
-            if gpus:
-                for gpu in gpus:
-                    print(f"  • {gpu.name}")
-
-            # Print training configuration to log file before training begins
-            print("🧠  Printing training configuration:")
-            print(f"Light Mode:         {'ON' if config.LIGHT_MODE else 'OFF'} — Using reduced dataset for fast testing")
-            print(f"Augmentation:       {'ON' if config.AUGMENT_MODE['enabled'] else 'OFF'}", end="")
-            if config.AUGMENT_MODE['enabled']:
-                print(" —", end=" ")
-                flags = []
-                if config.AUGMENT_MODE.get("random_crop", False):
-                    flags.append("Random Crop")
-                if config.AUGMENT_MODE.get("random_flip", False):
-                    flags.append("Horizontal Flip")
-                if config.AUGMENT_MODE.get("cutout", False):
-                    flags.append("Cutout")
-                print(", ".join(flags))
-            else:
-                print()
-
-
-            print(f"L2 Regularization:  {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ = {config.L2_MODE['lambda']})")
-            print(f"Dropout:            {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate = {config.DROPOUT_MODE['rate']})")
-            print(f"Optimizer:          {config.OPTIMIZER['type'].upper()} (lr = {config.OPTIMIZER['learning_rate']})")
-            print(f"Momentum:           {config.OPTIMIZER.get('momentum', 0.0)}")
-            print(f"LR Scheduler:       {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}", end="")
-            if config.SCHEDULE_MODE['enabled']:
-                print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('factor', 0.5)}")
-            else:
-                print()
-            print(f"Early Stopping:     {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}", end="")
-            if config.EARLY_STOP_MODE['enabled']:
-                print(f" — patience {config.EARLY_STOP_MODE.get('patience', '?')} epochs, restore best weights: {config.EARLY_STOP_MODE.get('restore_best_weights', False)}")
-            else:
-                print()
-            print(f"Weight Averaging:   {'ON' if config.AVERAGE_MODE['enabled'] else 'OFF'}", end="")
-            if config.AVERAGE_MODE['enabled']:
-                print(f" — starting at epoch {config.AVERAGE_MODE.get('start_epoch', '?')}")
-            else:
-                print()
-            print(f"Test-Time Augment:  {'ON' if config.TTA_MODE['enabled'] else 'OFF'}", end="")
-            if config.TTA_MODE['enabled']:
-                print(f" — running {config.TTA_MODE.get('runs', 1)} augmented passes per sample")
-            else:
-                print()
-
-
-            print(f"Epochs:             {config.EPOCHS_COUNT}")
-            print(f"Batch Size:         {config.BATCH_SIZE}\n")
+            # Print system info and experiment hyperparameters for traceability
+            _print_training_context(config)
 
             # Begin model training
             history = model.fit(
@@ -364,33 +383,30 @@ class RecoveryCheckpoint(Callback):
 
 
 # Function to resume training from checkpoint if available
-def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, run: int, config_name: str):
+def _resume_from_checkpoint(run_id: str, config):
     """
     Attempts to resume training from a saved checkpoint and training history.
 
-    This function checks if a model checkpoint and a corresponding history file exist.
-    If so, it loads the model, determines the epoch to resume from, and reconstructs
-    a dummy history object that mimics Keras' History for seamless integration.
+    Checks if a model checkpoint and history file exist for the given run_id.
+    If available, restores the model and resumes from the last saved epoch,
+    reconstructing a dummy History-like object for compatibility.
 
     Args:
-        checkpoint_path (Path): Directory where checkpoint files are stored.
-        config (Config): Configuration object with training parameters.
-        model_number (int): Identifier for the model architecture.
-        run (int): Sequential run number of the experiment.
-        config_name (str): Name of the configuration file used for this run.
+        run_id (str): Unique identifier for the experiment (e.g. "m9_r1_default").
+        config (Config): Configuration object with checkpoint and history paths.
 
     Returns:
         tuple:
-            - resumed_model (keras.Model or None): Loaded model if resume is possible, else None.
-            - initial_epoch (int): Epoch number to resume training from (0 if unavailable).
-            - history (object or None): Dummy object simulating Keras History, or None if not found.
+            - resumed_model (keras.Model or None): Restored model, or None if not found.
+            - initial_epoch (int): Epoch to resume training from (defaults to 0).
+            - history (object or None): Dummy object simulating Keras History, or None.
     """
-
 
     # Print header for function execution
     print("\n🎯  _resume_from_checkpoint")
 
     # Define path to the stored training history
+    checkpoint_path = config.CHECKPOINT_PATH / run_id
     history_file = checkpoint_path / "history.json"
 
     # Load model and resume epoch if checkpoint exists
@@ -399,20 +415,18 @@ def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, ru
 
     # Log resume status and handle early exit
     if resumed_model:
-        print(f"\n🔁  Resuming experiment at epoch_{initial_epoch}")
+        print(f"\n🔁  Resuming experiment {run_id} at epoch_{initial_epoch}")
 
         # If training was already completed, return early
         if initial_epoch >= config.EPOCHS_COUNT:
-            print(f"\n⏩  Returning early from experiment m{model_number}_r{run}_{config_name}")
+            print(f"\n⏩  Returning early from experiment {run_id}")
             return resumed_model, initial_epoch, None  # Early return: training complete
 
         # Attempt to load saved training history
         if history_file.exists():
             with open(history_file, "r") as f:
                 history_data = json.load(f)
-                class DummyHistory: pass
-                history = DummyHistory()
-                history.history = history_data  # Attach history data to dummy object
+            history = SimpleNamespace(history=history_data)  # Wrap dict in object with .history attribute
 
     return None if not resumed_model else resumed_model, initial_epoch, history  # Return resume state
 

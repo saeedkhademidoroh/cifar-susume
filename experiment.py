@@ -1,6 +1,7 @@
 # Import standard libraries
 import datetime
 import json
+import os
 import sys
 import time
 import traceback
@@ -33,6 +34,9 @@ def run_pipeline(pipeline):
 
     Args:
         pipeline (list of tuple): List of (model_number: int, config_name: str)
+
+    Returns:
+        None
     """
 
     # Print header for function execution
@@ -41,13 +45,8 @@ def run_pipeline(pipeline):
     # Generate timestamp for consistent filenames
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # Load config from the first entry to bootstrap directory setup
-    first_model, first_config_name = pipeline[0]
-    first_config_path = CONFIG.CONFIG_PATH / f"{first_config_name}.json"
-    first_config = CONFIG.load_config(first_config_path)
-
     # Initialize logging and result tracking
-    log_file, log_stream, result_file, all_results = _initialize_logging(timestamp)
+    log_stream, result_file, all_results = _initialize_logging(timestamp)
 
     try:
         # Load previously completed (model, config) combinations
@@ -56,7 +55,7 @@ def run_pipeline(pipeline):
         # Dictionary to track how many times each model_number has been run
         model_run_counter = {}
 
-        # Loop through each (model_number, config_name) in the pipeline
+        # Iterate through each experiment and assign unique run ID
         for i, (model_number, config_name) in enumerate(pipeline):
             print(f"\n⚙️   Piplining experiment {i+1}/{len(pipeline)}")
 
@@ -78,6 +77,10 @@ def run_pipeline(pipeline):
                 all_results=all_results,
                 result_file=result_file
             )
+
+
+        # Print final summary of all completed experiments
+        print(f"\n📦   Completed {len(all_results)} total experiment runs")
 
         # Save all accumulated results after pipeline execution
         with open(result_file, "w") as jf:
@@ -123,6 +126,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
     # Load dynamic configuration for this run
     config = CONFIG.load_config(config_path)
+    assert isinstance(config, CONFIG.__class__), "config must be a Config instance"
 
     # Create output folders if missing
     _ensure_output_directories(config)
@@ -136,6 +140,9 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
     print(f"\n🚀  Launching experiment m{model_number}_r{run} with '{config_name}'")
     start_time = time.time()
 
+    # Construct unique identifier for this run — used in paths, logs, and checkpoints
+    run_id = f"m{model_number}_r{run}_{config_name}"
+
     try:
         # Load dataset for this model variant
         train_data, train_labels, test_data, test_labels = build_dataset(config)
@@ -145,26 +152,28 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
         # Train model (resumable)
         trained_model, history, resumed = train_model(
-            train_data, train_labels,
-            model, model_number, run, config_name,
-            timestamp, config
+            train_data, train_labels, model, model_number, run, config_name, config
         )
 
         # Recover history if training was resumed and history is missing
         if resumed and (history is None or not hasattr(history, "history")):
-            history = _recover_training_history(config, model_number, run, config_name)
+            history = _recover_training_history(config, run_id)
 
         # Extract training/validation metrics
         metrics = extract_history_metrics(history)
 
         # Load best-performing model before final evaluation
-        best_model_path = config.CHECKPOINT_PATH / "best.keras"
+        best_model_path = config.CHECKPOINT_PATH / run_id / "best.keras"
         trained_model = load_model(best_model_path)
+        print(f"\n📥  Restored best model from:\n{best_model_path}")
 
         # Evaluate best model on test data
-        final_test_loss, final_test_acc = evaluate_model(
-            trained_model, test_data, test_labels, config
+        metrics = evaluate_model(
+            trained_model, history, test_data, test_labels, config
         )
+        final_test_loss = metrics["final_test_loss"]
+        final_test_acc = metrics["final_test_acc"]
+
 
         # Build evaluation dictionary for logging
         evaluation = _create_evaluation_dictionary(
@@ -187,7 +196,7 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
     except Exception as e:
         # On failure, log error details to error file
         log_to_json(
-            config.ERROR_PATH, key=None,
+            config.ERROR_PATH, key=run_id,
             record={
                 "model": model_number,
                 "run": run,
@@ -331,27 +340,26 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
 
 
 # Function to recover training history
-def _recover_training_history(config, model_number, run, config_name):
+def _recover_training_history(config, run_id):
     """
-    Attempts to load training history from disk if not already in memory.
+    Attempts to load training history from disk using a unique run identifier.
 
-    Used as a fallback when training is resumed but the in-memory history object is unavailable.
+    This serves as a fallback when training is resumed but the in-memory history
+    object is unavailable. The run_id string (e.g. "m9_r1_default") is used to locate
+    the corresponding checkpoint directory and retrieve the saved history.
 
     Args:
-        config (Config): Configuration object with path details.
-        model_number (int): Model identifier (e.g., 9).
-        run (int): Run identifier (e.g., 1).
-        config_name (str): Name of the config used for this run.
+        config (Config): Configuration object with directory paths.
+        run_id (str): Unique identifier for the run, formatted as 'm<model>_r<run>_<config>'.
 
     Returns:
         object | dict: Dummy object with `.history` if successful; empty dict otherwise.
     """
 
-
     # Print header for function execution
     print("\n🎯  _recover_training_history")
 
-    history_file = config.CHECKPOINT_PATH / f"m{model_number}_r{run}_{config_name}/history.json"
+    history_file = config.CHECKPOINT_PATH / run_id / "history.json"
 
     if history_file.exists():
         try:
@@ -364,7 +372,7 @@ def _recover_training_history(config, model_number, run, config_name):
         except Exception as e:
             print(f"\n⚠️  Failing to recover training history:\n{e}")
     else:
-        print(f"\n⚠️  Failing to find history for m{model_number}_r{run}_{config_name}")
+        print(f"\n⚠️  Failing to find history for {run_id}")
 
     return {}  # Return empty dict as fallback if recovery fails
 
@@ -382,10 +390,10 @@ def _initialize_logging(timestamp):
 
     Returns:
         tuple:
-            - log_file (Path): Path to the log text file.
-            - log_stream (IO): File stream object for the log.
-            - result_file (Path): Path to the structured result JSON file.
-            - all_results_list (list): Empty list to hold result records.
+            - log_stream (IO): File stream object for dual logging.
+            - result_file (Path): Path to structured result output file.
+            - all_results_list (list): In-memory result buffer.
+
     """
 
 
@@ -410,7 +418,7 @@ def _initialize_logging(timestamp):
     CONFIG.RESULT_PATH.mkdir(parents=True, exist_ok=True)
     result_file = CONFIG.RESULT_PATH / f"result_{timestamp}.json"
 
-    return log_file, log_stream, result_file, []  # Return handles for logging and results
+    return log_stream, result_file, []  # Return handles for logging and results
 
 
 # Function to ensure output directories

@@ -132,7 +132,7 @@ def build_model(model_number: int, config) -> Model:
         x = maybe_dropout(x)
         prediction_layer = Dense(10, activation="softmax", kernel_regularizer=regularizer)(x)
 
-    if model_number == 9:
+    elif model_number == 9:
         # Initial Conv(16)
         x = Conv2D(16, (3, 3), padding="same", kernel_regularizer=regularizer)(input_layer)
         x = BatchNormalization()(x)
@@ -166,6 +166,8 @@ def build_model(model_number: int, config) -> Model:
     # Print model architecture summary
     model.summary()
 
+    model.model_id = model_number
+    model.run_id = None  # Will be set externally in train_model
     return model  # Return compiled Keras model instance
 
 

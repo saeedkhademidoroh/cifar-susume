@@ -105,9 +105,10 @@ def clean_old_output(flag=False):
             CONFIG.ERROR_PATH,
             CONFIG.CHECKPOINT_PATH,
         ]
+        print(f"\n🗑️   Cleaning old experiment output")
         for path in targets:
             if path.exists():
-                print(f"\n🗑️   Cleaning old experiment output:\n{path}")
+                print(f"\n{path}")
                 shutil.rmtree(path, ignore_errors=True)
             else:
                 print(f"❌  Failing to clean old output:\n{path}")
@@ -116,4 +117,4 @@ def clean_old_output(flag=False):
 
 
 # Print module successfully executed
-print("\n✅  log.py successfully executed\n")
+print("\n✅  log.py successfully executed")

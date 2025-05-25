@@ -42,45 +42,67 @@ class Cutout:
         return Image.fromarray(img)
 
 
-# Function to build a torchvision transformation pipeline
-def build_transform(augment_config):
+# Function to normalize dataset
+def build_normalization_transform():
     """
-    Constructs a composite torchvision transform pipeline for CIFAR-10 images.
+    Returns a torchvision transform for CIFAR-10 normalization.
 
-    Applies optional data augmentation steps (crop, flip, cutout) if enabled,
+    Converts input to tensor and normalizes using CIFAR-10 mean/std.
+    """
+
+    # Print header for function execution
+    print("\n🎯  build_normalization_transform")
+
+
+    return transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)
+    ])
+
+
+# Function to augment dataset
+def build_augmentation_transform(config):
+    """
+    Constructs a transform pipeline with augmentations + normalization for CIFAR-10.
+
+    Applies random crop, flip, and cutout if enabled in the config,
     followed by standard normalization.
 
     Args:
-        augment_config (dict): Dictionary with augmentation flags:
-            - "enabled" (bool): Master switch for all augmentations
-            - "random_crop" (bool): Apply random cropping with padding
-            - "random_flip" (bool): Apply horizontal flip
-            - "cutout" (bool): Apply Cutout (mask a random square)
+        config (Config): Configuration with AUGMENT_MODE settings.
 
     Returns:
-        torchvision.transforms.Compose: A composed transform function
+        torchvision.transforms.Compose: Augmented and normalized transform pipeline.
     """
 
-    # Start with conversion to PIL (required by torchvision ops)
+    # Print header for function execution
+    print("\n🎯  build_augmentation_transform")
+
+    # Ensure config has AUGMENT_MODE field
+    assert hasattr(config, "AUGMENT_MODE"), "Missing AUGMENT_MODE in config"
+
+    # Start with conversion to PIL format (required for torchvision transforms)
     ops = [transforms.ToPILImage()]
 
-    # Apply augmentations only if enabled
-    if augment_config.get("enabled", False):
-        if augment_config.get("random_crop", False):
-            ops.append(transforms.RandomCrop(32, padding=4))
-        if augment_config.get("random_flip", False):
-            ops.append(transforms.RandomHorizontalFlip())
-        if augment_config.get("cutout", False):
-            ops.append(Cutout(size=16))
+    # Access augmentation config
+    augment = config.AUGMENT_MODE
 
-    # Always apply tensor conversion and normalization
-    ops += [
-        transforms.ToTensor(),
-        transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)
-    ]
+    # Conditionally add augmentations if enabled
+    if augment.get("enabled", False):
+        if augment.get("random_crop", False):
+            ops.append(transforms.RandomCrop(32, padding=4))  # Randomly crop with padding
+        if augment.get("random_flip", False):
+            ops.append(transforms.RandomHorizontalFlip())     # Random horizontal flip
+        if augment.get("cutout", False):
+            ops.append(Cutout(size=16))                       # Apply Cutout for occlusion
 
-    # Return the composed pipeline
+    # Always append normalization steps (ToTensor + Normalize)
+    ops += build_normalization_transform().transforms
+
+    # Return the composed transform pipeline
     return transforms.Compose(ops)
+
+
 
 
 # Function to load, optionally augment, and always standardize CIFAR-10
@@ -104,7 +126,7 @@ def build_dataset(config):
             All data arrays are np.float32 with shape (N, 32, 32, 3)
     """
 
-
+    # Print header for function execution
     print("\n🎯  build_dataset")
 
     # Load CIFAR-10
@@ -124,8 +146,8 @@ def build_dataset(config):
         train_images, train_labels = train_images[:-5000], train_labels[:-5000]
 
     # Build transforms for training and test
-    train_transform = build_transform(config.AUGMENT_MODE)
-    test_transform = build_transform({"enabled": False})
+    train_transform = build_augmentation_transform(config)
+    test_transform = build_normalization_transform()
 
     # Apply transforms and convert to float32 NumPy arrays
     train_data = [train_transform(img).permute(1, 2, 0).numpy() for img in train_images]

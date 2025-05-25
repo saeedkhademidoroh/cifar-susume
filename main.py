@@ -22,6 +22,11 @@ pipeline = [
     (6, "m6_rebase"),
     (9, "m9_tuned"),
     (9, "m9_drop")
+    # (9, "default"),
+    # (6, "default"),
+    # (6, "default"),
+    # (9, "default"),
+    # (9, "default")
 ]
 
 
