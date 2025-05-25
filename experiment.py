@@ -1,14 +1,17 @@
 # Import standard libraries
 import datetime
-import sys
 import json
+import sys
 import time
 import traceback
+
+# Import third-party libraries
+from keras.api.models import load_model
 
 # Import project-specific libraries
 from config import CONFIG
 from data import build_dataset
-from evaluate import extract_history_metrics
+from evaluate import evaluate_model, extract_history_metrics
 from log import log_to_json
 from model import build_model
 from train import train_model
@@ -154,10 +157,13 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
         # Extract training/validation metrics
         metrics = extract_history_metrics(history)
 
-        # Evaluate final model on test data
-        final_test_loss, final_test_acc = trained_model.evaluate(
-            test_data, test_labels,
-            batch_size=config.BATCH_SIZE, verbose=0
+        # Load best-performing model before final evaluation
+        best_model_path = config.CHECKPOINT_PATH / "best.keras"
+        trained_model = load_model(best_model_path)
+
+        # Evaluate best model on test data
+        final_test_loss, final_test_acc = evaluate_model(
+            trained_model, test_data, test_labels, config
         )
 
         # Build evaluation dictionary for logging
@@ -200,14 +206,16 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 # Function to load previous results
 def _load_previous_results(result_file, all_results):
     """
-    Function to load existing results from disk and extend in-memory results list.
+    Loads existing results from a previous result JSON file and updates the in-memory list.
+
+    Returns a set of (model, run, config) identifiers already logged, to prevent duplicates.
 
     Args:
-        result_file (Path): Path to the result.json file
-        all_results (list): Reference to the current in-memory results list
+        result_file (Path): Path to existing result JSON file.
+        all_results (list): The current in-memory result log (will be extended in-place).
 
     Returns:
-        set: A set of (model_number, run, config_name) triplets for deduplication
+        set: Set of (model, run, config) tuples to use for deduplication.
     """
 
     # Print header for function execution
@@ -230,23 +238,22 @@ def _load_previous_results(result_file, all_results):
 # Function to create an evaluation dictionary
 def _create_evaluation_dictionary(model_number, run, config_name, duration, config, metrics, test_loss, test_accuracy):
     """
-    Function to build structured evaluation dictionary.
+    Creates a full experiment record for evaluation and logging.
 
-    Combines model metadata, training config, runtime metrics, and evaluation results
-    into a single dictionary for logging.
+    Includes model identifiers, configuration parameters, training metrics, and test performance.
 
     Args:
-        model_number (int): Model variant used
-        run (int): Run ID for the model
-        config_name (str): Config file name
-        duration (float): Time taken for the run (seconds)
-        config (Config): Loaded config object
-        metrics (dict): Extracted training/validation metrics
-        test_loss (float): Final test loss
-        test_accuracy (float): Final test accuracy
+        model_number (int): The model variant ID.
+        run (int): The experiment run ID.
+        config_name (str): The name of the configuration file used.
+        duration (float): Total training and evaluation duration in seconds.
+        config (Config): Loaded configuration object.
+        metrics (dict): Training and validation metrics extracted after training.
+        test_loss (float): Final test set loss.
+        test_accuracy (float): Final test set accuracy.
 
     Returns:
-        dict: Structured evaluation result
+        dict: Complete evaluation result to log or store.
     """
 
     # Print header for function execution
@@ -262,7 +269,13 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
 
         "parameters": {
             "LIGHT_MODE": config.LIGHT_MODE,
-            "AUGMENT_MODE": config.AUGMENT_MODE,
+            "AUGMENT_MODE": {
+                "enabled": config.AUGMENT_MODE["enabled"],
+                "random_crop": config.AUGMENT_MODE.get("random_crop", False),
+                "random_flip": config.AUGMENT_MODE.get("random_flip", False),
+                "cutout": config.AUGMENT_MODE.get("cutout", False)
+            },
+
 
             "L2_MODE": {
                 "enabled": config.L2_MODE["enabled"],
@@ -272,13 +285,11 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
                 "enabled": config.DROPOUT_MODE["enabled"],
                 "rate": config.DROPOUT_MODE["rate"]
             },
-
             "OPTIMIZER": {
                 "type": config.OPTIMIZER["type"],
                 "learning_rate": config.OPTIMIZER["learning_rate"],
                 "momentum": config.OPTIMIZER.get("momentum", 0.0)
             },
-
             "SCHEDULE_MODE": {
                 "enabled": config.SCHEDULE_MODE["enabled"],
                 "warmup_epochs": config.SCHEDULE_MODE.get("warmup_epochs", 0),
@@ -286,22 +297,20 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
                 "patience": config.SCHEDULE_MODE.get("patience", None),
                 "min_lr": config.SCHEDULE_MODE.get("min_lr", None)
             },
-
             "EARLY_STOP_MODE": {
                 "enabled": config.EARLY_STOP_MODE["enabled"],
                 "patience": config.EARLY_STOP_MODE.get("patience", None),
                 "restore_best_weights": config.EARLY_STOP_MODE.get("restore_best_weights", None)
             },
-
             "AVERAGE_MODE": {
                 "enabled": config.AVERAGE_MODE["enabled"],
                 "start_epoch": config.AVERAGE_MODE.get("start_epoch", None)
             },
-
             "TTA_MODE": {
                 "enabled": config.TTA_MODE["enabled"],
                 "runs": config.TTA_MODE.get("runs", 1)
             },
+
 
             "EPOCHS_COUNT": config.EPOCHS_COUNT,
             "BATCH_SIZE": config.BATCH_SIZE
@@ -324,20 +333,20 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
 # Function to recover training history
 def _recover_training_history(config, model_number, run, config_name):
     """
-    Attempts to recover the training history from disk as a fallback.
+    Attempts to load training history from disk if not already in memory.
 
-    If the training was resumed and no history object is in memory, this function
-    reads the stored history.json file and wraps it in a dummy object.
+    Used as a fallback when training is resumed but the in-memory history object is unavailable.
 
     Args:
-        config (Config): Configuration object with checkpoint path
-        model_number (int): Model identifier
-        run (int): Run number
-        config_name (str): Config name used during training
+        config (Config): Configuration object with path details.
+        model_number (int): Model identifier (e.g., 9).
+        run (int): Run identifier (e.g., 1).
+        config_name (str): Name of the config used for this run.
 
     Returns:
-        object or dict: An object with .history attribute or empty dict if not found
+        object | dict: Dummy object with `.history` if successful; empty dict otherwise.
     """
+
 
     # Print header for function execution
     print("\n🎯  _recover_training_history")
@@ -363,17 +372,22 @@ def _recover_training_history(config, model_number, run, config_name):
 # Function to initialize logging
 def _initialize_logging(timestamp):
     """
-    Initializes dual logging to both console and log file.
+    Sets up dual logging to both terminal and a timestamped log file.
 
-    Creates a timestamped log file in LOG_PATH and redirects stdout and stderr
-    using the Tee class. Also prepares the result file path and structure.
+    Redirects stdout and stderr using a Tee class for simultaneous output.
+    Also prepares the result file path for storing structured outputs.
 
     Args:
-        timestamp (str): Current timestamp used for naming files.
+        timestamp (str): Unique timestamp used to name log and result files.
 
     Returns:
-        tuple: (log_file, log_stream, result_file, all_results_list)
+        tuple:
+            - log_file (Path): Path to the log text file.
+            - log_stream (IO): File stream object for the log.
+            - result_file (Path): Path to the structured result JSON file.
+            - all_results_list (list): Empty list to hold result records.
     """
+
 
     # Print header for function execution
     print("\n🎯  _initialize_logging")
@@ -402,9 +416,9 @@ def _initialize_logging(timestamp):
 # Function to ensure output directories
 def _ensure_output_directories(config):
     """
-    Ensures all output directories required for the experiment exist.
+    Ensures existence of all required experiment output directories.
 
-    Creates directories if they do not exist for:
+    Automatically creates the following paths if missing:
     - LOG_PATH
     - CHECKPOINT_PATH
     - RESULT_PATH
@@ -412,7 +426,10 @@ def _ensure_output_directories(config):
     - ERROR_PATH
 
     Args:
-        config (Config): Configuration object with path definitions
+        config (Config): The experiment configuration object with directory paths.
+
+    Returns:
+        None
     """
 
     # Print header for function execution
@@ -435,11 +452,11 @@ def _ensure_output_directories(config):
 # # Class for parallel writing in stdout and log
 class Tee:
     """
-    Custom class to duplicate output streams.
+    Custom class to duplicate stdout/stderr to multiple destinations.
 
-    Writes any data sent to it to all provided output streams,
-    typically the terminal and a log file simultaneously.
+    Used to stream logs both to the terminal and a file concurrently.
     """
+
     def __init__(self, *streams):
         """
         Initialize with multiple stream objects (e.g., sys.stdout and a file handle).

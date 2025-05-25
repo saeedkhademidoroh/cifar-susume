@@ -5,8 +5,12 @@ from pathlib import Path
 
 # Import third-party libraries
 import pytz
-from keras.api.callbacks import Callback, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.api.callbacks import Callback, ModelCheckpoint, EarlyStopping
 from keras.api.models import load_model
+
+from tensorflow.python.client import device_lib
+import tensorflow as tf
+
 
 
 # Function to train a model
@@ -72,40 +76,59 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
         if history is None:
             model.model_id = model_number
 
+            # Check available devices and GPU status
+            print("\n🖥️  Available compute devices:")
+            for device in device_lib.list_local_devices():
+                print(f"  • {device.name} ({device.device_type})")
+            gpus = tf.config.list_physical_devices("GPU")
+            print(f"\n🧮  GPU detected: {len(gpus) > 0}")
+            if gpus:
+                for gpu in gpus:
+                    print(f"  • {gpu.name}")
+
             # Print training configuration to log file before training begins
             print("🧠  Printing training configuration:")
             print(f"Light Mode:         {'ON' if config.LIGHT_MODE else 'OFF'} — Using reduced dataset for fast testing")
-            print(f"Augmentation:       {'ON' if config.AUGMENT_MODE else 'OFF'} — Random crop, flip, and Cutout enabled")
+            print(f"Augmentation:       {'ON' if config.AUGMENT_MODE['enabled'] else 'OFF'}", end="")
+            if config.AUGMENT_MODE['enabled']:
+                print(" —", end=" ")
+                flags = []
+                if config.AUGMENT_MODE.get("random_crop", False):
+                    flags.append("Random Crop")
+                if config.AUGMENT_MODE.get("random_flip", False):
+                    flags.append("Horizontal Flip")
+                if config.AUGMENT_MODE.get("cutout", False):
+                    flags.append("Cutout")
+                print(", ".join(flags))
+            else:
+                print()
+
 
             print(f"L2 Regularization:  {'ON' if config.L2_MODE['enabled'] else 'OFF'} (λ = {config.L2_MODE['lambda']})")
             print(f"Dropout:            {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate = {config.DROPOUT_MODE['rate']})")
-
             print(f"Optimizer:          {config.OPTIMIZER['type'].upper()} (lr = {config.OPTIMIZER['learning_rate']})")
             print(f"Momentum:           {config.OPTIMIZER.get('momentum', 0.0)}")
-
             print(f"LR Scheduler:       {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}", end="")
             if config.SCHEDULE_MODE['enabled']:
                 print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('factor', 0.5)}")
             else:
                 print()
-
             print(f"Early Stopping:     {'ON' if config.EARLY_STOP_MODE['enabled'] else 'OFF'}", end="")
             if config.EARLY_STOP_MODE['enabled']:
                 print(f" — patience {config.EARLY_STOP_MODE.get('patience', '?')} epochs, restore best weights: {config.EARLY_STOP_MODE.get('restore_best_weights', False)}")
             else:
                 print()
-
             print(f"Weight Averaging:   {'ON' if config.AVERAGE_MODE['enabled'] else 'OFF'}", end="")
             if config.AVERAGE_MODE['enabled']:
                 print(f" — starting at epoch {config.AVERAGE_MODE.get('start_epoch', '?')}")
             else:
                 print()
-
             print(f"Test-Time Augment:  {'ON' if config.TTA_MODE['enabled'] else 'OFF'}", end="")
             if config.TTA_MODE['enabled']:
                 print(f" — running {config.TTA_MODE.get('runs', 1)} augmented passes per sample")
             else:
                 print()
+
 
             print(f"Epochs:             {config.EPOCHS_COUNT}")
             print(f"Batch Size:         {config.BATCH_SIZE}\n")
@@ -146,6 +169,7 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     model_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_path)
 
+
     return model, history, False  # Return fully trained model, history, and resumption flag
 
 
@@ -155,28 +179,25 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
     Creates a list of Keras callbacks:
     - Saves the best model based on validation accuracy
     - Saves a model after each epoch
-    - Applies manual StepLR and linear warmup (if SCHEDULE_MODE is enabled)
+    - Applies milestone-based StepLR decay (if SCHEDULE_MODE is enabled)
+    - Applies optional learning rate warmup at start of training
     - Stops training early if validation stagnates (if EARLY_STOP_MODE is enabled)
-
-    Args:
-        model (keras.Model): The compiled model to access optimizer
-        model_checkpoint_path (Path): Output directory for model checkpoints
-        config (Config): Configuration object with scheduler and early stopping settings
-
-    Returns:
-        list: A list of Keras callback objects
     """
 
+    # Print header for function execution
     print("\n🎯  _prepare_checkpoint_callback")
 
     # Define checkpoint file paths
     best_model_path = model_checkpoint_path / "best.keras"
     per_epoch_path = model_checkpoint_path / "epoch_{epoch:02d}.keras"
 
+    # Extract verbosity settings from config
     verbose_lr = config.SCHEDULE_MODE.get("verbose", 1)
     verbose_es = config.EARLY_STOP_MODE.get("verbose", 1)
 
-    # Initialize core checkpoint callbacks
+    # Initialize core checkpoint callbacks:
+    # - Best model (based on val_accuracy)
+    # - Model after every epoch
     callbacks = [
         ModelCheckpoint(
             filepath=best_model_path,
@@ -193,7 +214,7 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
         )
     ]
 
-    # Append EarlyStopping if enabled
+    # Conditionally append EarlyStopping if enabled in config
     if config.EARLY_STOP_MODE.get("enabled", False):
         early_stop = EarlyStopping(
             monitor=config.EARLY_STOP_MODE.get("monitor", "val_accuracy"),
@@ -203,68 +224,89 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
         )
         callbacks.append(early_stop)
 
-    # Append StepLR and Warmup if scheduler enabled
+    # Scheduler logic based on config.SCHEDULE_MODE
     if config.SCHEDULE_MODE.get("enabled", False):
 
-        # StepLR scheduler
-        class StepDecayScheduler(Callback):
-            def __init__(self, optimizer, initial_lr, milestones, gamma):
-                super().__init__()
-                self.optimizer = optimizer
-                self.initial_lr = initial_lr
-                self.milestones = milestones
-                self.gamma = gamma
+        # StepLR scheduler (milestone-based decay)
+        if "milestones" in config.SCHEDULE_MODE:
+            # Define custom StepDecayScheduler callback
+            class StepDecayScheduler(Callback):
+                def __init__(self, optimizer, initial_lr, milestones, gamma):
+                    super().__init__()
+                    self.optimizer = optimizer
+                    self.initial_lr = initial_lr
+                    self.milestones = milestones
+                    self.gamma = gamma
 
-            def on_epoch_begin(self, epoch, logs=None):
-                lr = self.initial_lr
-                for milestone in self.milestones:
-                    if epoch >= milestone:
-                        lr *= self.gamma
-                self.model.optimizer.learning_rate.assign(lr)
-                print(f"\n🔁  StepLR applied — epoch {epoch}, learning rate set to {lr:.5f}\n")
+                def on_epoch_begin(self, epoch, logs=None):
+                    lr = self.initial_lr
+                    for milestone in self.milestones:
+                        if epoch >= milestone:
+                            lr *= self.gamma
+                    self.model.optimizer.learning_rate.assign(lr)
+                    print(f"\n🔁  StepLR applied — epoch {epoch}, learning rate set to {lr:.5f}\n")
 
-        step_scheduler = StepDecayScheduler(
-            optimizer=model.optimizer,
-            initial_lr=config.OPTIMIZER.get("learning_rate", 0.1),
-            milestones=[100, 150],
-            gamma=0.1
-        )
-        callbacks.append(step_scheduler)
+            # Instantiate and append step scheduler
+            step_scheduler = StepDecayScheduler(
+                optimizer=model.optimizer,
+                initial_lr=config.OPTIMIZER.get("learning_rate", 0.1),
+                milestones=config.SCHEDULE_MODE.get("milestones", [80, 120]),
+                gamma=config.SCHEDULE_MODE.get("gamma", 0.1)
+            )
+            callbacks.append(step_scheduler)
 
-        # Linear Warmup scheduler
-        class LinearWarmupScheduler(Callback):
-            def __init__(self, optimizer, warmup_epochs, target_lr):
-                super().__init__()
-                self.optimizer = optimizer
-                self.warmup_epochs = warmup_epochs
-                self.target_lr = target_lr
+        # ReduceLROnPlateau (metric-monitored decay)
+        elif "monitor" in config.SCHEDULE_MODE:
+            from keras.api.callbacks import ReduceLROnPlateau
+            scheduler = ReduceLROnPlateau(
+                monitor=config.SCHEDULE_MODE.get("monitor", "val_accuracy"),
+                factor=config.SCHEDULE_MODE.get("factor", 0.5),
+                patience=config.SCHEDULE_MODE.get("patience", 5),
+                min_lr=config.SCHEDULE_MODE.get("min_lr", 1e-5),
+                verbose=config.SCHEDULE_MODE.get("verbose", 1)
+            )
+            callbacks.append(scheduler)
 
-            def on_epoch_begin(self, epoch, logs=None):
-                if epoch < self.warmup_epochs:
-                    warmup_lr = self.target_lr * (epoch + 1) / self.warmup_epochs
-                    self.model.optimizer.learning_rate.assign(warmup_lr)
-                    print(f"⏫  Warmup applied — epoch {epoch}, learning rate set to {warmup_lr:.5f}\n")
+        # Linear warmup scheduler — optional early-stage ramp-up
+        if config.SCHEDULE_MODE.get("warmup_epochs", 0) > 0:
+            class LinearWarmupScheduler(Callback):
+                def __init__(self, optimizer, warmup_epochs, target_lr):
+                    super().__init__()
+                    self.optimizer = optimizer
+                    self.warmup_epochs = warmup_epochs
+                    self.target_lr = target_lr
 
-        warmup_scheduler = LinearWarmupScheduler(
-            optimizer=model.optimizer,
-            warmup_epochs=config.SCHEDULE_MODE.get("warmup_epochs", 5),
-            target_lr=config.OPTIMIZER.get("learning_rate", 0.1)
-        )
-        callbacks.append(warmup_scheduler)
+                def on_epoch_begin(self, epoch, logs=None):
+                    if epoch < self.warmup_epochs:
+                        warmup_lr = self.target_lr * ((epoch + 1) / self.warmup_epochs)
+                        self.model.optimizer.learning_rate.assign(warmup_lr)
+                        print(f"\n🔥  WarmupLR applied — epoch {epoch}, learning rate set to {warmup_lr:.5f}\n")
 
+            # Instantiate and append warmup scheduler
+            warmup_scheduler = LinearWarmupScheduler(
+                optimizer=model.optimizer,
+                warmup_epochs=config.SCHEDULE_MODE.get("warmup_epochs"),
+                target_lr=config.OPTIMIZER.get("learning_rate", 0.1)
+            )
+            callbacks.append(warmup_scheduler)
+
+    # Return all composed callbacks for model.fit()
+    # This includes checkpointing, early stopping, LR scheduling, and warmup (if enabled)
     return callbacks
 
 
 # Class for saving model state
 class RecoveryCheckpoint(Callback):
     """
-    Custom Keras Callback that saves the model and a JSON state file after each epoch.
+    Custom Keras callback to save model and epoch state after every epoch.
 
-    This ensures that training progress can be resumed from the last saved state.
+    This enables training to be resumed precisely from where it left off.
+    It writes the model to `latest.keras` and training progress to `state.json`.
 
     Args:
-        checkpoint_path (Path): Directory to store model and state.
+        checkpoint_path (Path): Directory where model and state will be stored.
     """
+
 
     def __init__(self, checkpoint_path: Path):
         """
@@ -326,22 +368,24 @@ def _resume_from_checkpoint(checkpoint_path: Path, config, model_number: int, ru
     """
     Attempts to resume training from a saved checkpoint and training history.
 
-    If a valid checkpoint and training history file are found, this function loads
-    the saved model, restores the training epoch, and reattaches the history.
+    This function checks if a model checkpoint and a corresponding history file exist.
+    If so, it loads the model, determines the epoch to resume from, and reconstructs
+    a dummy history object that mimics Keras' History for seamless integration.
 
     Args:
         checkpoint_path (Path): Directory where checkpoint files are stored.
         config (Config): Configuration object with training parameters.
-        model_number (int): Model identifier.
-        run (int): Run ID number.
-        config_name (str): Configuration name used for this run.
+        model_number (int): Identifier for the model architecture.
+        run (int): Sequential run number of the experiment.
+        config_name (str): Name of the configuration file used for this run.
 
     Returns:
         tuple:
-            - resumed_model (Model or None): Loaded Keras model if resume was possible.
-            - initial_epoch (int): Epoch to resume from.
-            - history (object or None): Dummy object with training history.
+            - resumed_model (keras.Model or None): Loaded model if resume is possible, else None.
+            - initial_epoch (int): Epoch number to resume training from (0 if unavailable).
+            - history (object or None): Dummy object simulating Keras History, or None if not found.
     """
+
 
     # Print header for function execution
     print("\n🎯  _resume_from_checkpoint")
@@ -450,14 +494,16 @@ def _split_dataset(train_data, train_labels, light_mode):
 # Function to save training history
 def _save_training_history(history_file: Path, history_obj):
     """
-    Saves the Keras training history to a specified JSON file.
+    Saves training history to a JSON file.
 
-    Converts the History object to a dictionary and writes it to disk.
+    Extracts the `.history` dictionary from a Keras History-like object
+    and writes it to disk as a JSON file.
 
     Args:
         history_file (Path): Path to the history JSON file.
-        history_obj (History): Keras History object containing training metrics.
+        history_obj: Object with a `.history` attribute (typically Keras History).
     """
+
 
     # Print header for function execution
     print("\n🎯  _save_training_history")

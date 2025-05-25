@@ -28,13 +28,11 @@ class Config:
     ERROR_PATH: Path               # Path to store structured error logs
 
     LIGHT_MODE: bool               # Enable reduced dataset (e.g. 5k train, 1k test) for fast iteration
-    AUGMENT_MODE: bool             # Enable augmentation pipeline (crop, flip, Cutout)
+    AUGMENT_MODE: dict             # Augmentation config with subkeys: random_crop, random_flip, cutout
 
     L2_MODE: dict                  # L2 regularization config (enabled + lambda)
     DROPOUT_MODE: dict             # Dropout config (enabled + dropout rate, often disabled for ResNet)
-
     OPTIMIZER: dict                # Optimizer settings: type, learning rate, momentum
-
     SCHEDULE_MODE: dict            # LR scheduler config (manual StepLR + optional warmup)
     EARLY_STOP_MODE: dict          # Early stopping config (usually disabled for 200-epoch ResNet runs)
     AVERAGE_MODE: dict             # Model weight averaging config (SWA-style, enabled near end of training)

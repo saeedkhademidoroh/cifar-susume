@@ -1,26 +1,33 @@
 # Import standard libraries
 import json
 
+# Import third-party libraries
+import numpy as np
+
+# Import project-specific libraries
+from data import build_transform
+
 
 # Function to evaluate trained model
 def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
     """
-    Function to evaluate a trained model and extract relevant training/test metrics.
+    Function to evaluate a trained model and extract training/test performance.
 
-    Loads fallback history if missing, evaluates the model on test data,
-    and prepares key statistics for logging and result tracking.
+    Handles optional TTA (Test-Time Augmentation), loads fallback training history
+    if not provided, and computes performance metrics.
 
     Args:
-        model (tf.keras.Model): Trained model instance
-        history (History or dict or None): Training history or None to trigger fallback loading
-        test_data (np.ndarray): Test dataset features
-        test_labels (np.ndarray): Test dataset labels
-        config (Config): Config object with BATCH_SIZE and CHECKPOINT_PATH
-        verbose (int): Verbosity level for evaluation (default: 0)
+        model (tf.keras.Model): Trained model instance.
+        history (History or dict or None): Training history, or None to auto-load from disk.
+        test_data (np.ndarray): Test images.
+        test_labels (np.ndarray): Test labels.
+        config (Config): Configuration object with paths and evaluation settings.
+        verbose (int): Verbosity level during evaluation and prediction.
 
     Returns:
-        dict: Dictionary containing training stats, test performance, and predictions
+        dict: Dictionary of training stats, final test loss/accuracy, and predictions.
     """
+
 
     # Print header for function execution
     print("\n🎯  evaluate_model")
@@ -56,7 +63,6 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
 
     # Predict outputs on test data
     if config.TTA_MODE.get("enabled", False):
-        from data import build_transform  # Make sure it's importable
 
         runs = config.TTA_MODE.get("runs", 5)
         transform = build_transform(augment=True)  # Always augment during TTA

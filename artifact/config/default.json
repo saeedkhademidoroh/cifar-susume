@@ -8,7 +8,13 @@
   "ERROR_PATH": "artifact/error",
 
   "LIGHT_MODE": true,
-  "AUGMENT_MODE": true,
+
+  "AUGMENT_MODE": {
+    "enabled": true,
+    "random_crop": true,
+    "random_flip": true,
+    "cutout": true
+  },
 
   "L2_MODE": {
     "enabled": true,
@@ -39,7 +45,7 @@
   "EARLY_STOP_MODE": {
     "enabled": true,
     "monitor": "val_accuracy",
-    "patience": 10,
+    "patience": 15,
     "restore_best_weights": true,
     "verbose": 1
   },

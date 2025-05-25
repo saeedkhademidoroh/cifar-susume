@@ -8,20 +8,21 @@
   "ERROR_PATH": "artifact/error",
 
   "LIGHT_MODE": false,
+
   "AUGMENT_MODE": {
     "enabled": true,
     "random_crop": true,
     "random_flip": true,
-    "cutout": true
+    "cutout": false
   },
 
   "L2_MODE": {
     "enabled": true,
-    "lambda": 0.0005
+    "lambda": 0.0001
   },
 
   "DROPOUT_MODE": {
-    "enabled": false,
+    "enabled": true,
     "rate": 0.3
   },
 
@@ -33,12 +34,10 @@
 
   "SCHEDULE_MODE": {
     "enabled": true,
-    "warmup_epochs": 5,
-    "monitor": "val_accuracy",
-    "factor": 0.1,
-    "patience": 3,
-    "min_lr": 1e-5,
-    "verbose": 1
+    "milestones": [80, 120],
+    "gamma": 0.1,
+    "verbose": 1,
+    "warmup_epochs": 5
   },
 
   "EARLY_STOP_MODE": {
@@ -51,7 +50,7 @@
 
   "AVERAGE_MODE": {
     "enabled": true,
-    "start_epoch": 170
+    "start_epoch": 160
   },
 
   "TTA_MODE": {

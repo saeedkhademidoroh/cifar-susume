@@ -1,5 +1,7 @@
-# Import third-party libraries
+# Import standard libraries
 import random
+
+# Import third-party libraries
 import numpy as np
 from PIL import Image
 from torchvision import datasets, transforms
@@ -40,20 +42,68 @@ class Cutout:
         return Image.fromarray(img)
 
 
+# Function to build a torchvision transformation pipeline
+def build_transform(augment_config):
+    """
+    Constructs a composite torchvision transform pipeline for CIFAR-10 images.
+
+    Applies optional data augmentation steps (crop, flip, cutout) if enabled,
+    followed by standard normalization.
+
+    Args:
+        augment_config (dict): Dictionary with augmentation flags:
+            - "enabled" (bool): Master switch for all augmentations
+            - "random_crop" (bool): Apply random cropping with padding
+            - "random_flip" (bool): Apply horizontal flip
+            - "cutout" (bool): Apply Cutout (mask a random square)
+
+    Returns:
+        torchvision.transforms.Compose: A composed transform function
+    """
+
+    # Start with conversion to PIL (required by torchvision ops)
+    ops = [transforms.ToPILImage()]
+
+    # Apply augmentations only if enabled
+    if augment_config.get("enabled", False):
+        if augment_config.get("random_crop", False):
+            ops.append(transforms.RandomCrop(32, padding=4))
+        if augment_config.get("random_flip", False):
+            ops.append(transforms.RandomHorizontalFlip())
+        if augment_config.get("cutout", False):
+            ops.append(Cutout(size=16))
+
+    # Always apply tensor conversion and normalization
+    ops += [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)
+    ]
+
+    # Return the composed pipeline
+    return transforms.Compose(ops)
+
+
 # Function to load, optionally augment, and always standardize CIFAR-10
 def build_dataset(config):
     """
-    Loads the CIFAR-10 dataset, applies optional light mode slicing,
-    optional data augmentation (crop, flip, cutout), and always performs
-    per-channel normalization.
+    Loads the CIFAR-10 dataset and applies preprocessing.
+
+    Supports:
+    - Optional light mode (subset of CIFAR-10)
+    - Optional data augmentation via flags:
+        - random_crop
+        - random_flip
+        - cutout
+    - Per-channel normalization with CIFAR-10 mean/std.
 
     Args:
-        config (Config): Configuration object with DATA_PATH, LIGHT_MODE, AUGMENT_MODE
+        config (Config): Configuration object with LIGHT_MODE and AUGMENT_MODE dict.
 
     Returns:
         tuple: (train_data, train_labels, test_data, test_labels)
-               train/test data are np.float32 arrays with shape (N, 32, 32, 3)
+            All data arrays are np.float32 with shape (N, 32, 32, 3)
     """
+
 
     print("\n🎯  build_dataset")
 
@@ -73,24 +123,9 @@ def build_dataset(config):
     else:
         train_images, train_labels = train_images[:-5000], train_labels[:-5000]
 
-    # Define transformation pipeline
-    def build_transform(augment):
-        ops = [transforms.ToPILImage()]
-        if augment:
-            ops += [
-                transforms.RandomCrop(32, padding=4),
-                transforms.RandomHorizontalFlip(),
-                Cutout(size=16)  # Add Cutout during training only
-            ]
-        ops += [
-            transforms.ToTensor(),
-            transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)
-        ]
-        return transforms.Compose(ops)
-
     # Build transforms for training and test
     train_transform = build_transform(config.AUGMENT_MODE)
-    test_transform = build_transform(False)
+    test_transform = build_transform({"enabled": False})
 
     # Apply transforms and convert to float32 NumPy arrays
     train_data = [train_transform(img).permute(1, 2, 0).numpy() for img in train_images]

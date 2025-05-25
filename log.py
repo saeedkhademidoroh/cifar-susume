@@ -13,20 +13,24 @@ from config import CONFIG
 # Function to log structured data to JSON
 def log_to_json(path, key, record=None, error=False):
     """
-    Function to log structured data to a JSON file.
+    Logs structured data to a JSON file for experiment tracking.
 
-    Handles both standard result logging and timestamped error logging.
-    Automatically adds a UTC timestamp to the record if not present.
+    Supports two modes:
+    - Result mode: Appends a new record under a specified key in result.json
+    - Error mode: Saves a standalone timestamped error JSON file
+
+    Automatically adds UTC timestamps to each record if not provided.
 
     Args:
-        path (Path or str): Target directory for the log file.
-        key (str): Top-level key in result.json (ignored if error=True).
-        record (dict, optional): Data to log (default is empty dict).
-        error (bool): If True, creates a timestamped error_<timestamp>.json file.
+        path (Path or str): Directory where the log file will be saved.
+        key (str): Key under which to store the record (ignored if error=True).
+        record (dict, optional): Data dictionary to log. Defaults to empty dict.
+        error (bool): If True, logs as error_<timestamp>.json instead of appending to result.json.
 
     Returns:
         None
     """
+
 
     # Print header for function execution
     print("\n🎯  log_to_json")
@@ -80,13 +84,12 @@ def log_to_json(path, key, record=None, error=False):
 # Function to clean old output
 def clean_old_output(flag=False):
     """
-    Function to clean output folders if CLEAN_MODE is enabled.
+    Cleans model, checkpoint, and error directories if CLEAN_MODE is enabled.
 
-    Deletes old checkpoint directories.
-    Only triggered if flag is True.
+    Primarily used to remove previous run artifacts before starting a new experiment.
 
     Args:
-        flag (bool): Whether to perform cleanup
+        flag (bool): If True, triggers cleanup. Otherwise, does nothing.
 
     Returns:
         None

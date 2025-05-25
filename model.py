@@ -1,30 +1,39 @@
 # Import third-party libraries
 from keras.api.models import Model
 from keras.api.layers import (
-    Input, Conv2D, MaxPooling2D, Flatten, Dense,
+    Input, Conv2D, Dense,
     BatchNormalization, Activation, GlobalAveragePooling2D,
-    DepthwiseConv2D, Add, Dropout
+    Add, Dropout
 )
 from keras.api.optimizers import Adam, SGD
 from keras.api.losses import SparseCategoricalCrossentropy
 from keras.api.regularizers import l2
 
 
+
 # Function to build a model
 def build_model(model_number: int, config) -> Model:
     """
-    Function to build and compile a model based on the given model_number.
+    Builds and compiles a Keras model based on the selected architecture.
 
-    Supports several variants of VGG-style CNNs with optional BatchNorm,
-    GlobalAveragePooling, separable convolutions, residual connections,
-    and configurable regularization (L2 and Dropout).
+    Supports multiple architectures:
+    - Model 6: Custom CNN with stacked residual blocks (32→64→128 filters)
+    - Model 9: ResNet-20-style model with 3 stages of residual blocks (16→32→64 filters)
+
+    Each model uses:
+    - Batch normalization after each convolution
+    - ReLU activation
+    - Optional L2 regularization and dropout
+    - Global average pooling before final classification
 
     Args:
-        model_number (int): Identifier for architecture variant
+        model_number (int): Model version to build (e.g., 6 or 9)
+        config (Config): Configuration object containing optimizer, regularization, and dropout settings
 
     Returns:
-        Model: A compiled Keras model instance
+        Model: A compiled tf.keras.Model ready for training
     """
+
 
     # Print header for function execution
     print("\n🎯  build_model\n")

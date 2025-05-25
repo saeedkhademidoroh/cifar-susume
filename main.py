@@ -13,12 +13,17 @@ print("\n✅  main.py is being executed")
 clean_old_output(False)
 
 # Force CPU usage by disabling GPU
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+# os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Define experiment pipeline: (model_number, config_name)
 pipeline = [
-    (9, "m9_base")
+    (9, "m9_base"),
+    (6, "m6_legacy"),
+    (6, "m6_rebase"),
+    (9, "m9_tuned"),
+    (9, "m9_drop")
 ]
+
 
 # Run experiments through pipeline
 run_pipeline(pipeline)
