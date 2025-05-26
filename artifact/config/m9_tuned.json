@@ -8,6 +8,7 @@
   "ERROR_PATH": "artifact/error",
 
   "LIGHT_MODE": false,
+  
   "AUGMENT_MODE": {
     "enabled": true,
     "random_crop": true,
@@ -53,7 +54,7 @@
   },
 
   "TTA_MODE": {
-    "enabled": true,
+    "enabled": false,
     "runs": 5
   },
 

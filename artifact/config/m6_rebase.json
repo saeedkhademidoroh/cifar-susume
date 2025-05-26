@@ -54,7 +54,7 @@
   },
 
   "TTA_MODE": {
-    "enabled": true,
+    "enabled": false,
     "runs": 5
   },
 
