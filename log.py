@@ -105,13 +105,13 @@ def clean_old_output(flag=False):
             CONFIG.ERROR_PATH,
             CONFIG.CHECKPOINT_PATH,
         ]
-        print(f"\n🗑️   Cleaning old experiment output")
+        print(f"\n🗑️  Cleaning old experiment output")
         for path in targets:
             if path.exists():
                 print(f"\n{path}")
                 shutil.rmtree(path, ignore_errors=True)
             else:
-                print(f"❌  Failing to clean old output:\n{path}")
+                print(f"\n{path}")
     else:
         print("\n🚫  CLEAN_MODE is OFF — skipping old output directories")
 

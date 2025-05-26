@@ -8,11 +8,13 @@ from types import SimpleNamespace
 import pytz
 import tensorflow as tf
 from tensorflow.python.client import device_lib
+from keras.api.losses import CategoricalCrossentropy
+from keras.api.metrics import Mean, SparseCategoricalAccuracy
 from keras.api.callbacks import Callback, ModelCheckpoint, EarlyStopping
 from keras.api.models import load_model
 
 
-
+# Function to print training context
 def _print_training_context(config):
     """
     Prints available compute devices and training configuration details.
@@ -48,6 +50,8 @@ def _print_training_context(config):
             flags.append("Horizontal Flip")
         if config.AUGMENT_MODE.get("cutout", False):
             flags.append("Cutout")
+        if config.AUGMENT_MODE.get("color_jitter", False):
+            flags.append("Color Jitter")
         print(", ".join(flags))
     else:
         print()
@@ -56,9 +60,10 @@ def _print_training_context(config):
     print(f"Dropout:            {'ON' if config.DROPOUT_MODE['enabled'] else 'OFF'} (rate = {config.DROPOUT_MODE['rate']})")
     print(f"Optimizer:          {config.OPTIMIZER['type'].upper()} (lr = {config.OPTIMIZER['learning_rate']})")
     print(f"Momentum:           {config.OPTIMIZER.get('momentum', 0.0)}")
+
     print(f"LR Scheduler:       {'ON' if config.SCHEDULE_MODE['enabled'] else 'OFF'}", end="")
     if config.SCHEDULE_MODE['enabled']:
-        print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('factor', 0.5)}")
+        print(f" — warmup for {config.SCHEDULE_MODE.get('warmup_epochs', 0)} epochs, decay factor {config.SCHEDULE_MODE.get('gamma', '?')}")
     else:
         print()
 
@@ -80,31 +85,27 @@ def _print_training_context(config):
     else:
         print()
 
+    print(f"MixUp:              {'ON' if config.MIXUP_MODE['enabled'] else 'OFF'}", end="")
+    if config.MIXUP_MODE['enabled']:
+        print(f" — alpha = {config.MIXUP_MODE.get('alpha', '?')}")
+    else:
+        print()
+
     print(f"Epochs:             {config.EPOCHS_COUNT}")
     print(f"Batch Size:         {config.BATCH_SIZE}\n")
+
 
 
 # Function to train a model
 def train_model(train_data, train_labels, model, model_number, run, config_name, config, verbose=2):
     """
-    Trains a model using the given data and logs key training metrics.
+    Trains a model using a custom training loop and logs key training metrics.
 
     Resumes training from the last saved checkpoint if available.
+    Supports advanced training strategies (e.g., MixUp, SWA).
     Saves the final model and full training history to disk.
-
-    Args:
-        train_data (np.ndarray): Training image tensors.
-        train_labels (np.ndarray): Integer class labels for training data.
-        model (tf.keras.Model): Compiled Keras model instance.
-        model_number (int): Model version number used to construct run_id.
-        run (int): Current run number for this model.
-        config_name (str): Name of the configuration used.
-        config (Config): Loaded configuration object containing paths and hyperparameters.
-        verbose (int): Verbosity level for Keras model.fit().
-
-    Returns:
-        tuple: (trained_model, training_history, was_resumed)
     """
+
 
     # Print header for function execution
     print("\n🎯  train_model")
@@ -137,6 +138,10 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
         train_data, train_labels, config.LIGHT_MODE
     )
 
+    # Build tf.data pipeline for training batches
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+    train_dataset = train_dataset.shuffle(1024).batch(config.BATCH_SIZE)
+
     # Prepare checkpoint, scheduler, and early stop callbacks
     callbacks = _prepare_callback(model, model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
@@ -152,17 +157,50 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
             # Print system info and experiment hyperparameters for traceability
             _print_training_context(config)
 
-            # Begin model training
-            history = model.fit(
-                x=train_data,
-                y=train_labels,
-                validation_data=(val_data, val_labels),
-                epochs=config.EPOCHS_COUNT,
-                batch_size=config.BATCH_SIZE,
-                callbacks=callbacks,
-                verbose=verbose,
-                initial_epoch=initial_epoch
-            )
+            # Extract MixUp settings from config
+            mixup_enabled = config.MIXUP_MODE.get("enabled", False)
+            mixup_alpha = config.MIXUP_MODE.get("alpha", 0.2)
+
+            # Cache training data as tensors to avoid repeated conversions
+            train_data_tensor = tf.convert_to_tensor(train_data)
+            train_labels_tensor = tf.convert_to_tensor(train_labels)
+
+            # Initialize custom history tracking
+            history = {"loss": [], "accuracy": [], "val_loss": [], "val_accuracy": []}
+
+            for epoch in range(initial_epoch, config.EPOCHS_COUNT):
+                print(f"\n🔁 Epoch {epoch + 1}/{config.EPOCHS_COUNT}\n")
+                epoch_loss = Mean()
+                epoch_acc = SparseCategoricalAccuracy()
+
+                for x_batch, y_batch in train_dataset:
+                    if mixup_enabled:
+                        idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x_batch)[0]]
+                        x_alt = tf.gather(train_data_tensor, idx)
+                        y_alt = tf.gather(train_labels_tensor, idx)
+
+                        lam = tf.random.uniform([], 1 - mixup_alpha, 1.0)
+                        x_batch = lam * x_batch + (1 - lam) * x_alt
+                        y_batch_mix = lam * tf.one_hot(y_batch, 10) + (1 - lam) * tf.one_hot(y_alt, 10)
+                        loss_fn_batch = CategoricalCrossentropy()
+                    else:
+                        y_batch_mix = tf.one_hot(y_batch, 10)
+                        loss_fn_batch = CategoricalCrossentropy()
+
+                    with tf.GradientTape() as tape:
+                        preds = model(x_batch, training=True)
+                        loss = loss_fn_batch(y_batch_mix, preds)
+
+                    grads = tape.gradient(loss, model.trainable_variables)
+                    model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+                    epoch_loss.update_state(loss)
+                    epoch_acc.update_state(y_batch, preds)
+
+                print(f"📊 Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {epoch_acc.result():.4f}")
+
+                history["loss"].append(epoch_loss.result().numpy())
+                history["accuracy"].append(epoch_acc.result().numpy())
 
             # Merge old history if training resumed
             if initial_epoch > 0:
@@ -170,9 +208,8 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
                 if old_history_file.exists():
                     with open(old_history_file, "r") as f:
                         old_history = json.load(f)
-                    for key in history.history:
-                        history.history[key] = old_history.get(key, []) + history.history[key]
-
+                    for key in history:
+                        history[key] = old_history.get(key, []) + history[key]
 
             # Save full history after training completes
             _save_training_history(model_checkpoint_path / "history.json", history)
@@ -187,7 +224,6 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
     model_path = config.MODEL_PATH / f"m{model_number}_r{run}_{config_name}.keras"
     model_path.parent.mkdir(parents=True, exist_ok=True)
     model.save(model_path)
-
 
     return model, history, False  # Return fully trained model, history, and resumption flag
 
@@ -532,7 +568,7 @@ def _save_training_history(history_file: Path, history_obj):
         with open(history_file, "w") as f:
             json.dump(history_obj.history, f)  # Serialize and write history data
     except Exception as e:
-        print(f"\n⚠️ Failing to save history:\n{e}")  # Log failure if saving fails
+        print(f"\n⚠️  Failing to save history:\n{e}")  # Log failure if saving fails
 
 
 # Print confirmation message

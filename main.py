@@ -10,15 +10,14 @@ from log import clean_old_output
 print("\n✅  main.py is being executed")
 
 # Clean old outputs if CLEAN_MODE is enabled
-# clean_old_output(True)
+clean_old_output(True)
 
 # Force CPU usage by disabling GPU
 # os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Define experiment pipeline: (model_number, config_name)
 pipeline = [
-    (9, "m9_res_flip"),
-    (9, "m9_res_fall")
+    (9, "default")
 ]
 
 # Run experiments through pipeline

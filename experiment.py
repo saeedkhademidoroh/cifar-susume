@@ -275,7 +275,6 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
         "date": datetime.datetime.now().strftime("%Y-%m-%d"),
         "time": datetime.datetime.now().strftime("%H:%M:%S"),
         "duration": str(datetime.timedelta(seconds=int(duration))),
-
         "parameters": {
             "LIGHT_MODE": config.LIGHT_MODE,
             "AUGMENT_MODE": {
@@ -284,8 +283,6 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
                 "random_flip": config.AUGMENT_MODE.get("random_flip", False),
                 "cutout": config.AUGMENT_MODE.get("cutout", False)
             },
-
-
             "L2_MODE": {
                 "enabled": config.L2_MODE["enabled"],
                 "lambda": config.L2_MODE["lambda"]
@@ -319,12 +316,14 @@ def _create_evaluation_dictionary(model_number, run, config_name, duration, conf
                 "enabled": config.TTA_MODE["enabled"],
                 "runs": config.TTA_MODE.get("runs", 1)
             },
-
+            "MIXUP_MODE": {
+                "enabled": config.MIXUP_MODE["enabled"],
+                "alpha": config.MIXUP_MODE["alpha"]
+            },
 
             "EPOCHS_COUNT": config.EPOCHS_COUNT,
             "BATCH_SIZE": config.BATCH_SIZE
         },
-
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
         "max_train_acc": metrics["max_train_acc"],

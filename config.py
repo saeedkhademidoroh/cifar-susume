@@ -37,6 +37,7 @@ class Config:
     EARLY_STOP_MODE: dict          # Early stopping config (usually disabled for 200-epoch ResNet runs)
     AVERAGE_MODE: dict             # Model weight averaging config (SWA-style, enabled near end of training)
     TTA_MODE: dict                 # Test-time augmentation config (enabled + runs count)
+    MIXUP_MODE: dict               # MixUp config (enabled + alpha for interpolation strength)
 
     EPOCHS_COUNT: int              # Total number of training epochs (e.g. 200)
     BATCH_SIZE: int                # Training batch size (e.g. 128)
@@ -106,9 +107,11 @@ class Config:
             "EARLY_STOP_MODE",
             "AVERAGE_MODE",
             "TTA_MODE",
+            "MIXUP_MODE",
             "EPOCHS_COUNT",
             "BATCH_SIZE"
         ]
+
 
         # Validate all required keys are present
         missing = [key for key in required_keys if key not in config_data]
@@ -136,9 +139,11 @@ class Config:
             EARLY_STOP_MODE=config_data["EARLY_STOP_MODE"],
             AVERAGE_MODE=config_data["AVERAGE_MODE"],
             TTA_MODE=config_data["TTA_MODE"],
+            MIXUP_MODE=config_data["MIXUP_MODE"],             # Added for MixUp
             EPOCHS_COUNT=config_data["EPOCHS_COUNT"],
             BATCH_SIZE=config_data["BATCH_SIZE"]
         )
+
 
 
 # Load default configuration from artifact/config/default.json
