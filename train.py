@@ -92,7 +92,7 @@ def _print_training_context(config):
         print()
 
     print(f"Epochs:             {config.EPOCHS_COUNT}")
-    print(f"Batch Size:         {config.BATCH_SIZE}\n")
+    print(f"Batch Size:         {config.BATCH_SIZE}")
 
 
 # Function to train a model
@@ -137,19 +137,35 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
         train_data, train_labels, config.LIGHT_MODE
     )
 
-    # Build tf.data pipeline for training batches
-    train_dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
-    train_dataset = train_dataset.shuffle(1024).batch(config.BATCH_SIZE)
+    # Convert training arrays to tensors for map-level MixUp use
+    train_data_tensor = tf.convert_to_tensor(train_data)
+    train_labels_tensor = tf.convert_to_tensor(train_labels)
 
-    # Prepare checkpoint, scheduler, and early stop callbacks
+    # Build tf.data pipeline
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+    train_dataset = train_dataset.shuffle(1024)
+
+    if config.MIXUP_MODE.get("enabled", False):
+        def dataset_mixup(x, y):
+            return _mixup_fn(x, y, train_data_tensor, train_labels_tensor, alpha=config.MIXUP_MODE.get("alpha", 0.2))
+        train_dataset = train_dataset.map(dataset_mixup, num_parallel_calls=tf.data.AUTOTUNE)
+    else:
+        def one_hot_encode(x, y):
+            return x, tf.one_hot(y, 10)
+        train_dataset = train_dataset.map(one_hot_encode, num_parallel_calls=tf.data.AUTOTUNE)
+
+    train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+
+    # Prepare callbacks
     callbacks = _prepare_callback(model, model_checkpoint_path, config)
     callbacks.append(RecoveryCheckpoint(model_checkpoint_path))
 
-    # Always assign model metadata
+    # Assign model metadata
     model.model_id = model_number
     model.run_id = f"m{model_number}_r{run}_{config_name}"
 
     try:
+
         # Only fit if no prior history was recovered
         if history is None:
 
@@ -167,41 +183,56 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
             # Build training dataset
             train_dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
             train_dataset = train_dataset.shuffle(1024)
+            train_dataset = train_dataset.batch(config.BATCH_SIZE)
 
             if mixup_enabled:
                 def dataset_mixup(x, y):
-                    return _mixup_fn(x, y, train_data_tensor, train_labels_tensor, alpha=mixup_alpha)
+                    idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x)[0]]
+                    x2 = tf.gather(train_data_tensor, idx)
+                    y2 = tf.gather(train_labels_tensor, idx)
+                    lam = tf.random.uniform([], 1 - mixup_alpha, 1.0)
+                    x_mix = lam * x + (1 - lam) * x2
+                    y_mix = lam * tf.one_hot(y, 10) + (1 - lam) * tf.one_hot(y2, 10)
+                    return x_mix, y_mix
                 train_dataset = train_dataset.map(dataset_mixup, num_parallel_calls=tf.data.AUTOTUNE)
             else:
                 def one_hot_encode(x, y):
                     return x, tf.one_hot(y, 10)
                 train_dataset = train_dataset.map(one_hot_encode, num_parallel_calls=tf.data.AUTOTUNE)
 
-            train_dataset = train_dataset.batch(config.BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+            train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
             # Initialize custom history tracking
             history = {"loss": [], "accuracy": [], "val_loss": [], "val_accuracy": []}
 
+            # Define compiled train step
+            loss_fn = CategoricalCrossentropy()
+            acc_fn = SparseCategoricalAccuracy()
+
+            @tf.function
+            def train_step(x_batch, y_batch):
+                with tf.GradientTape() as tape:
+                    preds = model(x_batch, training=True)
+                    loss = loss_fn(y_batch, preds)
+                grads = tape.gradient(loss, model.trainable_variables)
+                model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
+                acc_fn.update_state(tf.argmax(y_batch, axis=1), preds)
+                return loss
+
+            # Training loop
             for epoch in range(initial_epoch, config.EPOCHS_COUNT):
-                print(f"\n🔁 Epoch {epoch + 1}/{config.EPOCHS_COUNT}\n")
+                print(f"\n📆  Epoch {epoch + 1}/{config.EPOCHS_COUNT}\n")
                 epoch_loss = Mean()
-                epoch_acc = SparseCategoricalAccuracy()
+                acc_fn.reset_state()
 
                 for x_batch, y_batch in train_dataset:
-                    with tf.GradientTape() as tape:
-                        preds = model(x_batch, training=True)
-                        loss = CategoricalCrossentropy()(y_batch, preds)
-
-                    grads = tape.gradient(loss, model.trainable_variables)
-                    model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
-
+                    loss = train_step(x_batch, y_batch)
                     epoch_loss.update_state(loss)
-                    epoch_acc.update_state(tf.argmax(y_batch, axis=1), preds)
 
-                print(f"📊 Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {epoch_acc.result():.4f}")
+                print(f"\n📊  Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {acc_fn.result():.4f}")
 
                 history["loss"].append(epoch_loss.result().numpy())
-                history["accuracy"].append(epoch_acc.result().numpy())
+                history["accuracy"].append(acc_fn.result().numpy())
 
             # Merge old history if training resumed
             if initial_epoch > 0:
@@ -213,7 +244,11 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
                         history[key] = old_history.get(key, []) + history[key]
 
             # Save full history after training completes
-            _save_training_history(model_checkpoint_path / "history.json", history)
+            try:
+                _save_training_history(model_checkpoint_path / "history.json", history)
+            except Exception as e:
+                print(f"\n⚠️  Failing to save history:\n{e}")
+
 
     except Exception as e:
         # On failure, attempt to save partial history if available
@@ -566,25 +601,31 @@ def _mixup_fn(x1, y1, train_data_tensor, train_labels_tensor, alpha=0.2):
             y_mix (tf.Tensor): Batch of soft labels (one-hot interpolated).
     """
 
-
     # Print header for function execution
     print("\n🎯  _mixup_fn")
 
     # Randomly select indices from the full dataset to pair with current batch
     idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x1)[0]]
 
-    # Gather alternative samples
+    # Gather alternative samples from cached tensors
     x2 = tf.gather(train_data_tensor, idx)
     y2 = tf.gather(train_labels_tensor, idx)
 
-    # Sample lambda from Beta(alpha, alpha) (approximated here as uniform)
+    # Sample lambda from uniform distribution for mixing
     lam = tf.random.uniform([], 1 - alpha, 1.0)
+
+    # Print lambda and one sample mixed label for verification
+    tf.print("λ =", lam)
+    tf.print("Mixed label preview:", lam * tf.one_hot(tf.expand_dims(y1, 0), 10) + (1 - lam) * tf.one_hot(tf.expand_dims(y2, 0), 10))
+    tf.print("y1 shape:", tf.shape(y1))
 
     # Mix images and labels
     x_mix = lam * x1 + (1 - lam) * x2
     y_mix = lam * tf.one_hot(y1, 10) + (1 - lam) * tf.one_hot(y2, 10)
 
+    # Return mixed inputs and soft labels
     return x_mix, y_mix
+
 
 
 # Function to save training history

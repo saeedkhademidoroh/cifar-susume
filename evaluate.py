@@ -52,8 +52,25 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
                 history = {}
 
     # Extract metrics from training history
-    metrics = extract_history_metrics(history)
+    try:
+        # Attempt to extract min/max metrics from provided history
+        metrics = extract_history_metrics(history)
 
+    except (ValueError, KeyError) as e:
+        # Handle missing or incomplete history data gracefully
+        print(f"\n⚠️  Failed to extract history metrics: {e}")
+
+        # Fallback: initialize all expected metrics as None
+        metrics = {
+            "min_train_loss": None,
+            "min_train_loss_epoch": None,
+            "max_train_acc": None,
+            "max_train_acc_epoch": None,
+            "min_val_loss": None,
+            "min_val_loss_epoch": None,
+            "max_val_acc": None,
+            "max_val_acc_epoch": None,
+        }
 
     # Evaluate model on test data
     final_test_loss, final_test_acc = model.evaluate(
@@ -147,20 +164,14 @@ def extract_history_metrics(history):
         "max_train_acc_epoch": history["accuracy"].index(max(history["accuracy"])) + 1,
     }
 
-    # Extract validation metrics if available
-    if "val_loss" in history and "val_accuracy" in history:
-        metrics.update({
-            "min_val_loss": min(history["val_loss"]),
-            "min_val_loss_epoch": history["val_loss"].index(min(history["val_loss"])) + 1,
-            "max_val_acc": max(history["val_accuracy"]),
-            "max_val_acc_epoch": history["val_accuracy"].index(max(history["val_accuracy"])) + 1,
-        })
-    else:
-        metrics["min_val_loss"] = None
-        metrics["min_val_loss_epoch"] = None
-        metrics["max_val_acc"] = None
-        metrics["max_val_acc_epoch"] = None
+    # Extract validation metrics safely
+    val_loss = history.get("val_loss", [])
+    val_acc = history.get("val_accuracy", [])
 
+    metrics["min_val_loss"] = min(val_loss) if val_loss else None
+    metrics["min_val_loss_epoch"] = val_loss.index(min(val_loss)) + 1 if val_loss else None
+    metrics["max_val_acc"] = max(val_acc) if val_acc else None
+    metrics["max_val_acc_epoch"] = val_acc.index(max(val_acc)) + 1 if val_acc else None
 
     return metrics  # Return dictionary of extracted metrics
 

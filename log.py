@@ -108,10 +108,10 @@ def clean_old_output(flag=False):
         print(f"\n🗑️  Cleaning old experiment output")
         for path in targets:
             if path.exists():
-                print(f"\n{path}")
+                print(f"{path}")
                 shutil.rmtree(path, ignore_errors=True)
             else:
-                print(f"\n{path}")
+                print(f"{path}")
     else:
         print("\n🚫  CLEAN_MODE is OFF — skipping old output directories")
 
