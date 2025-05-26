@@ -53,12 +53,12 @@
   },
 
   "MIXUP_MODE": {
-    "enabled": false,
+    "enabled": true,
     "alpha": 0.2
   },
 
   "FROZEN_BN": true,
 
-  "EPOCHS_COUNT": 5,
+  "EPOCHS_COUNT": 4,
   "BATCH_SIZE": 32
 }

@@ -1,12 +1,13 @@
 # Import standard libraries
 import datetime
 import json
-import os
 import sys
 import time
 import traceback
 
 # Import third-party libraries
+import numpy as np
+import tensorflow as tf
 from keras.api.models import load_model
 
 # Import project-specific libraries
@@ -16,6 +17,31 @@ from evaluate import evaluate_model, extract_history_metrics
 from log import log_to_json
 from model import build_model
 from train import train_model
+
+
+# Function to recursively convert NumPy/TensorFlow types to native Python types
+def _to_json_compatible(obj):
+    # If the object is a dictionary, convert all values recursively
+    if isinstance(obj, dict):
+        return {k: _to_json_compatible(v) for k, v in obj.items()}
+
+    # If the object is a list, convert all elements recursively
+    elif isinstance(obj, list):
+        return [_to_json_compatible(v) for v in obj]
+
+    # Convert NumPy scalar types to native Python types
+    elif isinstance(obj, (np.generic,)):
+        return obj.item()
+
+    # Convert TensorFlow scalar tensors
+    elif isinstance(obj, tf.Tensor):
+        if tf.rank(obj) == 0:
+            return obj.numpy().item()
+        else:
+            return obj.numpy().tolist()
+
+    # Already compatible types are returned as-is
+    return obj
 
 
 # Function to run all experiments in pipeline
@@ -84,7 +110,7 @@ def run_pipeline(pipeline):
 
         # Save all accumulated results after pipeline execution
         with open(result_file, "w") as jf:
-            json.dump(all_results, jf, indent=2)
+            json.dump(_to_json_compatible(all_results), jf, indent=2)
 
     finally:
         # Restore standard output/error streams and close log
@@ -184,12 +210,14 @@ def _run_single_pipeline_entry(model_number, config_path, config_name, run, time
 
         # Print summary to console
         print("\n📊  Dumping experiment results:")
-        print(json.dumps([evaluation], indent=2))
+
+        # Safely print evaluation dictionary as formatted JSON
+        print(json.dumps([_to_json_compatible(evaluation)], indent=2))
 
         # Append to in-memory result list and save to disk
         all_results.append(evaluation)
         with open(result_file, "w") as jf:
-            json.dump(all_results, jf, indent=2)
+            json.dump(_to_json_compatible(all_results), jf, indent=2)
 
         print(f"\n✅   m{model_number} run {run} with '{config_name}' successfully executed")
 

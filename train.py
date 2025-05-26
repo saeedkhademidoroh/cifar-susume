@@ -185,54 +185,119 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
             train_dataset = train_dataset.shuffle(1024)
             train_dataset = train_dataset.batch(config.BATCH_SIZE)
 
+            # Apply MixUp augmentation if enabled
             if mixup_enabled:
                 def dataset_mixup(x, y):
+                    # Randomly select indices from full dataset
                     idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x)[0]]
                     x2 = tf.gather(train_data_tensor, idx)
                     y2 = tf.gather(train_labels_tensor, idx)
+
+                    # Sample lambda value from uniform distribution (approx. Beta)
                     lam = tf.random.uniform([], 1 - mixup_alpha, 1.0)
+
+                    # Linearly combine image pairs
                     x_mix = lam * x + (1 - lam) * x2
+
+                    # Linearly combine one-hot label vectors
                     y_mix = lam * tf.one_hot(y, 10) + (1 - lam) * tf.one_hot(y2, 10)
+
                     return x_mix, y_mix
+
+                # Inject MixUp transformation into tf.data pipeline
                 train_dataset = train_dataset.map(dataset_mixup, num_parallel_calls=tf.data.AUTOTUNE)
+
             else:
+                # Apply one-hot encoding if MixUp is disabled
                 def one_hot_encode(x, y):
                     return x, tf.one_hot(y, 10)
+
+                # Inject encoding into tf.data pipeline
                 train_dataset = train_dataset.map(one_hot_encode, num_parallel_calls=tf.data.AUTOTUNE)
 
+            # Prefetch batches for GPU pipeline efficiency
             train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
-            # Initialize custom history tracking
+            # Initialize custom history tracking structure
             history = {"loss": [], "accuracy": [], "val_loss": [], "val_accuracy": []}
 
-            # Define compiled train step
+            # Initialize loss and accuracy functions
             loss_fn = CategoricalCrossentropy()
             acc_fn = SparseCategoricalAccuracy()
 
+            # Define one compiled training step (graph-traced for speed)
             @tf.function
             def train_step(x_batch, y_batch):
+                # Forward + backward pass
                 with tf.GradientTape() as tape:
                     preds = model(x_batch, training=True)
                     loss = loss_fn(y_batch, preds)
+
+                # Compute and apply gradients
                 grads = tape.gradient(loss, model.trainable_variables)
                 model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+                # Update accuracy state
                 acc_fn.update_state(tf.argmax(y_batch, axis=1), preds)
+
                 return loss
 
-            # Training loop
-            for epoch in range(initial_epoch, config.EPOCHS_COUNT):
-                print(f"\n📆  Epoch {epoch + 1}/{config.EPOCHS_COUNT}\n")
-                epoch_loss = Mean()
-                acc_fn.reset_state()
+            # Training loop with best model tracking
+            best_acc = -1.0  # Initialize best accuracy to a low sentinel value
 
+            for epoch in range(initial_epoch, config.EPOCHS_COUNT):
+                print(f"\n📆  Epoch {epoch + 1}/{config.EPOCHS_COUNT}")
+                epoch_loss = Mean()  # Reset loss tracker for this epoch
+                acc_fn.reset_state()  # Reset accuracy tracker
+
+                # Iterate over training batches
                 for x_batch, y_batch in train_dataset:
                     loss = train_step(x_batch, y_batch)
-                    epoch_loss.update_state(loss)
+                    epoch_loss.update_state(loss)  # Update running loss
 
-                print(f"\n📊  Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {acc_fn.result():.4f}")
+                # Get final accuracy for this epoch
+                epoch_acc = acc_fn.result().numpy()
 
+                # Log training metrics
+                print(f"\n📊  Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {epoch_acc:.4f}")
+
+                # Record metrics to history
                 history["loss"].append(epoch_loss.result().numpy())
-                history["accuracy"].append(acc_fn.result().numpy())
+                history["accuracy"].append(epoch_acc)
+
+                # Evaluate model on validation data after each epoch
+                # Run batched inference for validation to avoid OOM
+                val_dataset = tf.data.Dataset.from_tensor_slices((val_data, val_labels))  # Build tf.data dataset from val set
+                val_dataset = val_dataset.batch(config.BATCH_SIZE)  # Batch the dataset to avoid memory spike
+
+                val_preds_all = []      # Store predictions from each batch
+                val_labels_all = []     # Store ground-truth labels from each batch
+
+                for x_val, y_val in val_dataset:
+                    preds = model(x_val, training=False)       # Run model inference
+                    val_preds_all.append(preds)                # Collect predictions
+                    val_labels_all.append(y_val)               # Collect labels
+
+                # Concatenate all batches to form the full prediction and label arrays
+                val_preds = tf.concat(val_preds_all, axis=0)
+                val_labels_cat = tf.concat(val_labels_all, axis=0)
+
+                # Compute categorical cross-entropy loss using one-hot encoded labels
+                val_loss_value = loss_fn(tf.one_hot(val_labels_cat, 10), val_preds).numpy()
+
+                # Compute sparse categorical accuracy over the full val set
+                val_acc_value = tf.keras.metrics.sparse_categorical_accuracy(val_labels_cat, val_preds).numpy().mean()
+
+                print(f"\n📈  Val — Loss: {val_loss_value:.4f} — Acc: {val_acc_value:.4f}")
+
+                history["val_loss"].append(val_loss_value)
+                history["val_accuracy"].append(val_acc_value)
+
+                # Save best model based on validation accuracy
+                if val_acc_value > best_acc:
+                    best_acc = val_acc_value
+                    model.save(model_checkpoint_path / "best.keras")
+                    print(f"\n💾  Saved new best model — Val Acc: {best_acc:.4f}")
 
             # Merge old history if training resumed
             if initial_epoch > 0:
@@ -245,15 +310,22 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
 
             # Save full history after training completes
             try:
-                _save_training_history(model_checkpoint_path / "history.json", history)
+                class DummyHistory: pass
+                h = DummyHistory()
+                h.history = history
+                _save_training_history(model_checkpoint_path / "history.json", h)
             except Exception as e:
-                print(f"\n⚠️  Failing to save history:\n{e}")
-
+                print(f"\n⚠️   Failing to save history:\n{e}")
 
     except Exception as e:
         # On failure, attempt to save partial history if available
-        if hasattr(model, "history") and model.history:
-            _save_training_history(model_checkpoint_path / "history.json", model.history)
+        try:
+            class DummyHistory: pass
+            h = DummyHistory()
+            h.history = history
+            _save_training_history(model_checkpoint_path / "history.json", h)
+        except Exception:
+            pass
         raise e
 
     # Save the trained model to disk
@@ -650,7 +722,7 @@ def _save_training_history(history_file: Path, history_obj):
         with open(history_file, "w") as f:
             json.dump(history_obj.history, f)  # Serialize and write history data
     except Exception as e:
-        print(f"\n⚠️  Failing to save history:\n{e}")  # Log failure if saving fails
+        print(f"\n⚠️   Failing to save history:\n{e}")  # Log failure if saving fails
 
 
 # Print confirmation message
