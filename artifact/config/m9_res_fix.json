@@ -7,7 +7,7 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
 
-  "LIGHT_MODE": true,
+  "LIGHT_MODE": false,
 
   "AUGMENT_MODE": {
     "enabled": true,
@@ -60,6 +60,6 @@
     "runs": 5
   },
 
-  "EPOCHS_COUNT": 4,
-  "BATCH_SIZE": 4
+  "EPOCHS_COUNT": 164,
+  "BATCH_SIZE": 128
 }

@@ -245,10 +245,11 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
 
     # Scheduler logic based on config.SCHEDULE_MODE
     if config.SCHEDULE_MODE.get("enabled", False):
+        scheduler_type = config.SCHEDULE_MODE.get("type", "").lower()
 
-        # StepLR scheduler (milestone-based decay)
-        if "milestones" in config.SCHEDULE_MODE:
-            # Define custom StepDecayScheduler callback
+        # StepLR scheduler (milestone-based learning rate decay)
+        if scheduler_type == "step":
+            # Custom Keras callback to implement milestone-based LR decay
             class StepDecayScheduler(Callback):
                 def __init__(self, optimizer, initial_lr, milestones, gamma):
                     super().__init__()
@@ -258,14 +259,16 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
                     self.gamma = gamma
 
                 def on_epoch_begin(self, epoch, logs=None):
+                    # Compute decayed LR based on number of milestones passed
                     lr = self.initial_lr
                     for milestone in self.milestones:
                         if epoch >= milestone:
                             lr *= self.gamma
+                    # Apply new learning rate
                     self.model.optimizer.learning_rate.assign(lr)
                     print(f"\n🔁  StepLR applied — epoch {epoch}, learning rate set to {lr:.5f}\n")
 
-            # Instantiate and append step scheduler
+            # Instantiate StepDecayScheduler with config values
             step_scheduler = StepDecayScheduler(
                 optimizer=model.optimizer,
                 initial_lr=config.OPTIMIZER.get("learning_rate", 0.1),
@@ -274,8 +277,8 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
             )
             callbacks.append(step_scheduler)
 
-        # ReduceLROnPlateau (metric-monitored decay)
-        elif "monitor" in config.SCHEDULE_MODE:
+        # ReduceLROnPlateau scheduler (metric-monitored adaptive decay)
+        elif scheduler_type == "plateau":
             from keras.api.callbacks import ReduceLROnPlateau
             scheduler = ReduceLROnPlateau(
                 monitor=config.SCHEDULE_MODE.get("monitor", "val_accuracy"),
@@ -286,8 +289,9 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
             )
             callbacks.append(scheduler)
 
-        # Linear warmup scheduler — optional early-stage ramp-up
+        # Linear warmup scheduler (optional, applies during early epochs)
         if config.SCHEDULE_MODE.get("warmup_epochs", 0) > 0:
+            # Custom Keras callback to linearly ramp up LR for N warmup epochs
             class LinearWarmupScheduler(Callback):
                 def __init__(self, optimizer, warmup_epochs, target_lr):
                     super().__init__()
@@ -297,11 +301,12 @@ def _prepare_callback(model, model_checkpoint_path: Path, config):
 
                 def on_epoch_begin(self, epoch, logs=None):
                     if epoch < self.warmup_epochs:
+                        # Linearly scale LR based on warmup progress
                         warmup_lr = self.target_lr * ((epoch + 1) / self.warmup_epochs)
                         self.model.optimizer.learning_rate.assign(warmup_lr)
                         print(f"\n🔥  WarmupLR applied — epoch {epoch}, learning rate set to {warmup_lr:.5f}\n")
 
-            # Instantiate and append warmup scheduler
+            # Instantiate LinearWarmupScheduler with target LR and warmup period
             warmup_scheduler = LinearWarmupScheduler(
                 optimizer=model.optimizer,
                 warmup_epochs=config.SCHEDULE_MODE.get("warmup_epochs"),

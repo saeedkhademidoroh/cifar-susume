@@ -10,18 +10,14 @@ from log import clean_old_output
 print("\n✅  main.py is being executed")
 
 # Clean old outputs if CLEAN_MODE is enabled
-# clean_old_output(False)
+# clean_old_output(True)
 
 # Force CPU usage by disabling GPU
 # os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 # Define experiment pipeline: (model_number, config_name)
 pipeline = [
-    (6, "m6_legacy"),         # Legacy config (nonstandard but informative)
-    (6, "m6_rebase_res"),     # ResNet-faithful baseline for model 6
-    (6, "m6_rebase_mod"),     # Modernized model 6
-    (9, "m9_base_res"),       # ResNet-faithful baseline
-    (9, "m9_base_mod")        # Modernized model 9
+    (9, "m9_res_fix")
 ]
 
 # Run experiments through pipeline
