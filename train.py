@@ -95,7 +95,6 @@ def _print_training_context(config):
     print(f"Batch Size:         {config.BATCH_SIZE}\n")
 
 
-
 # Function to train a model
 def train_model(train_data, train_labels, model, model_number, run, config_name, config, verbose=2):
     """
@@ -161,9 +160,24 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
             mixup_enabled = config.MIXUP_MODE.get("enabled", False)
             mixup_alpha = config.MIXUP_MODE.get("alpha", 0.2)
 
-            # Cache training data as tensors to avoid repeated conversions
+            # Cache training data as tensors (needed for MixUp)
             train_data_tensor = tf.convert_to_tensor(train_data)
             train_labels_tensor = tf.convert_to_tensor(train_labels)
+
+            # Build training dataset
+            train_dataset = tf.data.Dataset.from_tensor_slices((train_data, train_labels))
+            train_dataset = train_dataset.shuffle(1024)
+
+            if mixup_enabled:
+                def dataset_mixup(x, y):
+                    return _mixup_fn(x, y, train_data_tensor, train_labels_tensor, alpha=mixup_alpha)
+                train_dataset = train_dataset.map(dataset_mixup, num_parallel_calls=tf.data.AUTOTUNE)
+            else:
+                def one_hot_encode(x, y):
+                    return x, tf.one_hot(y, 10)
+                train_dataset = train_dataset.map(one_hot_encode, num_parallel_calls=tf.data.AUTOTUNE)
+
+            train_dataset = train_dataset.batch(config.BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
             # Initialize custom history tracking
             history = {"loss": [], "accuracy": [], "val_loss": [], "val_accuracy": []}
@@ -174,28 +188,15 @@ def train_model(train_data, train_labels, model, model_number, run, config_name,
                 epoch_acc = SparseCategoricalAccuracy()
 
                 for x_batch, y_batch in train_dataset:
-                    if mixup_enabled:
-                        idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x_batch)[0]]
-                        x_alt = tf.gather(train_data_tensor, idx)
-                        y_alt = tf.gather(train_labels_tensor, idx)
-
-                        lam = tf.random.uniform([], 1 - mixup_alpha, 1.0)
-                        x_batch = lam * x_batch + (1 - lam) * x_alt
-                        y_batch_mix = lam * tf.one_hot(y_batch, 10) + (1 - lam) * tf.one_hot(y_alt, 10)
-                        loss_fn_batch = CategoricalCrossentropy()
-                    else:
-                        y_batch_mix = tf.one_hot(y_batch, 10)
-                        loss_fn_batch = CategoricalCrossentropy()
-
                     with tf.GradientTape() as tape:
                         preds = model(x_batch, training=True)
-                        loss = loss_fn_batch(y_batch_mix, preds)
+                        loss = CategoricalCrossentropy()(y_batch, preds)
 
                     grads = tape.gradient(loss, model.trainable_variables)
                     model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
                     epoch_loss.update_state(loss)
-                    epoch_acc.update_state(y_batch, preds)
+                    epoch_acc.update_state(tf.argmax(y_batch, axis=1), preds)
 
                 print(f"📊 Epoch {epoch + 1} — Loss: {epoch_loss.result():.4f} — Acc: {epoch_acc.result():.4f}")
 
@@ -544,6 +545,46 @@ def _split_dataset(train_data, train_labels, light_mode):
         train_labels = train_labels[:-5000]
 
     return train_data, train_labels, val_data, val_labels  # Return split subsets
+
+
+# Function to apply MixUp augmentation to a training batch inside a tf.data pipeline
+def _mixup_fn(x1, y1, train_data_tensor, train_labels_tensor, alpha=0.2):
+    """
+    Applies MixUp augmentation on the given input batch by linearly combining each sample
+    with a randomly selected counterpart from the dataset.
+
+    Args:
+        x1 (tf.Tensor): A batch of input images of shape [B, H, W, C].
+        y1 (tf.Tensor): A batch of integer labels of shape [B].
+        train_data_tensor (tf.Tensor): Full training dataset tensor [N, H, W, C] for sampling.
+        train_labels_tensor (tf.Tensor): Corresponding labels tensor [N].
+        alpha (float): MixUp alpha parameter controlling interpolation strength.
+
+    Returns:
+        tuple: (x_mix, y_mix)
+            x_mix (tf.Tensor): Batch of mixed images.
+            y_mix (tf.Tensor): Batch of soft labels (one-hot interpolated).
+    """
+
+
+    # Print header for function execution
+    print("\n🎯  _mixup_fn")
+
+    # Randomly select indices from the full dataset to pair with current batch
+    idx = tf.random.shuffle(tf.range(tf.shape(train_data_tensor)[0]))[:tf.shape(x1)[0]]
+
+    # Gather alternative samples
+    x2 = tf.gather(train_data_tensor, idx)
+    y2 = tf.gather(train_labels_tensor, idx)
+
+    # Sample lambda from Beta(alpha, alpha) (approximated here as uniform)
+    lam = tf.random.uniform([], 1 - alpha, 1.0)
+
+    # Mix images and labels
+    x_mix = lam * x1 + (1 - lam) * x2
+    y_mix = lam * tf.one_hot(y1, 10) + (1 - lam) * tf.one_hot(y2, 10)
+
+    return x_mix, y_mix
 
 
 # Function to save training history
