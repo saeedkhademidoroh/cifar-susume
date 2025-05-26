@@ -17,7 +17,8 @@ print("\n✅  main.py is being executed")
 
 # Define experiment pipeline: (model_number, config_name)
 pipeline = [
-    (9, "m9_res_fix")
+    (9, "m9_res_flip"),
+    (9, "m9_res_fall")
 ]
 
 # Run experiments through pipeline

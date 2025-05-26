@@ -1,0 +1,65 @@
+{
+  "CONFIG_PATH": "artifact/config",
+  "DATA_PATH": "artifact/data",
+  "LOG_PATH": "artifact/log",
+  "CHECKPOINT_PATH": "artifact/checkpoint",
+  "RESULT_PATH": "artifact/result",
+  "MODEL_PATH": "artifact/model/",
+  "ERROR_PATH": "artifact/error",
+
+  "LIGHT_MODE": false,
+
+  "AUGMENT_MODE": {
+    "enabled": true,
+    "random_crop": true,
+    "random_flip": true,
+    "cutout": true,
+    "color_jitter": false
+  },
+
+  "L2_MODE": {
+    "enabled": true,
+    "lambda": 0.0001
+  },
+
+  "DROPOUT_MODE": {
+    "enabled": true,
+    "rate": 0.1
+  },
+
+  "OPTIMIZER": {
+    "type": "sgd",
+    "learning_rate": 0.1,
+    "momentum": 0.9
+  },
+
+  "SCHEDULE_MODE": {
+    "enabled": true,
+    "type": "step",
+    "milestones": [82, 123],
+    "gamma": 0.1,
+    "verbose": 1,
+    "warmup_epochs": 0
+  },
+
+  "EARLY_STOP_MODE": {
+    "enabled": false,
+    "monitor": "val_accuracy",
+    "patience": 15,
+    "restore_best_weights": false,
+    "verbose": 1
+  },
+
+  "AVERAGE_MODE": {
+    "enabled": true,
+    "start_epoch": 150
+  },
+
+  "TTA_MODE": {
+    "enabled": false,
+    "runs": 5
+  },
+
+  "EPOCHS_COUNT": 164,
+  "BATCH_SIZE": 128
+}
