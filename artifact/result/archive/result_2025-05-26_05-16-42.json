@@ -2,12 +2,12 @@
   {
     "model": 9,
     "run": 1,
-    "config_name": "default",
-    "date": "2025-05-25",
-    "time": "18:22:36",
-    "duration": "0:02:03",
+    "config_name": "m9_base",
+    "date": "2025-05-26",
+    "time": "05:22:35",
+    "duration": "0:05:53",
     "parameters": {
-      "LIGHT_MODE": true,
+      "LIGHT_MODE": false,
       "AUGMENT_MODE": {
         "enabled": true,
         "random_crop": true,
@@ -19,7 +19,7 @@
         "lambda": 0.0005
       },
       "DROPOUT_MODE": {
-        "enabled": true,
+        "enabled": false,
         "rate": 0.3
       },
       "OPTIMIZER": {
@@ -30,7 +30,7 @@
       "SCHEDULE_MODE": {
         "enabled": true,
         "warmup_epochs": 5,
-        "factor": 0.5,
+        "factor": 0.1,
         "patience": 3,
         "min_lr": 1e-05
       },
@@ -44,37 +44,37 @@
         "start_epoch": 170
       },
       "TTA_MODE": {
-        "enabled": true,
+        "enabled": false,
         "runs": 5
       },
-      "EPOCHS_COUNT": 4,
-      "BATCH_SIZE": 4
+      "EPOCHS_COUNT": 200,
+      "BATCH_SIZE": 128
     },
-    "min_train_loss": 2.3439645767211914,
-    "min_train_loss_epoch": 4,
-    "max_train_acc": 0.17225000262260437,
-    "max_train_acc_epoch": 4,
-    "min_val_loss": 2.2577950954437256,
-    "min_val_loss_epoch": 4,
-    "max_val_acc": 0.21400000154972076,
-    "max_val_acc_epoch": 3,
-    "final_test_loss": 2.302896499633789,
-    "final_test_acc": 0.22100000083446503
+    "min_train_loss": 0.21722985804080963,
+    "min_train_loss_epoch": 18,
+    "max_train_acc": 0.9778249859809875,
+    "max_train_acc_epoch": 17,
+    "min_val_loss": 0.7178073525428772,
+    "min_val_loss_epoch": 3,
+    "max_val_acc": 0.8095999956130981,
+    "max_val_acc_epoch": 4,
+    "final_test_loss": 0.6464659571647644,
+    "final_test_acc": 0.8529000282287598
   },
   {
     "model": 6,
     "run": 1,
-    "config_name": "default",
-    "date": "2025-05-25",
-    "time": "18:26:26",
-    "duration": "0:03:50",
+    "config_name": "m6_legacy",
+    "date": "2025-05-26",
+    "time": "05:27:31",
+    "duration": "0:04:55",
     "parameters": {
-      "LIGHT_MODE": true,
+      "LIGHT_MODE": false,
       "AUGMENT_MODE": {
         "enabled": true,
         "random_crop": true,
         "random_flip": true,
-        "cutout": true
+        "cutout": false
       },
       "L2_MODE": {
         "enabled": true,
@@ -91,9 +91,9 @@
       },
       "SCHEDULE_MODE": {
         "enabled": true,
-        "warmup_epochs": 5,
+        "warmup_epochs": 0,
         "factor": 0.5,
-        "patience": 3,
+        "patience": 5,
         "min_lr": 1e-05
       },
       "EARLY_STOP_MODE": {
@@ -102,36 +102,36 @@
         "restore_best_weights": true
       },
       "AVERAGE_MODE": {
-        "enabled": true,
+        "enabled": false,
         "start_epoch": 170
       },
       "TTA_MODE": {
-        "enabled": true,
+        "enabled": false,
         "runs": 5
       },
-      "EPOCHS_COUNT": 4,
-      "BATCH_SIZE": 4
+      "EPOCHS_COUNT": 100,
+      "BATCH_SIZE": 32
     },
-    "min_train_loss": 2.339679718017578,
-    "min_train_loss_epoch": 4,
-    "max_train_acc": 0.19599999487400055,
-    "max_train_acc_epoch": 4,
-    "min_val_loss": 2.289825439453125,
-    "min_val_loss_epoch": 3,
-    "max_val_acc": 0.23199999332427979,
-    "max_val_acc_epoch": 3,
-    "final_test_loss": 2.249147891998291,
-    "final_test_acc": 0.24500000476837158
+    "min_train_loss": 0.10906655341386795,
+    "min_train_loss_epoch": 72,
+    "max_train_acc": 1.0,
+    "max_train_acc_epoch": 63,
+    "min_val_loss": 0.5025977492332458,
+    "min_val_loss_epoch": 74,
+    "max_val_acc": 0.878000020980835,
+    "max_val_acc_epoch": 75,
+    "final_test_loss": 0.5446161031723022,
+    "final_test_acc": 0.8754000067710876
   },
   {
     "model": 6,
     "run": 2,
-    "config_name": "default",
-    "date": "2025-05-25",
-    "time": "18:30:12",
-    "duration": "0:03:46",
+    "config_name": "m6_rebase",
+    "date": "2025-05-26",
+    "time": "05:32:56",
+    "duration": "0:05:24",
     "parameters": {
-      "LIGHT_MODE": true,
+      "LIGHT_MODE": false,
       "AUGMENT_MODE": {
         "enabled": true,
         "random_crop": true,
@@ -154,9 +154,9 @@
       "SCHEDULE_MODE": {
         "enabled": true,
         "warmup_epochs": 5,
-        "factor": 0.5,
-        "patience": 3,
-        "min_lr": 1e-05
+        "factor": null,
+        "patience": null,
+        "min_lr": null
       },
       "EARLY_STOP_MODE": {
         "enabled": true,
@@ -164,48 +164,48 @@
         "restore_best_weights": true
       },
       "AVERAGE_MODE": {
-        "enabled": true,
+        "enabled": false,
         "start_epoch": 170
       },
       "TTA_MODE": {
-        "enabled": true,
+        "enabled": false,
         "runs": 5
       },
-      "EPOCHS_COUNT": 4,
-      "BATCH_SIZE": 4
+      "EPOCHS_COUNT": 100,
+      "BATCH_SIZE": 32
     },
-    "min_train_loss": 2.3336803913116455,
-    "min_train_loss_epoch": 4,
-    "max_train_acc": 0.2045000046491623,
-    "max_train_acc_epoch": 4,
-    "min_val_loss": 2.3097805976867676,
-    "min_val_loss_epoch": 3,
-    "max_val_acc": 0.20200000703334808,
-    "max_val_acc_epoch": 3,
-    "final_test_loss": 2.376312732696533,
-    "final_test_acc": 0.18199999630451202
+    "min_train_loss": 1.3896182775497437,
+    "min_train_loss_epoch": 65,
+    "max_train_acc": 0.7326250076293945,
+    "max_train_acc_epoch": 74,
+    "min_val_loss": 1.5175951719284058,
+    "min_val_loss_epoch": 45,
+    "max_val_acc": 0.6858000159263611,
+    "max_val_acc_epoch": 45,
+    "final_test_loss": 1.3790611028671265,
+    "final_test_acc": 0.7369999885559082
   },
   {
     "model": 9,
     "run": 2,
-    "config_name": "default",
-    "date": "2025-05-25",
-    "time": "18:32:53",
-    "duration": "0:02:40",
+    "config_name": "m9_tuned",
+    "date": "2025-05-26",
+    "time": "05:36:05",
+    "duration": "0:03:09",
     "parameters": {
-      "LIGHT_MODE": true,
+      "LIGHT_MODE": false,
       "AUGMENT_MODE": {
         "enabled": true,
         "random_crop": true,
         "random_flip": true,
-        "cutout": true
+        "cutout": false
       },
       "L2_MODE": {
         "enabled": true,
-        "lambda": 0.0005
+        "lambda": 0.0001
       },
       "DROPOUT_MODE": {
-        "enabled": true,
+        "enabled": false,
         "rate": 0.3
       },
       "OPTIMIZER": {
@@ -216,9 +216,9 @@
       "SCHEDULE_MODE": {
         "enabled": true,
         "warmup_epochs": 5,
-        "factor": 0.5,
-        "patience": 3,
-        "min_lr": 1e-05
+        "factor": null,
+        "patience": null,
+        "min_lr": null
       },
       "EARLY_STOP_MODE": {
         "enabled": true,
@@ -230,41 +230,41 @@
         "start_epoch": 170
       },
       "TTA_MODE": {
-        "enabled": true,
+        "enabled": false,
         "runs": 5
       },
-      "EPOCHS_COUNT": 4,
-      "BATCH_SIZE": 4
+      "EPOCHS_COUNT": 200,
+      "BATCH_SIZE": 128
     },
-    "min_train_loss": 2.3518316745758057,
-    "min_train_loss_epoch": 4,
-    "max_train_acc": 0.17949999868869781,
-    "max_train_acc_epoch": 2,
-    "min_val_loss": 2.33426570892334,
-    "min_val_loss_epoch": 4,
-    "max_val_acc": 0.2029999941587448,
-    "max_val_acc_epoch": 1,
-    "final_test_loss": 2.456068754196167,
-    "final_test_acc": 0.22300000488758087
+    "min_train_loss": 0.32662540674209595,
+    "min_train_loss_epoch": 44,
+    "max_train_acc": 0.9703750014305115,
+    "max_train_acc_epoch": 44,
+    "min_val_loss": 0.8879655003547668,
+    "min_val_loss_epoch": 45,
+    "max_val_acc": 0.7886000275611877,
+    "max_val_acc_epoch": 45,
+    "final_test_loss": 0.9213802814483643,
+    "final_test_acc": 0.7792999744415283
   },
   {
     "model": 9,
     "run": 3,
-    "config_name": "default",
-    "date": "2025-05-25",
-    "time": "18:35:33",
-    "duration": "0:02:40",
+    "config_name": "m9_drop",
+    "date": "2025-05-26",
+    "time": "05:39:33",
+    "duration": "0:03:27",
     "parameters": {
-      "LIGHT_MODE": true,
+      "LIGHT_MODE": false,
       "AUGMENT_MODE": {
         "enabled": true,
         "random_crop": true,
         "random_flip": true,
-        "cutout": true
+        "cutout": false
       },
       "L2_MODE": {
         "enabled": true,
-        "lambda": 0.0005
+        "lambda": 0.0001
       },
       "DROPOUT_MODE": {
         "enabled": true,
@@ -278,9 +278,9 @@
       "SCHEDULE_MODE": {
         "enabled": true,
         "warmup_epochs": 5,
-        "factor": 0.5,
-        "patience": 3,
-        "min_lr": 1e-05
+        "factor": null,
+        "patience": null,
+        "min_lr": null
       },
       "EARLY_STOP_MODE": {
         "enabled": true,
@@ -289,24 +289,24 @@
       },
       "AVERAGE_MODE": {
         "enabled": true,
-        "start_epoch": 170
+        "start_epoch": 160
       },
       "TTA_MODE": {
-        "enabled": true,
+        "enabled": false,
         "runs": 5
       },
-      "EPOCHS_COUNT": 4,
-      "BATCH_SIZE": 4
+      "EPOCHS_COUNT": 200,
+      "BATCH_SIZE": 128
     },
-    "min_train_loss": 2.3257858753204346,
-    "min_train_loss_epoch": 4,
-    "max_train_acc": 0.1837500035762787,
-    "max_train_acc_epoch": 4,
-    "min_val_loss": 2.2501447200775146,
-    "min_val_loss_epoch": 3,
-    "max_val_acc": 0.2290000021457672,
-    "max_val_acc_epoch": 3,
-    "final_test_loss": 2.2792890071868896,
-    "final_test_acc": 0.23999999463558197
+    "min_train_loss": 0.39833468198776245,
+    "min_train_loss_epoch": 46,
+    "max_train_acc": 0.9543250203132629,
+    "max_train_acc_epoch": 46,
+    "min_val_loss": 0.8389862179756165,
+    "min_val_loss_epoch": 50,
+    "max_val_acc": 0.8058000206947327,
+    "max_val_acc_epoch": 50,
+    "final_test_loss": 0.8774023652076721,
+    "final_test_acc": 0.8055999875068665
   }
 ]

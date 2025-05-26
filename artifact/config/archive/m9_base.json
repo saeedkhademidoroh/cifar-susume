@@ -13,16 +13,17 @@
     "enabled": true,
     "random_crop": true,
     "random_flip": true,
-    "cutout": false
+    "cutout": true,
+    "color_jitter": true
   },
 
   "L2_MODE": {
     "enabled": true,
-    "lambda": 0.0001
+    "lambda": 0.0005
   },
 
   "DROPOUT_MODE": {
-    "enabled": true,
+    "enabled": false,
     "rate": 0.3
   },
 
@@ -34,14 +35,16 @@
 
   "SCHEDULE_MODE": {
     "enabled": true,
-    "milestones": [80, 120],
-    "gamma": 0.1,
-    "verbose": 1,
-    "warmup_epochs": 5
+    "warmup_epochs": 5,
+    "monitor": "val_accuracy",
+    "factor": 0.1,
+    "patience": 3,
+    "min_lr": 1e-5,
+    "verbose": 1
   },
 
   "EARLY_STOP_MODE": {
-    "enabled": true,
+    "enabled": false,
     "monitor": "val_accuracy",
     "patience": 15,
     "restore_best_weights": true,
@@ -50,7 +53,7 @@
 
   "AVERAGE_MODE": {
     "enabled": true,
-    "start_epoch": 160
+    "start_epoch": 170
   },
 
   "TTA_MODE": {

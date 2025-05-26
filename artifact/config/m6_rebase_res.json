@@ -14,39 +14,38 @@
     "random_crop": true,
     "random_flip": true,
     "cutout": false,
-    "color_jitter": true
+    "color_jitter": false
   },
 
   "L2_MODE": {
     "enabled": true,
-    "lambda": 0.0005
+    "lambda": 0.0001
   },
 
   "DROPOUT_MODE": {
-    "enabled": true,
-    "rate": 0.3
+    "enabled": false,
+    "rate": 0.0
   },
 
   "OPTIMIZER": {
     "type": "sgd",
-    "learning_rate": 0.05,
+    "learning_rate": 0.1,
     "momentum": 0.9
   },
 
   "SCHEDULE_MODE": {
     "enabled": true,
-    "monitor": "val_accuracy",
-    "factor": 0.5,
-    "patience": 5,
-    "min_lr": 1e-5,
-    "verbose": 1
+    "milestones": [82, 123],
+    "gamma": 0.1,
+    "verbose": 1,
+    "warmup_epochs": 0
   },
 
   "EARLY_STOP_MODE": {
     "enabled": false,
     "monitor": "val_accuracy",
     "patience": 15,
-    "restore_best_weights": true,
+    "restore_best_weights": false,
     "verbose": 1
   },
 
@@ -60,6 +59,6 @@
     "runs": 5
   },
 
-  "EPOCHS_COUNT": 100,
-  "BATCH_SIZE": 32
+  "EPOCHS_COUNT": 164,
+  "BATCH_SIZE": 128
 }
