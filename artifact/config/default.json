@@ -59,6 +59,6 @@
 
   "FROZEN_BN": true,
 
-  "EPOCHS_COUNT": 4,
+  "EPOCHS_COUNT": 8,
   "BATCH_SIZE": 32
 }

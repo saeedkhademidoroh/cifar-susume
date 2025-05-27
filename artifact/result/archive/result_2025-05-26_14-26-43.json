@@ -1,0 +1,68 @@
+[
+  {
+    "model": 9,
+    "run": 1,
+    "config_name": "m9_res_full",
+    "date": "2025-05-26",
+    "time": "15:10:35",
+    "duration": "0:43:52",
+    "parameters": {
+      "LIGHT_MODE": false,
+      "AUGMENT_MODE": {
+        "enabled": false,
+        "random_crop": false,
+        "random_flip": false,
+        "cutout": false
+      },
+      "L2_MODE": {
+        "enabled": true,
+        "lambda": 0.0005
+      },
+      "DROPOUT_MODE": {
+        "enabled": false,
+        "rate": 0.0
+      },
+      "OPTIMIZER": {
+        "type": "sgd",
+        "learning_rate": 0.05,
+        "momentum": 0.9
+      },
+      "SCHEDULE_MODE": {
+        "enabled": true,
+        "warmup_epochs": 5,
+        "factor": null,
+        "patience": null,
+        "min_lr": null
+      },
+      "EARLY_STOP_MODE": {
+        "enabled": false,
+        "patience": null,
+        "restore_best_weights": null
+      },
+      "AVERAGE_MODE": {
+        "enabled": true,
+        "start_epoch": 150
+      },
+      "TTA_MODE": {
+        "enabled": false,
+        "runs": 1
+      },
+      "MIXUP_MODE": {
+        "enabled": true,
+        "alpha": 0.2
+      },
+      "EPOCHS_COUNT": 164,
+      "BATCH_SIZE": 128
+    },
+    "min_train_loss": 0.44883596897125244,
+    "min_train_loss_epoch": 134,
+    "max_train_acc": 0.9964500069618225,
+    "max_train_acc_epoch": 125,
+    "min_val_loss": 0.6502788066864014,
+    "min_val_loss_epoch": 90,
+    "max_val_acc": 0.8130000233650208,
+    "max_val_acc_epoch": 90,
+    "final_test_loss": 2.7552106380462646,
+    "final_test_acc": 0.7940000295639038
+  }
+]
