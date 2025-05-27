@@ -14,6 +14,18 @@ from keras.api.callbacks import Callback, ModelCheckpoint, EarlyStopping
 from keras.api.models import load_model
 
 
+from keras.api.callbacks import Callback
+
+# class L2Monitor(Callback):
+#     def on_epoch_end(self, epoch, logs=None):
+#         weight_sum = sum([tf.reduce_sum(tf.square(w)).numpy() for w in self.model.trainable_weights])
+#         print(f"📦 Epoch {epoch+1}: Total weight L2 norm² = {weight_sum:.6f}")
+
+# before = model.get_weights()
+# # ...train...
+# after = model.get_weights()
+# # Compare norm differences manually
+
 # Function to print training context
 def _print_training_context(config):
     """

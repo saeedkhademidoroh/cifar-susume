@@ -7,40 +7,48 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
 
+  "FROZEN_BN": false,
   "LIGHT_MODE": false,
 
   "AUGMENT_MODE": {
+    "cutout": false,
     "enabled": true,
     "random_crop": true,
-    "random_flip": true,
-    "cutout": false
+    "random_flip": true
   },
-
-  "L2_MODE": {
-    "enabled": true,
-    "lambda": 0.0001
+  "MIXUP_MODE": {
+    "alpha": 0.2,
+    "enabled": false
   },
 
   "DROPOUT_MODE": {
     "enabled": false,
     "rate": 0.0
   },
-
-  "OPTIMIZER": {
-    "type": "sgd",
-    "learning_rate": 0.1,
-    "momentum": 0.9
+  "L2_MODE": {
+    "enabled": true,
+    "lambda": 0.0001,
+    "mode": "optimizer"
   },
 
+  "OPTIMIZER": {
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "type": "sgd"
+  },
   "SCHEDULE_MODE": {
     "enabled": true,
-    "type": "step",
-    "milestones": [82, 123],
     "gamma": 0.1,
+    "milestones": [82, 123],
+    "type": "step",
     "verbose": 1,
     "warmup_epochs": 0
   },
 
+  "AVERAGE_MODE": {
+    "enabled": false,
+    "start_epoch": 150
+  },
   "EARLY_STOP_MODE": {
     "enabled": false,
     "monitor": "val_accuracy",
@@ -48,24 +56,14 @@
     "restore_best_weights": false,
     "verbose": 1
   },
-
-  "AVERAGE_MODE": {
-    "enabled": false,
-    "start_epoch": 150
-  },
-
   "TTA_MODE": {
-    "enabled": false,
-    "runs": 1
+    "enabled": true,
+    "random_crop": true,
+    "random_flip": true,
+    "runs": 5
   },
 
-  "MIXUP_MODE": {
-    "enabled": false,
-    "alpha": 0.2
-  },
 
-  "FROZEN_BN": false,
-
-  "EPOCHS_COUNT": 164,
-  "BATCH_SIZE": 128
+  "BATCH_SIZE": 128,
+  "EPOCHS_COUNT": 164
 }

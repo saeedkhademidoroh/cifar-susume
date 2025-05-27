@@ -14,9 +14,17 @@ from keras.api.models import load_model
 from config import CONFIG
 from data import build_dataset
 from evaluate import evaluate_model, extract_history_metrics
-from log import log_to_json
+from utility import log_to_json
 from model import build_model
 from train import train_model
+
+
+
+# best_model_path = config.CHECKPOINT_PATH / run_id / "best_model.h5"
+# if best_model_path.exists():
+#     model.load_weights(str(best_model_path))
+#     model._loaded_weights_mtime = os.path.getmtime(best_model_path)  # ← Required tag
+#     print(f"\n✅  Best model weights loaded from: {best_model_path}")
 
 
 # Function to recursively convert NumPy/TensorFlow types to native Python types

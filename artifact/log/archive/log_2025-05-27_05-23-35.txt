@@ -1,0 +1,1393 @@
+
+📜  Logging experiment output:
+/content/drive/MyDrive/src/cifar-susume/artifact/log/log_2025-05-27_05-23-35.txt
+
+🎯  _load_previous_results
+
+⚙️   Piplining experiment 1/1
+
+🎯  _run_single_pipeline_entry
+
+🎯  load_config
+
+📂  Loading configuration file:
+/content/drive/MyDrive/src/cifar-susume/artifact/config/m9_res_full.json
+
+🎯  _ensure_output_directories
+
+📂  Ensuring output directories
+/content/drive/MyDrive/src/cifar-susume/artifact/log
+/content/drive/MyDrive/src/cifar-susume/artifact/checkpoint
+/content/drive/MyDrive/src/cifar-susume/artifact/result
+/content/drive/MyDrive/src/cifar-susume/artifact/model
+/content/drive/MyDrive/src/cifar-susume/artifact/error
+
+🚀  Launching experiment m9_r1 with 'm9_res_full'
+
+🎯  build_dataset
+
+🎯  build_augmentation_transform
+
+🎯  build_normalization_transform
+
+🎯  build_normalization_transform
+
+🎯  build_model
+
+Model: "functional"
+┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ Layer (type)        ┃ Output Shape      ┃    Param # ┃ Connected to      ┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ input_layer         │ (None, 32, 32, 3) │          0 │ -                 │
+│ (InputLayer)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d (Conv2D)     │ (None, 32, 32,    │        448 │ input_layer[0][0] │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalization │ (None, 32, 32,    │         64 │ conv2d[0][0]      │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation          │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_1 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation[0][0]  │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_1[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_1        │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_2 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation_1[0][… │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_2[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add (Add)           │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│                     │ 16)               │            │ activation[0][0]  │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_2        │ (None, 32, 32,    │          0 │ add[0][0]         │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_3 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation_2[0][… │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_3[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_3        │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_4 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation_3[0][… │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_4[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_1 (Add)         │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│                     │ 16)               │            │ activation_2[0][… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_4        │ (None, 32, 32,    │          0 │ add_1[0][0]       │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_5 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation_4[0][… │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_5[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_5        │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_6 (Conv2D)   │ (None, 32, 32,    │      2,320 │ activation_5[0][… │
+│                     │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 32, 32,    │         64 │ conv2d_6[0][0]    │
+│ (BatchNormalizatio… │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_2 (Add)         │ (None, 32, 32,    │          0 │ batch_normalizat… │
+│                     │ 16)               │            │ activation_4[0][… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_6        │ (None, 32, 32,    │          0 │ add_2[0][0]       │
+│ (Activation)        │ 16)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_7 (Conv2D)   │ (None, 16, 16,    │      4,640 │ activation_6[0][… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_7[0][0]    │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_7        │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_8 (Conv2D)   │ (None, 16, 16,    │      9,248 │ activation_7[0][… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_8[0][0]    │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_9 (Conv2D)   │ (None, 16, 16,    │        544 │ activation_6[0][… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_3 (Add)         │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│                     │ 32)               │            │ conv2d_9[0][0]    │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_8        │ (None, 16, 16,    │          0 │ add_3[0][0]       │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_10 (Conv2D)  │ (None, 16, 16,    │      9,248 │ activation_8[0][… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_10[0][0]   │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_9        │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_11 (Conv2D)  │ (None, 16, 16,    │      9,248 │ activation_9[0][… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_11[0][0]   │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_4 (Add)         │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│                     │ 32)               │            │ activation_8[0][… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_10       │ (None, 16, 16,    │          0 │ add_4[0][0]       │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_12 (Conv2D)  │ (None, 16, 16,    │      9,248 │ activation_10[0]… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_12[0][0]   │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_11       │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_13 (Conv2D)  │ (None, 16, 16,    │      9,248 │ activation_11[0]… │
+│                     │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 16, 16,    │        128 │ conv2d_13[0][0]   │
+│ (BatchNormalizatio… │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_5 (Add)         │ (None, 16, 16,    │          0 │ batch_normalizat… │
+│                     │ 32)               │            │ activation_10[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_12       │ (None, 16, 16,    │          0 │ add_5[0][0]       │
+│ (Activation)        │ 32)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_14 (Conv2D)  │ (None, 8, 8, 64)  │     18,496 │ activation_12[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_14[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_13       │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_15 (Conv2D)  │ (None, 8, 8, 64)  │     36,928 │ activation_13[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_15[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_16 (Conv2D)  │ (None, 8, 8, 64)  │      2,112 │ activation_12[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_6 (Add)         │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│                     │                   │            │ conv2d_16[0][0]   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_14       │ (None, 8, 8, 64)  │          0 │ add_6[0][0]       │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_17 (Conv2D)  │ (None, 8, 8, 64)  │     36,928 │ activation_14[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_17[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_15       │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_18 (Conv2D)  │ (None, 8, 8, 64)  │     36,928 │ activation_15[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_18[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_7 (Add)         │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│                     │                   │            │ activation_14[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_16       │ (None, 8, 8, 64)  │          0 │ add_7[0][0]       │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_19 (Conv2D)  │ (None, 8, 8, 64)  │     36,928 │ activation_16[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_19[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_17       │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ conv2d_20 (Conv2D)  │ (None, 8, 8, 64)  │     36,928 │ activation_17[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ batch_normalizatio… │ (None, 8, 8, 64)  │        256 │ conv2d_20[0][0]   │
+│ (BatchNormalizatio… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ add_8 (Add)         │ (None, 8, 8, 64)  │          0 │ batch_normalizat… │
+│                     │                   │            │ activation_16[0]… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ activation_18       │ (None, 8, 8, 64)  │          0 │ add_8[0][0]       │
+│ (Activation)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ global_average_poo… │ (None, 64)        │          0 │ activation_18[0]… │
+│ (GlobalAveragePool… │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dense (Dense)       │ (None, 10)        │        650 │ global_average_p… │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
+ Total params: 274,442 (1.05 MB)
+ Trainable params: 273,066 (1.04 MB)
+ Non-trainable params: 1,376 (5.38 KB)
+
+🎯  train_model
+
+🎯  _resume_from_checkpoint
+
+🎯  _load_from_checkpoint
+
+🎯  _split_dataset
+
+🎯  _mixup_fn
+
+🎯  _prepare_checkpoint_callback
+
+🎯  __init__ (RecoveryCheckpoint)
+
+
+🎯  _print_training_context
+
+🖥️   Available compute devices:
+  • /device:CPU:0 (CPU)
+  • /device:GPU:0 (GPU)
+
+🧮  GPU detected: True
+  • /physical_device:GPU:0
+
+🧠  Printing training configuration:
+Light Mode:         OFF — Using reduced dataset for fast testing
+Augmentation:       ON — Random Crop, Horizontal Flip, Cutout
+L2 Regularization:  ON (λ = 0.0005)
+Dropout:            OFF (rate = 0.0)
+Optimizer:          SGD (lr = 0.05)
+Momentum:           0.9
+LR Scheduler:       ON — warmup for 15 epochs, decay factor 0.1
+Early Stopping:     ON — patience 20 epochs, restore best weights: True
+Weight Averaging:   ON — starting at epoch 150
+Test-Time Augment:  OFF
+MixUp:              ON — alpha = 0.2
+Epochs:             164
+Batch Size:         128
+
+📆  Epoch 1/164
+
+📊  Epoch 1 — Loss: 1.8937 — Acc: 0.3390
+
+📈  Val — Loss: 2.0802 — Acc: 0.3010
+
+💾  Saved new best model — Val Acc: 0.3010
+
+📆  Epoch 2/164
+
+📊  Epoch 2 — Loss: 1.6056 — Acc: 0.4743
+
+📈  Val — Loss: 1.5327 — Acc: 0.4576
+
+💾  Saved new best model — Val Acc: 0.4576
+
+📆  Epoch 3/164
+
+📊  Epoch 3 — Loss: 1.4673 — Acc: 0.5528
+
+📈  Val — Loss: 1.4473 — Acc: 0.4970
+
+💾  Saved new best model — Val Acc: 0.4970
+
+📆  Epoch 4/164
+
+📊  Epoch 4 — Loss: 1.3641 — Acc: 0.6037
+
+📈  Val — Loss: 1.3885 — Acc: 0.5222
+
+💾  Saved new best model — Val Acc: 0.5222
+
+📆  Epoch 5/164
+
+📊  Epoch 5 — Loss: 1.2787 — Acc: 0.6482
+
+📈  Val — Loss: 1.1341 — Acc: 0.6022
+
+💾  Saved new best model — Val Acc: 0.6022
+
+📆  Epoch 6/164
+
+📊  Epoch 6 — Loss: 1.2156 — Acc: 0.6764
+
+📈  Val — Loss: 1.1437 — Acc: 0.6058
+
+💾  Saved new best model — Val Acc: 0.6058
+
+📆  Epoch 7/164
+
+📊  Epoch 7 — Loss: 1.1661 — Acc: 0.7060
+
+📈  Val — Loss: 1.3799 — Acc: 0.5312
+
+📆  Epoch 8/164
+
+📊  Epoch 8 — Loss: 1.0979 — Acc: 0.7304
+
+📈  Val — Loss: 1.0295 — Acc: 0.6462
+
+💾  Saved new best model — Val Acc: 0.6462
+
+📆  Epoch 9/164
+
+📊  Epoch 9 — Loss: 1.0524 — Acc: 0.7524
+
+📈  Val — Loss: 1.1128 — Acc: 0.6276
+
+📆  Epoch 10/164
+
+📊  Epoch 10 — Loss: 1.0372 — Acc: 0.7688
+
+📈  Val — Loss: 1.0693 — Acc: 0.6422
+
+📆  Epoch 11/164
+
+📊  Epoch 11 — Loss: 0.9960 — Acc: 0.7821
+
+📈  Val — Loss: 1.3276 — Acc: 0.5684
+
+📆  Epoch 12/164
+
+📊  Epoch 12 — Loss: 0.9678 — Acc: 0.8001
+
+📈  Val — Loss: 1.3117 — Acc: 0.5810
+
+📆  Epoch 13/164
+
+📊  Epoch 13 — Loss: 0.9451 — Acc: 0.8115
+
+📈  Val — Loss: 0.9868 — Acc: 0.6734
+
+💾  Saved new best model — Val Acc: 0.6734
+
+📆  Epoch 14/164
+
+📊  Epoch 14 — Loss: 0.9112 — Acc: 0.8276
+
+📈  Val — Loss: 0.9490 — Acc: 0.6848
+
+💾  Saved new best model — Val Acc: 0.6848
+
+📆  Epoch 15/164
+
+📊  Epoch 15 — Loss: 0.8890 — Acc: 0.8402
+
+📈  Val — Loss: 1.0707 — Acc: 0.6596
+
+📆  Epoch 16/164
+
+📊  Epoch 16 — Loss: 0.8578 — Acc: 0.8488
+
+📈  Val — Loss: 1.0824 — Acc: 0.6538
+
+📆  Epoch 17/164
+
+📊  Epoch 17 — Loss: 0.8556 — Acc: 0.8573
+
+📈  Val — Loss: 1.1023 — Acc: 0.6546
+
+📆  Epoch 18/164
+
+📊  Epoch 18 — Loss: 0.8430 — Acc: 0.8720
+
+📈  Val — Loss: 1.0934 — Acc: 0.6674
+
+📆  Epoch 19/164
+
+📊  Epoch 19 — Loss: 0.8436 — Acc: 0.8765
+
+📈  Val — Loss: 1.0419 — Acc: 0.6630
+
+📆  Epoch 20/164
+
+📊  Epoch 20 — Loss: 0.7769 — Acc: 0.8931
+
+📈  Val — Loss: 1.1701 — Acc: 0.6412
+
+📆  Epoch 21/164
+
+📊  Epoch 21 — Loss: 0.7675 — Acc: 0.8954
+
+📈  Val — Loss: 1.0195 — Acc: 0.6822
+
+📆  Epoch 22/164
+
+📊  Epoch 22 — Loss: 0.7574 — Acc: 0.9050
+
+📈  Val — Loss: 1.0382 — Acc: 0.6820
+
+📆  Epoch 23/164
+
+📊  Epoch 23 — Loss: 0.7275 — Acc: 0.9104
+
+📈  Val — Loss: 1.1364 — Acc: 0.6544
+
+📆  Epoch 24/164
+
+📊  Epoch 24 — Loss: 0.7610 — Acc: 0.9136
+
+📈  Val — Loss: 1.1092 — Acc: 0.6534
+
+📆  Epoch 25/164
+
+📊  Epoch 25 — Loss: 0.7118 — Acc: 0.9258
+
+📈  Val — Loss: 1.0495 — Acc: 0.6748
+
+📆  Epoch 26/164
+
+📊  Epoch 26 — Loss: 0.6957 — Acc: 0.9346
+
+📈  Val — Loss: 1.1060 — Acc: 0.6724
+
+📆  Epoch 27/164
+
+📊  Epoch 27 — Loss: 0.6768 — Acc: 0.9377
+
+📈  Val — Loss: 1.1135 — Acc: 0.6568
+
+📆  Epoch 28/164
+
+📊  Epoch 28 — Loss: 0.6997 — Acc: 0.9378
+
+📈  Val — Loss: 1.1017 — Acc: 0.6668
+
+📆  Epoch 29/164
+
+📊  Epoch 29 — Loss: 0.6530 — Acc: 0.9445
+
+📈  Val — Loss: 1.0717 — Acc: 0.6788
+
+📆  Epoch 30/164
+
+📊  Epoch 30 — Loss: 0.6721 — Acc: 0.9461
+
+📈  Val — Loss: 1.1773 — Acc: 0.6490
+
+📆  Epoch 31/164
+
+📊  Epoch 31 — Loss: 0.6601 — Acc: 0.9534
+
+📈  Val — Loss: 1.1676 — Acc: 0.6554
+
+📆  Epoch 32/164
+
+📊  Epoch 32 — Loss: 0.6373 — Acc: 0.9547
+
+📈  Val — Loss: 1.2461 — Acc: 0.6318
+
+📆  Epoch 33/164
+
+📊  Epoch 33 — Loss: 0.6425 — Acc: 0.9579
+
+📈  Val — Loss: 1.1575 — Acc: 0.6530
+
+📆  Epoch 34/164
+
+📊  Epoch 34 — Loss: 0.6556 — Acc: 0.9585
+
+📈  Val — Loss: 1.1115 — Acc: 0.6722
+
+📆  Epoch 35/164
+
+📊  Epoch 35 — Loss: 0.6288 — Acc: 0.9664
+
+📈  Val — Loss: 1.1356 — Acc: 0.6598
+
+📆  Epoch 36/164
+
+📊  Epoch 36 — Loss: 0.6297 — Acc: 0.9677
+
+📈  Val — Loss: 1.0992 — Acc: 0.6716
+
+📆  Epoch 37/164
+
+📊  Epoch 37 — Loss: 0.6244 — Acc: 0.9687
+
+📈  Val — Loss: 1.0622 — Acc: 0.6762
+
+📆  Epoch 38/164
+
+📊  Epoch 38 — Loss: 0.6140 — Acc: 0.9713
+
+📈  Val — Loss: 1.0646 — Acc: 0.6848
+
+📆  Epoch 39/164
+
+📊  Epoch 39 — Loss: 0.6021 — Acc: 0.9715
+
+📈  Val — Loss: 1.0559 — Acc: 0.6856
+
+💾  Saved new best model — Val Acc: 0.6856
+
+📆  Epoch 40/164
+
+📊  Epoch 40 — Loss: 0.6017 — Acc: 0.9745
+
+📈  Val — Loss: 1.0848 — Acc: 0.6768
+
+📆  Epoch 41/164
+
+📊  Epoch 41 — Loss: 0.6062 — Acc: 0.9737
+
+📈  Val — Loss: 1.1030 — Acc: 0.6692
+
+📆  Epoch 42/164
+
+📊  Epoch 42 — Loss: 0.6104 — Acc: 0.9746
+
+📈  Val — Loss: 1.0337 — Acc: 0.6924
+
+💾  Saved new best model — Val Acc: 0.6924
+
+📆  Epoch 43/164
+
+📊  Epoch 43 — Loss: 0.5566 — Acc: 0.9809
+
+📈  Val — Loss: 1.0726 — Acc: 0.6818
+
+📆  Epoch 44/164
+
+📊  Epoch 44 — Loss: 0.6185 — Acc: 0.9745
+
+📈  Val — Loss: 1.0462 — Acc: 0.6826
+
+📆  Epoch 45/164
+
+📊  Epoch 45 — Loss: 0.5927 — Acc: 0.9777
+
+📈  Val — Loss: 1.0831 — Acc: 0.6796
+
+📆  Epoch 46/164
+
+📊  Epoch 46 — Loss: 0.5856 — Acc: 0.9801
+
+📈  Val — Loss: 1.0756 — Acc: 0.6734
+
+📆  Epoch 47/164
+
+📊  Epoch 47 — Loss: 0.5918 — Acc: 0.9779
+
+📈  Val — Loss: 1.0575 — Acc: 0.6854
+
+📆  Epoch 48/164
+
+📊  Epoch 48 — Loss: 0.5645 — Acc: 0.9817
+
+📈  Val — Loss: 1.0332 — Acc: 0.6876
+
+📆  Epoch 49/164
+
+📊  Epoch 49 — Loss: 0.6012 — Acc: 0.9804
+
+📈  Val — Loss: 1.0725 — Acc: 0.6804
+
+📆  Epoch 50/164
+
+📊  Epoch 50 — Loss: 0.5754 — Acc: 0.9824
+
+📈  Val — Loss: 1.0871 — Acc: 0.6700
+
+📆  Epoch 51/164
+
+📊  Epoch 51 — Loss: 0.6126 — Acc: 0.9790
+
+📈  Val — Loss: 1.1354 — Acc: 0.6600
+
+📆  Epoch 52/164
+
+📊  Epoch 52 — Loss: 0.6031 — Acc: 0.9808
+
+📈  Val — Loss: 1.0503 — Acc: 0.6846
+
+📆  Epoch 53/164
+
+📊  Epoch 53 — Loss: 0.5972 — Acc: 0.9806
+
+📈  Val — Loss: 1.0272 — Acc: 0.6930
+
+💾  Saved new best model — Val Acc: 0.6930
+
+📆  Epoch 54/164
+
+📊  Epoch 54 — Loss: 0.5551 — Acc: 0.9848
+
+📈  Val — Loss: 1.0433 — Acc: 0.6872
+
+📆  Epoch 55/164
+
+📊  Epoch 55 — Loss: 0.5608 — Acc: 0.9848
+
+📈  Val — Loss: 1.1040 — Acc: 0.6730
+
+📆  Epoch 56/164
+
+📊  Epoch 56 — Loss: 0.5659 — Acc: 0.9855
+
+📈  Val — Loss: 1.0573 — Acc: 0.6872
+
+📆  Epoch 57/164
+
+📊  Epoch 57 — Loss: 0.5844 — Acc: 0.9833
+
+📈  Val — Loss: 1.0687 — Acc: 0.6830
+
+📆  Epoch 58/164
+
+📊  Epoch 58 — Loss: 0.5364 — Acc: 0.9885
+
+📈  Val — Loss: 1.0001 — Acc: 0.7012
+
+💾  Saved new best model — Val Acc: 0.7012
+
+📆  Epoch 59/164
+
+📊  Epoch 59 — Loss: 0.5829 — Acc: 0.9862
+
+📈  Val — Loss: 1.0243 — Acc: 0.6884
+
+📆  Epoch 60/164
+
+📊  Epoch 60 — Loss: 0.5769 — Acc: 0.9858
+
+📈  Val — Loss: 1.0683 — Acc: 0.6836
+
+📆  Epoch 61/164
+
+📊  Epoch 61 — Loss: 0.5793 — Acc: 0.9857
+
+📈  Val — Loss: 1.0808 — Acc: 0.6780
+
+📆  Epoch 62/164
+
+📊  Epoch 62 — Loss: 0.5642 — Acc: 0.9869
+
+📈  Val — Loss: 1.0407 — Acc: 0.6904
+
+📆  Epoch 63/164
+
+📊  Epoch 63 — Loss: 0.5423 — Acc: 0.9873
+
+📈  Val — Loss: 1.0462 — Acc: 0.6906
+
+📆  Epoch 64/164
+
+📊  Epoch 64 — Loss: 0.5983 — Acc: 0.9849
+
+📈  Val — Loss: 1.0380 — Acc: 0.6934
+
+📆  Epoch 65/164
+
+📊  Epoch 65 — Loss: 0.5462 — Acc: 0.9885
+
+📈  Val — Loss: 1.0430 — Acc: 0.6940
+
+📆  Epoch 66/164
+
+📊  Epoch 66 — Loss: 0.5224 — Acc: 0.9895
+
+📈  Val — Loss: 1.0797 — Acc: 0.6870
+
+📆  Epoch 67/164
+
+📊  Epoch 67 — Loss: 0.5727 — Acc: 0.9868
+
+📈  Val — Loss: 1.0133 — Acc: 0.6980
+
+📆  Epoch 68/164
+
+📊  Epoch 68 — Loss: 0.5538 — Acc: 0.9884
+
+📈  Val — Loss: 0.9771 — Acc: 0.7084
+
+💾  Saved new best model — Val Acc: 0.7084
+
+📆  Epoch 69/164
+
+📊  Epoch 69 — Loss: 0.5636 — Acc: 0.9873
+
+📈  Val — Loss: 1.0559 — Acc: 0.6888
+
+📆  Epoch 70/164
+
+📊  Epoch 70 — Loss: 0.5701 — Acc: 0.9879
+
+📈  Val — Loss: 1.0720 — Acc: 0.6800
+
+📆  Epoch 71/164
+
+📊  Epoch 71 — Loss: 0.5327 — Acc: 0.9902
+
+📈  Val — Loss: 1.0483 — Acc: 0.6950
+
+📆  Epoch 72/164
+
+📊  Epoch 72 — Loss: 0.5550 — Acc: 0.9892
+
+📈  Val — Loss: 1.0527 — Acc: 0.6916
+
+📆  Epoch 73/164
+
+📊  Epoch 73 — Loss: 0.5696 — Acc: 0.9881
+
+📈  Val — Loss: 1.0375 — Acc: 0.6918
+
+📆  Epoch 74/164
+
+📊  Epoch 74 — Loss: 0.5670 — Acc: 0.9876
+
+📈  Val — Loss: 1.0002 — Acc: 0.7016
+
+📆  Epoch 75/164
+
+📊  Epoch 75 — Loss: 0.5409 — Acc: 0.9905
+
+📈  Val — Loss: 1.0339 — Acc: 0.6952
+
+📆  Epoch 76/164
+
+📊  Epoch 76 — Loss: 0.5182 — Acc: 0.9901
+
+📈  Val — Loss: 1.0171 — Acc: 0.6996
+
+📆  Epoch 77/164
+
+📊  Epoch 77 — Loss: 0.5694 — Acc: 0.9893
+
+📈  Val — Loss: 1.0340 — Acc: 0.6978
+
+📆  Epoch 78/164
+
+📊  Epoch 78 — Loss: 0.5622 — Acc: 0.9889
+
+📈  Val — Loss: 1.0240 — Acc: 0.6912
+
+📆  Epoch 79/164
+
+📊  Epoch 79 — Loss: 0.5687 — Acc: 0.9881
+
+📈  Val — Loss: 1.0658 — Acc: 0.6876
+
+📆  Epoch 80/164
+
+📊  Epoch 80 — Loss: 0.5453 — Acc: 0.9909
+
+📈  Val — Loss: 0.9876 — Acc: 0.7042
+
+📆  Epoch 81/164
+
+📊  Epoch 81 — Loss: 0.5572 — Acc: 0.9898
+
+📈  Val — Loss: 1.0079 — Acc: 0.6944
+
+📆  Epoch 82/164
+
+📊  Epoch 82 — Loss: 0.5744 — Acc: 0.9881
+
+📈  Val — Loss: 1.0733 — Acc: 0.6838
+
+📆  Epoch 83/164
+
+📊  Epoch 83 — Loss: 0.5381 — Acc: 0.9908
+
+📈  Val — Loss: 1.0045 — Acc: 0.6974
+
+📆  Epoch 84/164
+
+📊  Epoch 84 — Loss: 0.5424 — Acc: 0.9914
+
+📈  Val — Loss: 1.0359 — Acc: 0.6958
+
+📆  Epoch 85/164
+
+📊  Epoch 85 — Loss: 0.5520 — Acc: 0.9898
+
+📈  Val — Loss: 1.0157 — Acc: 0.6980
+
+📆  Epoch 86/164
+
+📊  Epoch 86 — Loss: 0.5410 — Acc: 0.9911
+
+📈  Val — Loss: 1.1120 — Acc: 0.6748
+
+📆  Epoch 87/164
+
+📊  Epoch 87 — Loss: 0.5575 — Acc: 0.9903
+
+📈  Val — Loss: 1.0294 — Acc: 0.6900
+
+📆  Epoch 88/164
+
+📊  Epoch 88 — Loss: 0.5153 — Acc: 0.9920
+
+📈  Val — Loss: 0.9937 — Acc: 0.7054
+
+📆  Epoch 89/164
+
+📊  Epoch 89 — Loss: 0.5561 — Acc: 0.9894
+
+📈  Val — Loss: 1.0130 — Acc: 0.7012
+
+📆  Epoch 90/164
+
+📊  Epoch 90 — Loss: 0.5339 — Acc: 0.9912
+
+📈  Val — Loss: 1.0157 — Acc: 0.7010
+
+📆  Epoch 91/164
+
+📊  Epoch 91 — Loss: 0.5489 — Acc: 0.9915
+
+📈  Val — Loss: 0.9973 — Acc: 0.6970
+
+📆  Epoch 92/164
+
+📊  Epoch 92 — Loss: 0.5124 — Acc: 0.9931
+
+📈  Val — Loss: 1.0020 — Acc: 0.7026
+
+📆  Epoch 93/164
+
+📊  Epoch 93 — Loss: 0.5488 — Acc: 0.9900
+
+📈  Val — Loss: 1.0315 — Acc: 0.6910
+
+📆  Epoch 94/164
+
+📊  Epoch 94 — Loss: 0.5461 — Acc: 0.9914
+
+📈  Val — Loss: 0.9847 — Acc: 0.7088
+
+💾  Saved new best model — Val Acc: 0.7088
+
+📆  Epoch 95/164
+
+📊  Epoch 95 — Loss: 0.5120 — Acc: 0.9933
+
+📈  Val — Loss: 1.0134 — Acc: 0.6916
+
+📆  Epoch 96/164
+
+📊  Epoch 96 — Loss: 0.5340 — Acc: 0.9913
+
+📈  Val — Loss: 1.0380 — Acc: 0.6936
+
+📆  Epoch 97/164
+
+📊  Epoch 97 — Loss: 0.5447 — Acc: 0.9915
+
+📈  Val — Loss: 1.0461 — Acc: 0.6906
+
+📆  Epoch 98/164
+
+📊  Epoch 98 — Loss: 0.5187 — Acc: 0.9930
+
+📈  Val — Loss: 1.0166 — Acc: 0.7050
+
+📆  Epoch 99/164
+
+📊  Epoch 99 — Loss: 0.5471 — Acc: 0.9913
+
+📈  Val — Loss: 1.0045 — Acc: 0.6946
+
+📆  Epoch 100/164
+
+📊  Epoch 100 — Loss: 0.5199 — Acc: 0.9926
+
+📈  Val — Loss: 0.9932 — Acc: 0.7014
+
+📆  Epoch 101/164
+
+📊  Epoch 101 — Loss: 0.5693 — Acc: 0.9901
+
+📈  Val — Loss: 1.0307 — Acc: 0.6930
+
+📆  Epoch 102/164
+
+📊  Epoch 102 — Loss: 0.5320 — Acc: 0.9916
+
+📈  Val — Loss: 0.9951 — Acc: 0.7034
+
+📆  Epoch 103/164
+
+📊  Epoch 103 — Loss: 0.5394 — Acc: 0.9923
+
+📈  Val — Loss: 0.9773 — Acc: 0.7074
+
+📆  Epoch 104/164
+
+📊  Epoch 104 — Loss: 0.5557 — Acc: 0.9909
+
+📈  Val — Loss: 1.0052 — Acc: 0.7056
+
+📆  Epoch 105/164
+
+📊  Epoch 105 — Loss: 0.5572 — Acc: 0.9904
+
+📈  Val — Loss: 1.0427 — Acc: 0.6902
+
+📆  Epoch 106/164
+
+📊  Epoch 106 — Loss: 0.5265 — Acc: 0.9912
+
+📈  Val — Loss: 1.0356 — Acc: 0.6928
+
+📆  Epoch 107/164
+
+📊  Epoch 107 — Loss: 0.5037 — Acc: 0.9945
+
+📈  Val — Loss: 1.0143 — Acc: 0.6974
+
+📆  Epoch 108/164
+
+📊  Epoch 108 — Loss: 0.5356 — Acc: 0.9921
+
+📈  Val — Loss: 1.0039 — Acc: 0.6998
+
+📆  Epoch 109/164
+
+📊  Epoch 109 — Loss: 0.5444 — Acc: 0.9916
+
+📈  Val — Loss: 1.0121 — Acc: 0.6946
+
+📆  Epoch 110/164
+
+📊  Epoch 110 — Loss: 0.5339 — Acc: 0.9929
+
+📈  Val — Loss: 0.9925 — Acc: 0.7050
+
+📆  Epoch 111/164
+
+📊  Epoch 111 — Loss: 0.5530 — Acc: 0.9907
+
+📈  Val — Loss: 1.0582 — Acc: 0.6822
+
+📆  Epoch 112/164
+
+📊  Epoch 112 — Loss: 0.5373 — Acc: 0.9910
+
+📈  Val — Loss: 0.9891 — Acc: 0.7074
+
+📆  Epoch 113/164
+
+📊  Epoch 113 — Loss: 0.5247 — Acc: 0.9931
+
+📈  Val — Loss: 1.0161 — Acc: 0.6982
+
+📆  Epoch 114/164
+
+📊  Epoch 114 — Loss: 0.5372 — Acc: 0.9912
+
+📈  Val — Loss: 1.0348 — Acc: 0.6928
+
+📆  Epoch 115/164
+
+📊  Epoch 115 — Loss: 0.5511 — Acc: 0.9917
+
+📈  Val — Loss: 1.0205 — Acc: 0.7022
+
+📆  Epoch 116/164
+
+📊  Epoch 116 — Loss: 0.5193 — Acc: 0.9938
+
+📈  Val — Loss: 0.9785 — Acc: 0.7120
+
+💾  Saved new best model — Val Acc: 0.7120
+
+📆  Epoch 117/164
+
+📊  Epoch 117 — Loss: 0.5454 — Acc: 0.9911
+
+📈  Val — Loss: 0.9854 — Acc: 0.7040
+
+📆  Epoch 118/164
+
+📊  Epoch 118 — Loss: 0.5099 — Acc: 0.9926
+
+📈  Val — Loss: 1.0136 — Acc: 0.6952
+
+📆  Epoch 119/164
+
+📊  Epoch 119 — Loss: 0.5399 — Acc: 0.9926
+
+📈  Val — Loss: 1.0308 — Acc: 0.6966
+
+📆  Epoch 120/164
+
+📊  Epoch 120 — Loss: 0.5213 — Acc: 0.9931
+
+📈  Val — Loss: 1.0177 — Acc: 0.6984
+
+📆  Epoch 121/164
+
+📊  Epoch 121 — Loss: 0.5446 — Acc: 0.9918
+
+📈  Val — Loss: 1.0456 — Acc: 0.6874
+
+📆  Epoch 122/164
+
+📊  Epoch 122 — Loss: 0.5466 — Acc: 0.9924
+
+📈  Val — Loss: 1.0098 — Acc: 0.7016
+
+📆  Epoch 123/164
+
+📊  Epoch 123 — Loss: 0.5379 — Acc: 0.9929
+
+📈  Val — Loss: 1.0240 — Acc: 0.6926
+
+📆  Epoch 124/164
+
+📊  Epoch 124 — Loss: 0.5337 — Acc: 0.9921
+
+📈  Val — Loss: 1.0016 — Acc: 0.7004
+
+📆  Epoch 125/164
+
+📊  Epoch 125 — Loss: 0.5138 — Acc: 0.9933
+
+📈  Val — Loss: 0.9985 — Acc: 0.7002
+
+📆  Epoch 126/164
+
+📊  Epoch 126 — Loss: 0.5463 — Acc: 0.9926
+
+📈  Val — Loss: 0.9843 — Acc: 0.7080
+
+📆  Epoch 127/164
+
+📊  Epoch 127 — Loss: 0.5245 — Acc: 0.9920
+
+📈  Val — Loss: 1.0162 — Acc: 0.6988
+
+📆  Epoch 128/164
+
+📊  Epoch 128 — Loss: 0.5408 — Acc: 0.9934
+
+📈  Val — Loss: 0.9951 — Acc: 0.7066
+
+📆  Epoch 129/164
+
+📊  Epoch 129 — Loss: 0.5387 — Acc: 0.9929
+
+📈  Val — Loss: 1.0196 — Acc: 0.6920
+
+📆  Epoch 130/164
+
+📊  Epoch 130 — Loss: 0.4977 — Acc: 0.9938
+
+📈  Val — Loss: 1.0276 — Acc: 0.6902
+
+📆  Epoch 131/164
+
+📊  Epoch 131 — Loss: 0.5577 — Acc: 0.9912
+
+📈  Val — Loss: 1.0586 — Acc: 0.6894
+
+📆  Epoch 132/164
+
+📊  Epoch 132 — Loss: 0.5311 — Acc: 0.9916
+
+📈  Val — Loss: 1.0111 — Acc: 0.6988
+
+📆  Epoch 133/164
+
+📊  Epoch 133 — Loss: 0.5354 — Acc: 0.9933
+
+📈  Val — Loss: 1.0224 — Acc: 0.6984
+
+📆  Epoch 134/164
+
+📊  Epoch 134 — Loss: 0.5285 — Acc: 0.9930
+
+📈  Val — Loss: 1.0314 — Acc: 0.6968
+
+📆  Epoch 135/164
+
+📊  Epoch 135 — Loss: 0.5300 — Acc: 0.9929
+
+📈  Val — Loss: 1.0741 — Acc: 0.6816
+
+📆  Epoch 136/164
+
+📊  Epoch 136 — Loss: 0.5542 — Acc: 0.9929
+
+📈  Val — Loss: 0.9782 — Acc: 0.7064
+
+📆  Epoch 137/164
+
+📊  Epoch 137 — Loss: 0.5245 — Acc: 0.9935
+
+📈  Val — Loss: 1.0136 — Acc: 0.6962
+
+📆  Epoch 138/164
+
+📊  Epoch 138 — Loss: 0.5443 — Acc: 0.9918
+
+📈  Val — Loss: 1.0335 — Acc: 0.6924
+
+📆  Epoch 139/164
+
+📊  Epoch 139 — Loss: 0.5588 — Acc: 0.9917
+
+📈  Val — Loss: 1.0009 — Acc: 0.6992
+
+📆  Epoch 140/164
+
+📊  Epoch 140 — Loss: 0.5411 — Acc: 0.9929
+
+📈  Val — Loss: 1.0158 — Acc: 0.7004
+
+📆  Epoch 141/164
+
+📊  Epoch 141 — Loss: 0.5463 — Acc: 0.9920
+
+📈  Val — Loss: 0.9945 — Acc: 0.7000
+
+📆  Epoch 142/164
+
+📊  Epoch 142 — Loss: 0.5321 — Acc: 0.9922
+
+📈  Val — Loss: 1.0420 — Acc: 0.6896
+
+📆  Epoch 143/164
+
+📊  Epoch 143 — Loss: 0.5183 — Acc: 0.9927
+
+📈  Val — Loss: 1.0044 — Acc: 0.7034
+
+📆  Epoch 144/164
+
+📊  Epoch 144 — Loss: 0.5207 — Acc: 0.9929
+
+📈  Val — Loss: 1.0256 — Acc: 0.6972
+
+📆  Epoch 145/164
+
+📊  Epoch 145 — Loss: 0.5621 — Acc: 0.9923
+
+📈  Val — Loss: 0.9826 — Acc: 0.7034
+
+📆  Epoch 146/164
+
+📊  Epoch 146 — Loss: 0.5358 — Acc: 0.9931
+
+📈  Val — Loss: 0.9980 — Acc: 0.7010
+
+📆  Epoch 147/164
+
+📊  Epoch 147 — Loss: 0.5309 — Acc: 0.9927
+
+📈  Val — Loss: 1.0207 — Acc: 0.6960
+
+📆  Epoch 148/164
+
+📊  Epoch 148 — Loss: 0.5346 — Acc: 0.9923
+
+📈  Val — Loss: 1.0114 — Acc: 0.7014
+
+📆  Epoch 149/164
+
+📊  Epoch 149 — Loss: 0.5095 — Acc: 0.9928
+
+📈  Val — Loss: 1.0644 — Acc: 0.6852
+
+📆  Epoch 150/164
+
+📊  Epoch 150 — Loss: 0.5473 — Acc: 0.9932
+
+📈  Val — Loss: 1.0280 — Acc: 0.6950
+
+📆  Epoch 151/164
+
+📊  Epoch 151 — Loss: 0.5385 — Acc: 0.9926
+
+📈  Val — Loss: 1.0173 — Acc: 0.6982
+
+📆  Epoch 152/164
+
+📊  Epoch 152 — Loss: 0.5416 — Acc: 0.9927
+
+📈  Val — Loss: 1.0082 — Acc: 0.7004
+
+📆  Epoch 153/164
+
+📊  Epoch 153 — Loss: 0.4992 — Acc: 0.9948
+
+📈  Val — Loss: 1.0281 — Acc: 0.6990
+
+📆  Epoch 154/164
+
+📊  Epoch 154 — Loss: 0.5209 — Acc: 0.9930
+
+📈  Val — Loss: 1.0618 — Acc: 0.6830
+
+📆  Epoch 155/164
+
+📊  Epoch 155 — Loss: 0.4979 — Acc: 0.9925
+
+📈  Val — Loss: 1.0248 — Acc: 0.6994
+
+📆  Epoch 156/164
+
+📊  Epoch 156 — Loss: 0.5383 — Acc: 0.9927
+
+📈  Val — Loss: 1.0240 — Acc: 0.6992
+
+📆  Epoch 157/164
+
+📊  Epoch 157 — Loss: 0.5092 — Acc: 0.9944
+
+📈  Val — Loss: 1.0347 — Acc: 0.6918
+
+📆  Epoch 158/164
+
+📊  Epoch 158 — Loss: 0.5044 — Acc: 0.9940
+
+📈  Val — Loss: 0.9784 — Acc: 0.7068
+
+📆  Epoch 159/164
+
+📊  Epoch 159 — Loss: 0.5232 — Acc: 0.9926
+
+📈  Val — Loss: 1.0328 — Acc: 0.6920
+
+📆  Epoch 160/164
+
+📊  Epoch 160 — Loss: 0.4978 — Acc: 0.9951
+
+📈  Val — Loss: 1.0597 — Acc: 0.6854
+
+📆  Epoch 161/164
+
+📊  Epoch 161 — Loss: 0.5345 — Acc: 0.9931
+
+📈  Val — Loss: 0.9890 — Acc: 0.7102
+
+📆  Epoch 162/164
+
+📊  Epoch 162 — Loss: 0.5018 — Acc: 0.9937
+
+📈  Val — Loss: 0.9869 — Acc: 0.7100
+
+📆  Epoch 163/164
+
+📊  Epoch 163 — Loss: 0.5557 — Acc: 0.9930
+
+📈  Val — Loss: 0.9863 — Acc: 0.7054
+
+📆  Epoch 164/164
+
+📊  Epoch 164 — Loss: 0.5085 — Acc: 0.9942
+
+📈  Val — Loss: 1.0192 — Acc: 0.6986
+
+🎯  _save_training_history
+
+⚠️   Failing to save history:
+Object of type float32 is not JSON serializable
+
+🎯  extract_history_metrics
+
+📥  Restored best model from:
+/content/drive/MyDrive/src/cifar-susume/artifact/checkpoint/m9_r1_m9_res_full/best.keras
+
+🎯  evaluate_model
+
+🎯  extract_history_metrics
+
+🎯  _create_evaluation_dictionary
+
+📊  Dumping experiment results:
+[
+  {
+    "model": 9,
+    "run": 1,
+    "config_name": "m9_res_full",
+    "date": "2025-05-27",
+    "time": "06:08:49",
+    "duration": "0:45:14",
+    "parameters": {
+      "LIGHT_MODE": false,
+      "AUGMENT_MODE": {
+        "enabled": true,
+        "random_crop": true,
+        "random_flip": true,
+        "cutout": true
+      },
+      "L2_MODE": {
+        "enabled": true,
+        "lambda": 0.0005
+      },
+      "DROPOUT_MODE": {
+        "enabled": false,
+        "rate": 0.0
+      },
+      "OPTIMIZER": {
+        "type": "sgd",
+        "learning_rate": 0.05,
+        "momentum": 0.9
+      },
+      "SCHEDULE_MODE": {
+        "enabled": true,
+        "warmup_epochs": 15,
+        "factor": null,
+        "patience": null,
+        "min_lr": null
+      },
+      "EARLY_STOP_MODE": {
+        "enabled": true,
+        "patience": 20,
+        "restore_best_weights": true
+      },
+      "AVERAGE_MODE": {
+        "enabled": true,
+        "start_epoch": 150
+      },
+      "TTA_MODE": {
+        "enabled": false,
+        "runs": 1
+      },
+      "MIXUP_MODE": {
+        "enabled": true,
+        "alpha": 0.2
+      },
+      "EPOCHS_COUNT": 164,
+      "BATCH_SIZE": 128
+    },
+    "min_train_loss": 0.49766185879707336,
+    "min_train_loss_epoch": 130,
+    "max_train_acc": 0.9951000213623047,
+    "max_train_acc_epoch": 160,
+    "min_val_loss": 0.9490179419517517,
+    "min_val_loss_epoch": 14,
+    "max_val_acc": 0.7120000123977661,
+    "max_val_acc_epoch": 116,
+    "final_test_loss": 3.8713481426239014,
+    "final_test_acc": 0.7728000283241272
+  }
+]
+
+✅   m9 run 1 with 'm9_res_full' successfully executed
+
+📦   Completed 1 total experiment runs

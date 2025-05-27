@@ -7,58 +7,62 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
 
-  "LIGHT_MODE": false,
+  "FROZEN_BN": true,
+  "LIGHT_MODE": true,
 
   "AUGMENT_MODE": {
-    "enabled": false
-  },
-
-  "L2_MODE": {
+    "cutout": true,
     "enabled": true,
-    "adaptive": true,
-    "lambda": 0.0005
+    "random_crop": true,
+    "random_flip": true
+  },
+  "MIXUP_MODE": {
+    "alpha": 0.2,
+    "enabled": true
   },
 
   "DROPOUT_MODE": {
-    "enabled": false,
+    "enabled": true,
     "rate": 0.0
+  },
+  "L2_MODE": {
+    "enabled": true,
+    "lambda": 0.0001,
+    "mode": "optimizer"
   },
 
   "OPTIMIZER": {
-    "type": "sgd",
-    "learning_rate": 0.05,
-    "momentum": 0.9
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "type": "sgd"
   },
-
   "SCHEDULE_MODE": {
     "enabled": true,
-    "type": "step",
-    "milestones": [81, 122],
     "gamma": 0.1,
+    "milestones": [82, 123],
+    "type": "step",
     "verbose": 1,
-    "warmup_epochs": 5
-  },
-
-  "EARLY_STOP_MODE": {
-    "enabled": false
+    "warmup_epochs": 0
   },
 
   "AVERAGE_MODE": {
     "enabled": true,
     "start_epoch": 150
   },
-
-  "TTA_MODE": {
-    "enabled": false
-  },
-
-  "MIXUP_MODE": {
+  "EARLY_STOP_MODE": {
     "enabled": true,
-    "alpha": 0.2
+    "monitor": "val_accuracy",
+    "patience": 20,
+    "restore_best_weights": true,
+    "verbose": 1
+  },
+  "TTA_MODE": {
+    "enabled": true,
+    "random_crop": true,
+    "random_flip": true,
+    "runs": 5
   },
 
-  "FROZEN_BN": true,
-
-  "EPOCHS_COUNT": 8,
-  "BATCH_SIZE": 32
+  "BATCH_SIZE": 8,
+  "EPOCHS_COUNT": 32
 }
