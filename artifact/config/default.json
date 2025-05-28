@@ -7,22 +7,14 @@
   "MODEL_PATH": "artifact/model/",
   "ERROR_PATH": "artifact/error",
 
-  "FROZEN_BN": true,
-  "LIGHT_MODE": true,
-
   "AUGMENT_MODE": {
-    "cutout": true,
     "enabled": true,
     "random_crop": true,
     "random_flip": true
   },
-  "MIXUP_MODE": {
-    "alpha": 0.2,
-    "enabled": true
-  },
 
   "DROPOUT_MODE": {
-    "enabled": true,
+    "enabled": false,
     "rate": 0.0
   },
   "L2_MODE": {
@@ -46,23 +38,23 @@
   },
 
   "AVERAGE_MODE": {
-    "enabled": true,
+    "enabled": false,
     "start_epoch": 150
   },
   "EARLY_STOP_MODE": {
-    "enabled": true,
+    "enabled": false,
     "monitor": "val_accuracy",
     "patience": 20,
-    "restore_best_weights": true,
+    "restore_best_weights": false,
     "verbose": 1
   },
   "TTA_MODE": {
-    "enabled": true,
+    "enabled": false,
     "random_crop": true,
     "random_flip": true,
     "runs": 5
   },
 
-  "BATCH_SIZE": 8,
-  "EPOCHS_COUNT": 32
+  "BATCH_SIZE": 128,
+  "EPOCHS_COUNT": 164
 }

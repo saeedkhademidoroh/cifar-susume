@@ -11,7 +11,7 @@ from torchvision import transforms
 from data import build_normalization_transform
 from utility import extract_history_metrics
 
-# Function to build tta transform
+
 def _build_tta_transform(config):
     """
     Builds the transform pipeline for Test-Time Augmentation based on TTA_MODE.
@@ -20,115 +20,106 @@ def _build_tta_transform(config):
         torchvision.transforms.Compose: TTA transform.
     """
 
-    # Print header for function execution
+    # Step 0: Print header for function execution
     print("\n🎯  build_tta_transform is executing ...")
 
-    # Extract TTA settings from config
+    # Step 1: Extract TTA settings from config
     tta = config.TTA_MODE
 
-    # Log TTA augmentation policy
+    # Step 2: Log selected TTA augmentation policy
     print("\n🎛️  TTA augmentation policy:")
     print(f"→ random_crop enabled:  {tta.get('random_crop', False)}")
     print(f"→ random_flip enabled:  {tta.get('random_flip', False)}")
-    print(f"→ cutout enabled:       {tta.get('cutout', False)}")
+    print(f"→ cutout enabled:       {tta.get('cutout', False)}")  # Not applied here but logged for consistency
 
-    # Initialize transform ops with image format conversion
+    # Step 3: Start transform list with PIL conversion
     ops = [transforms.ToPILImage()]
 
-    # Conditionally add augmentations
+    # Step 4: Conditionally add augmentation operations
     if tta.get("random_crop", False):
-        ops.append(transforms.RandomCrop(32, padding=4))  # Safe spatial jitter
+        ops.append(transforms.RandomCrop(32, padding=4))  # Crop with padding
     if tta.get("random_flip", False):
-        ops.append(transforms.RandomHorizontalFlip())     # Safe horizontal flip
+        ops.append(transforms.RandomHorizontalFlip())     # Horizontal flip
 
-    # Append normalization steps (ToTensor + Normalize)
+    # Step 5: Append normalization steps (ToTensor + Normalize)
     ops += build_normalization_transform().transforms
 
-    # Return full transform pipeline
+    # Step 6: Return composed transform pipeline
     return transforms.Compose(ops)
 
 
-# Function to evaluate trained model
-def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
+# Function to evaluate trained model and extract metrics
+def evaluate_model(model, history, test_data, test_labels, config, run_id, verbose=0):
     """
-    Function to evaluate a trained model and extract training/test performance.
+    Evaluates a trained model and extracts final metrics.
 
-    Handles optional TTA (Test-Time Augmentation), loads fallback training history
-    if not provided, and computes performance metrics.
+    Automatically recovers training history if not provided.
+    Supports optional Test-Time Augmentation (TTA) if enabled in config.
 
     Args:
-        model (tf.keras.Model): Trained model instance.
-        history (History or dict or None): Training history, or None to auto-load from disk.
-        test_data (np.ndarray): Test images.
-        test_labels (np.ndarray): Test labels.
-        config (Config): Configuration object with paths and evaluation settings.
-        verbose (int): Verbosity level during evaluation and prediction.
+        model (tf.keras.Model): Trained model to evaluate.
+        history (dict or object, optional): Training history or None to auto-load.
+        test_data (np.ndarray): Test set inputs.
+        test_labels (np.ndarray): Test set labels.
+        config (SimpleNamespace): Configuration object with evaluation and logging settings.
+        verbose (int): Verbosity for evaluation and prediction.
 
     Returns:
-        dict: Dictionary of training stats, final test loss/accuracy, and predictions.
+        dict: Dictionary with:
+            - train_loss / train_acc
+            - val_loss / val_acc (if available)
+            - test_loss / test_acc
+            - predictions
     """
 
-    # Print header for function execution
+    # Step 0: Print function header
     print("\n🎯  evaluate_model is executing ...")
 
-    # Sanity check — ensure test input is in NumPy format
+    # Step 1: Verify test_data type
     if not isinstance(test_data, np.ndarray):
-        raise ValueError("\n\n❌  ValueError from evaluate.py at evaluate_model()!\ntest_data must be a NumPy array\n\n")
+        raise ValueError(
+            "\n\n❌  ValueError from evaluate.py at evaluate_model()!\n"
+            "test_data must be a NumPy array\n\n"
+        )
 
-
-    # Load fallback history if history is missing and model.run_id is available
+    # Step 2: Attempt fallback history load if missing
     if history is None and hasattr(model, "run_id"):
         history_path = config.CHECKPOINT_PATH / model.run_id / "history.json"
-
         if history_path.exists():
             try:
-                # Load the JSON history file into a SimpleNamespace
                 with open(history_path, "r") as f:
                     history_data = json.load(f)
-
                 history = SimpleNamespace(history=history_data)
-
-                # Print fallback path info
-                print(f"\n📄  Fallback training history loaded:")
-                print(f"→ Path: {history_path}")
+                print(f"\n📄  Fallback training history loaded:\n→ Path: {history_path}")
             except Exception as e:
-                # Print fallback load failure and continue with empty dict
-                print(f"\n\n❌  Error from evaluate.py at evaluate_model()!\nFailed to load fallback history:\n→ {e}\n\n")
+                print(f"\n\n❌  Failed to load fallback history:\n→ {e}\n\n")
                 history = {}
 
-    # Extract metrics from training history (min/max train/val loss/acc)
+    # Step 3: Try to extract training/validation metrics
     try:
         metrics = extract_history_metrics(history)
-
     except (ValueError, KeyError) as e:
-        # If metrics can't be extracted, fall back to null values
-        print(f"\n\n❌  Error from evaluate.py at evaluate_model()!\nFailed to extract history metrics:\n→ {e}\n\n")
+        print(f"\n\n❌  Failed to extract history metrics:\n→ {e}\n\n")
         metrics = {
-            "min_train_loss": None,
-            "min_train_loss_epoch": None,
-            "max_train_acc": None,
-            "max_train_acc_epoch": None,
-            "min_val_loss": None,
-            "min_val_loss_epoch": None,
-            "max_val_acc": None,
-            "max_val_acc_epoch": None,
+            "min_train_loss": None, "min_train_loss_epoch": None,
+            "max_train_acc": None,  "max_train_acc_epoch": None,
+            "min_val_loss": None,  "min_val_loss_epoch": None,
+            "max_val_acc": None,   "max_val_acc_epoch": None,
         }
 
-    # Soft check: confirm model source is best checkpoint (non-intrusive)
-    best_weights_path = config.CHECKPOINT_PATH / model.run_id / "best_model.h5"
-
+    # Step 4: Sanity check — validate model weights source
+    best_weights_path = config.CHECKPOINT_PATH / run_id / "best.keras"
     if best_weights_path.exists():
         best_mtime = os.path.getmtime(best_weights_path)
         current_mtime = getattr(model, "_loaded_weights_mtime", None)
-
         if current_mtime and abs(current_mtime - best_mtime) > 1:
-            print(f"\n\n❌  Error from evaluate.py at evaluate_model()!\nModel may not be loaded from best_model.h5\n\n")
+            print("\n\n❌  Model may not be loaded from best_model.h5\n")
         else:
-            print(f"\n🔍  Model appears to originate from best checkpoint.")
+            print("\n🔍  Model appears to originate from best checkpoint.")
     else:
-        print(f"\n\n❌  Error from evaluate.py at evaluate_model()!\nNo best_model.h5 found — unable to verify model source\n\n")
+        print("\n\n❌  No best_model.h5 found — unable to verify model source\n")
 
-    # Evaluate final test performance (loss and accuracy)
+    # Step 5: Run baseline test evaluation
     final_test_loss, final_test_acc = model.evaluate(
         test_data,
         test_labels,
@@ -136,74 +127,64 @@ def evaluate_model(model, history, test_data, test_labels, config, verbose=0):
         verbose=verbose
     )
 
-    # If TTA is enabled, run multiple augmented inference passes
-    if config.TTA_MODE.get("enabled", False):
-        runs = config.TTA_MODE.get("runs", 5)  # Number of TTA passes
+    # Step 5.5: Print final test evaluation metrics
+    print("\n📈  Baseline test evaluation complete")
+    print(f"→ Final Test Loss:  {final_test_loss:.4f}")
+    print(f"→ Final Test Acc:   {final_test_acc:.4f}")
 
-        # Load transform pipeline with augmentation and normalization
+    # Step 6: Apply Test-Time Augmentation if enabled
+    if config.TTA_MODE.get("enabled", False):
+        runs = config.TTA_MODE.get("runs", 5)
+        print(
+            f"\n🌀  Test-Time Augmentation is enabled"
+            f"\n→ Running {runs} augmented passes per sample"
+        )
         transform = _build_tta_transform(config)
         tta_preds = []
 
         for run_idx in range(runs):
-            # Transform each test image individually (back to uint8 first)
-            augmented = [
-                transform((img * 255).astype(np.uint8)) for img in test_data
-            ]
+            augmented = [transform((img * 255).astype(np.uint8)) for img in test_data]
 
-            # 🔍 Log verification info only for the first TTA run and first image
             if run_idx == 0:
-                print(f"\n🎛️  First test image is being TTA-transformed:")
+                print("\n🎛️  First test image is being TTA-transformed:")
                 print(f"→ Original shape: {test_data[0].shape}")
                 print(f"→ Original pixel range: min={test_data[0].min()}, max={test_data[0].max()}")
-
                 arr = augmented[0].permute(1, 2, 0).numpy()
                 print(f"→ Transformed shape: {arr.shape}")
                 print(f"→ Transformed pixel range: min={arr.min():.3f}, max={arr.max():.3f}")
 
-            # Convert each image back to NHWC float32 format
             batch = np.stack([img.permute(1, 2, 0).numpy() for img in augmented]).astype(np.float32)
-
-            # Predict on the augmented test batch
             preds = model.predict(batch, verbose=verbose)
             tta_preds.append(preds)
 
-        # Average predictions from all TTA runs
         predictions = np.mean(tta_preds, axis=0)
         print(f"\n📈  TTA applied — predictions averaged over {runs} runs")
 
     else:
-        # Standard inference without TTA
+        # Step 7: Standard inference without TTA
         predictions = model.predict(test_data, verbose=verbose)
 
-    # Verbose prediction shape (optional)
-    print(
-        f"\n📊  Predictions Summary"
-        f"\n→ TTA enabled     : {config.TTA_MODE.get('enabled', False)}"
-        f"\n→ Predictions shape: {predictions.shape}\n"
-    )
+        # Step 7.5: Log prediction shape and dtype
+        print(
+            f"\n📊  Predictions collected (standard inference)"
+            f"\n→ Shape: {predictions.shape} — DType: {predictions.dtype}"
+        )
 
-    # Return structured output including metrics, performance, and predictions
+    # Step 8: Return full evaluation dictionary
     return {
-        # Training stats
         "min_train_loss": metrics["min_train_loss"],
         "min_train_loss_epoch": metrics["min_train_loss_epoch"],
         "max_train_acc": metrics["max_train_acc"],
         "max_train_acc_epoch": metrics["max_train_acc_epoch"],
-
-        # Validation stats (if any)
         "min_val_loss": metrics.get("min_val_loss"),
         "min_val_loss_epoch": metrics.get("min_val_loss_epoch"),
         "max_val_acc": metrics.get("max_val_acc"),
         "max_val_acc_epoch": metrics.get("max_val_acc_epoch"),
-
-        # Final test scores
         "final_test_loss": final_test_loss,
         "final_test_acc": final_test_acc,
-
-        # Prediction matrix (used for TTA voting or further processing)
         "predictions": predictions,
     }
 
 
 # Print module successfully executed
-print("\n✅  evaluate.py successfully executed")
+print("\n✅  evaluate.py successfully executed.")

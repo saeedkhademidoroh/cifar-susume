@@ -16,7 +16,6 @@ print(f"\n📊  CIFAR-10 normalization constants loaded:")
 print(f"→ Mean per channel: {_CIFAR10_MEAN}")
 print(f"→ Std per channel: {_CIFAR10_STD}")
 
-# Cutout transform: masks a square region of the image to improve robustness
 class Cutout:
     def __init__(self, size=16):
         """
@@ -26,10 +25,14 @@ class Cutout:
             size (int): Side length of the square mask to apply.
         """
 
-        # Store size of the square mask in pixels
+        # Step 0: Print header for function execution
+        print("\n🎯  Cutout.__init__ is executing ...")
+
+
+        # Step 1: Store the mask size
         self.size = size
 
-        # Print initialization log
+        # Step 2: Print initialization info
         print(f"\n🧊  Cutout transformation initialized successfully:")
         print(f"→ Active mask size: {self.size}×{self.size} pixels")
 
@@ -44,54 +47,68 @@ class Cutout:
             PIL.Image: Image with a square region zeroed out.
         """
 
-        # Convert PIL image to NumPy array if needed
+        # Log only on the very first call
+        if not hasattr(self, "_has_logged"):
+            self._has_logged = True
+            do_log = True
+        else:
+            do_log = False
+
+        # Step 0: Print header for function execution (only if logging)
+        if do_log:
+            print("\n🎯  Cutout.__call__ is executing ...")
+
+        # Step 1: Convert image to NumPy if needed
         if isinstance(img, Image.Image):
             img = np.array(img)
 
-        # Print input shape for debugging
-        print(f"\n🧊  Cutout input shape:\n→ {img.shape} (H×W×C)")
+        # Step 2: Log image shape (only if logging)
+        if do_log:
+            print(f"\n🧊  Cutout input shape:\n→ {img.shape} (H×W×C)")
 
-        # Get image height and width
+        # Step 3: Extract dimensions
         h, w = img.shape[:2]
 
-        # Random center coordinates for the mask
+        # Step 4: Randomly pick center of the mask
         y = random.randint(0, h)
         x = random.randint(0, w)
 
-        # Compute mask boundaries
+        # Step 5: Calculate mask boundaries
         y1 = max(0, y - self.size // 2)
         y2 = min(h, y + self.size // 2)
         x1 = max(0, x - self.size // 2)
         x2 = min(w, x + self.size // 2)
 
-        # Ensure bounds are valid
+        # Step 6: Assert boundaries are valid
         assert y1 >= 0 and y2 <= h and x1 >= 0 and x2 <= w, "Cutout mask out of image bounds"
 
-        # Apply a black square (zero mask) across all RGB channels
+        # Step 7: Apply zero-mask to selected region (across all channels)
         img[y1:y2, x1:x2, :] = 0
 
-        # Calculate number of masked pixels (ignores channel redundancy)
+        # Step 8: Measure masked area
         masked_pixels = (y2 - y1) * (x2 - x1)
 
-        # Extract pixel values at center of mask
+        # Step 9: Sample and log center pixel
         center_y, center_x = (y1 + y2) // 2, (x1 + x2) // 2
         sample_pixel = img[center_y, center_x]
 
-        # Check whether all masked pixels are zeroed across all channels
+        # Step 10: Confirm that region is fully zeroed
         all_zero = np.all(img[y1:y2, x1:x2] == 0)
 
-        print(f"\n🧊  Cutout mask applied to image successfully:")
-        print(f"→ Masked area: {y2 - y1}×{x2 - x1} pixels")
-        print(f"→ Total masked pixels: {masked_pixels}")
-        print(f"→ Mask center pixel value: {sample_pixel}")
-        print(f"→ All masked pixels fully zeroed: {all_zero}")
-        print(f"→ Post-cutout pixel range: min={img.min()}, max={img.max()}")
+        # Step 11: Print post-cutout summary (only if logging)
+        if do_log:
+            print(f"\n🧊  Cutout mask applied to image successfully:")
+            print(f"→ Masked area: {y2 - y1}×{x2 - x1} pixels")
+            print(f"→ Total masked pixels: {masked_pixels}")
+            print(f"→ Mask center pixel value: {sample_pixel}")
+            print(f"→ All masked pixels fully zeroed: {all_zero}")
+            print(f"→ Post-cutout pixel range: min={img.min()}, max={img.max()}")
 
-        # Return the image as PIL format for downstream compatibility
+        # Step 12: Return the transformed image in PIL format
         return Image.fromarray(img)
 
 
-# Function to build normalization transform
+# Function to build normalization-only transform
 def build_normalization_transform():
     """
     Returns a torchvision transform for CIFAR-10 normalization.
@@ -99,22 +116,22 @@ def build_normalization_transform():
     Converts input to tensor and normalizes using CIFAR-10 mean/std.
     """
 
-    # Print header for function execution
+    # Step 0: Print header for function execution
     print("\n🎯  build_normalization_transform is executing ...")
 
-    # Log normalization details
+    # Step 1: Log normalization parameters
     print("\n📊  Applying normalization to dataset:")
     print(f"→ Normalization mean: {_CIFAR10_MEAN}")
     print(f"→ Normalization std:  {_CIFAR10_STD}")
 
-    # Return a composed transform that converts to tensor and normalizes using CIFAR-10 stats
+    # Step 2: Return transform pipeline (ToTensor + Normalize)
     return transforms.Compose([
-        transforms.ToTensor(),  # Converts H×W×C image to C×H×W tensor in [0, 1]
-        transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)  # Normalizes using fixed per-channel stats
+        transforms.ToTensor(),  # Step 2.1: Convert H×W×C image to C×H×W in [0, 1]
+        transforms.Normalize(mean=_CIFAR10_MEAN, std=_CIFAR10_STD)  # Step 2.2: Normalize using CIFAR-10 stats
     ])
 
 
-# Function to build augmentation transform
+# Function to build full augmentation + normalization transform
 def _build_augmentation_transform(config):
     """
     Constructs a transform pipeline with augmentations + normalization for CIFAR-10.
@@ -129,112 +146,91 @@ def _build_augmentation_transform(config):
         torchvision.transforms.Compose: Augmented and normalized transform pipeline.
     """
 
-    # Print header for function execution
+    # Step 0: Print header for function execution
     print("\n🎯  build_augmentation_transform is executing ...")
 
-    # Ensure config has AUGMENT_MODE field
+    # Step 1: Validate AUGMENT_MODE exists in config
     if not hasattr(config, "AUGMENT_MODE"):
         raise ValueError("\n\n❌  ValueError from data.py at build_augmentation_transform()!\nMissing 'AUGMENT_MODE' in config\n\n")
 
-    # Access augmentation config
+    # Step 2: Load augmentation settings
     augment = config.AUGMENT_MODE
 
-    # Print augmentation policy summary
+    # Step 3: Log augmentation flags
     print("\n🎛️  Augmentation policy is being configured:")
     print(f"→ random_crop enabled:  {augment.get('random_crop', False)}")
     print(f"→ random_flip enabled:  {augment.get('random_flip', False)}")
     print(f"→ cutout enabled:       {augment.get('cutout', False)}")
 
-    # Start with conversion to PIL format (required for torchvision transforms)
-    ops = [transforms.ToPILImage()]
+    # Step 4: Initialize transform sequence
+    ops = [transforms.ToPILImage()]  # Convert to PIL format first
 
-    # Conditionally add augmentations if enabled
+    # Step 5: Conditionally append augmentations
     if augment.get("enabled", False):
         if augment.get("random_crop", False):
-            ops.append(transforms.RandomCrop(32, padding=4))  # Randomly crop with padding
+            ops.append(transforms.RandomCrop(32, padding=4))  # Step 5.1: Random crop
         if augment.get("random_flip", False):
-            ops.append(transforms.RandomHorizontalFlip())     # Random horizontal flip
+            ops.append(transforms.RandomHorizontalFlip())     # Step 5.2: Random flip
         if augment.get("cutout", False):
-            ops.append(Cutout(size=16))                       # Apply Cutout for occlusion
+            ops.append(Cutout(size=16))                       # Step 5.3: Cutout
 
-    # Append normalization transforms (ToTensor + Normalize)
+    # Step 6: Add normalization steps from helper
     ops += build_normalization_transform().transforms
 
-    # Return composed pipeline with augmentations and normalization
+    # Step 7: Return composed transform pipeline
     return transforms.Compose(ops)
 
 
-# Function to load, optionally augment, and always standardize CIFAR-10
-def build_dataset(config):
+def build_dataset(config, val_split=5000):
     """
-    Loads the CIFAR-10 dataset and applies preprocessing.
-
-    Supports:
-    - Optional light mode (subset of CIFAR-10)
-    - Optional data augmentation via flags:
-        - random_crop
-        - random_flip
-        - cutout
-    - Per-channel normalization with CIFAR-10 mean/std.
-
-    Args:
-        config (Config): Configuration object with LIGHT_MODE and AUGMENT_MODE dict.
-
-    Returns:
-        tuple: (train_data, train_labels, test_data, test_labels)
-            All data arrays are np.float32 with shape (N, 32, 32, 3)
+    Loads CIFAR-10, applies preprocessing, and splits train/val as needed.
+    Returns: train_data, train_labels, val_data, val_labels, test_data, test_labels
     """
 
-    # Print header for function execution
+    # Step 0: Print header for function execution
     print("\n🎯  build_dataset is executing ...")
 
-    # Load CIFAR-10 from torchvision.datasets
+    # Step 1: Load CIFAR-10 dataset from torchvision
     train_set = datasets.CIFAR10(root=config.DATA_PATH, train=True, download=True)
     test_set = datasets.CIFAR10(root=config.DATA_PATH, train=False, download=True)
 
+    # Step 2: Extract raw images and labels
     train_images = train_set.data
-    test_images = test_set.data
     train_labels = np.array(train_set.targets)
+    test_images = test_set.data
     test_labels = np.array(test_set.targets)
 
-    # Apply light mode (smaller subset) if enabled
-    if config.LIGHT_MODE:
-        train_images, train_labels = train_images[:5000], train_labels[:5000]
-        test_images, test_labels = test_images[:1000], test_labels[:1000]
-    else:
-        train_images, train_labels = train_images[:-5000], train_labels[:-5000]
+    # Step 3: Define train/validation split size
+    split = val_split
 
-    # Build transform pipelines
+    # Step 4: Build transformation pipelines
     train_transform = _build_augmentation_transform(config)
     test_transform = build_normalization_transform()
 
-    # Apply training transforms and verify augmentation
-    train_data = []
-    for i, img in enumerate(train_images):
-        if i == 0:
-            print(f"\n🎛️  First training image is being transformed:")
-            print(f"→ Original shape: {img.shape}")
-            print(f"→ Original pixel range: min={img.min()}, max={img.max()}")
+    # Step 4.1: Verify augmentation pipeline using one sample
+    sample_aug = train_transform(train_images[0])
+    print("\n🎛️  Augmentation pipeline verification:")
+    print(f"→ Shape: {sample_aug.shape}")
+    print(f"→ Min: {sample_aug.min().item():.3f}, Max: {sample_aug.max().item():.3f}")
 
-        transformed = train_transform(img)
+    # Step 5: Transform all training images
+    train_data = [train_transform(img).permute(1, 2, 0).numpy() for img in train_images]
 
-        if i == 0:
-            arr = transformed.permute(1, 2, 0).numpy()
-            print(f"→ Transformed shape: {arr.shape}")
-            print(f"→ Transformed pixel range: min={arr.min():.3f}, max={arr.max():.3f}")
-
-        train_data.append(transformed.permute(1, 2, 0).numpy())
-
-    # Apply test transforms (no augmentation)
+    # Step 6: Transform all test images
     test_data = [test_transform(img).permute(1, 2, 0).numpy() for img in test_images]
 
-    # Return final arrays and labels
-    return (
-        np.stack(train_data).astype(np.float32),
-        train_labels,
-        np.stack(test_data).astype(np.float32),
-        test_labels,
-    )
+    # Step 7: Convert to arrays
+    train_data = np.stack(train_data).astype(np.float32)
+    test_data = np.stack(test_data).astype(np.float32)
+
+    # Step 8: Split training set into train/val
+    val_data = train_data[:split]
+    val_labels = train_labels[:split]
+    train_data_final = train_data[split:]
+    train_labels_final = train_labels[split:]
+
+    # Step 9: Return all arrays
+    return train_data_final, train_labels_final, val_data, val_labels, test_data, test_labels
 
 
 # Print module successfully executed

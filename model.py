@@ -8,66 +8,108 @@ from keras.api.optimizers import Adam, SGD
 from keras.api.losses import SparseCategoricalCrossentropy
 
 
-# Function to apply a residual block
 def _res_block(x, filters, regularizer, downsample=False):
     """
-    Function to apply a 2-layer residual block with identity or projection shortcut.
+    Applies a 2-layer residual block with either identity or projection shortcut.
 
-    Implements the standard ResNet block (conv → BN → ReLU → conv → BN + shortcut → ReLU),
-    where the shortcut is either identity or a projection to match dimensions.
+    Structure:
+    - conv → BN → ReLU → conv → BN → Add(shortcut) → ReLU
+    - Shortcut is identity if shape matches, else 1×1 conv with matching stride
+
+    Args:
+        x (Tensor): Input tensor.
+        filters (int): Number of output channels.
+        regularizer: Regularizer to apply (e.g. L2).
+        downsample (bool): If True, apply stride=2 in the first conv layer.
+
+    Returns:
+        Tensor: Output of the residual block.
     """
 
-    # Print header for function execution
+    # Step 0: Print function execution header
     print("\n🎯  _res_block is executing ...")
 
-    # Use stride=2 if downsampling is requested
+    # Step 1: Determine stride (downsample or not)
     stride = 2 if downsample else 1
 
-    # Save input tensor as shortcut before transformation
+    # Step 2: Store the input tensor as shortcut for later addition
     shortcut = x
 
-    # First convolutional layer (with optional downsampling)
+    # Step 3: First convolution layer with optional downsampling
     x = Conv2D(filters, (3, 3), strides=stride, padding="same", kernel_regularizer=regularizer)(x)
     x = BatchNormalization()(x)
     x = Activation("relu")(x)
 
-    # Second convolutional layer
+    # Step 4: Second convolution layer (no downsampling)
     x = Conv2D(filters, (3, 3), padding="same", kernel_regularizer=regularizer)(x)
     x = BatchNormalization()(x)
 
-    # Apply projection to shortcut if dimensions mismatch or downsampling is applied
+    # Step 5: Apply 1x1 projection to shortcut if shape mismatch or downsampling
     if downsample or shortcut.shape[-1] != filters:
         shortcut = Conv2D(filters, (1, 1), strides=stride, padding="same", kernel_regularizer=regularizer)(shortcut)
 
-    # Add transformed input and shortcut, then apply final activation
+    # Step 6: Add shortcut to the main path and apply ReLU
     x = Add()([x, shortcut])
     x = Activation("relu")(x)
 
-    # Return the output tensor after residual connection
+    # Step 7: Return output tensor
     return x
 
 
-# Function to optionally apply Dropout based on config
 def maybe_dropout(config, x):
-    # Extract dropout rate from config (default to 0.0 if missing)
+    """
+    Applies Dropout to a tensor if enabled in the configuration.
+
+    Args:
+        config (Config): Configuration object containing DROPOUT_MODE settings.
+        x (Tensor): Input tensor to potentially apply Dropout to.
+
+    Returns:
+        Tensor: Either the original tensor or a Dropout-applied tensor.
+    """
+
+    # Step 0: Print function execution header
+    print("\n🎯  maybe_dropout is executing ...")
+
+    # Step 1: Extract dropout rate from config (default to 0.0 if missing)
     rate = config.DROPOUT_MODE.get("rate", 0.0)
 
-    # Validate that rate is numeric (float or int); reject invalid types like string or None
+    # Step 2: Validate that dropout rate is numeric
     if not isinstance(rate, (float, int)):
-        raise ValueError("\n\n❌  ValueError from model.py at maybe_dropout()!\nDROPOUT_MODE['rate'] must be a number (float or int)\n\n")
+        raise ValueError(
+            "\n\n❌  Error from model.py at maybe_dropout()!\n"
+            "→ DROPOUT_MODE['rate'] must be a number (float or int)\n\n"
+        )
 
-    # Apply Dropout only if explicitly enabled in config; otherwise return input unchanged
-    return Dropout(rate)(x) if config.DROPOUT_MODE.get("enabled", False) else x
+    # Step 3: Apply Dropout if explicitly enabled in config
+    if config.DROPOUT_MODE.get("enabled", False):
+        return Dropout(rate)(x)
+
+    # Step 4: Otherwise, return input tensor unchanged
+    return x
 
 
-# Function to build and compile a Keras model based on the selected architecture
 def build_model(model_number: int, config) -> Model:
     """
-    Function to build and compile a Keras model based on the selected architecture.
+    Builds and returns the specified model architecture.
+
+    Supports multiple model variants identified by `model_number`. Each variant
+    corresponds to a predefined model function (e.g., `build_model_9`).
+
+    Args:
+        model_number (int): Identifier for the model to be built.
+        input_shape (tuple): Input shape of the images (e.g., (32, 32, 3)).
+        num_classes (int): Number of output classes for classification.
+
+    Returns:
+        tf.keras.Model: Instantiated and compiled Keras model.
+
+    Raises:
+        ValueError: If `model_number` is not recognized.
     """
 
     # Print header for function execution
-    print("\n🎯  build_model is executing ...\n")
+    print("\n🎯  build_model is executing ...")
 
     # Extract optimizer configuration block from the global config object
     optimizer_config = config.OPTIMIZER
