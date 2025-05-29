@@ -343,7 +343,7 @@ def run_pipeline(pipeline):
 
         # Step 5: Run each pipeline entry
         for i, (model_number, config_name) in enumerate(pipeline):
-            print(f"\n⚙️   Piplining experiment {i+1}/{len(pipeline)}")
+            print(f"\n⚙️  Piplining experiment {i+1}/{len(pipeline)}")
 
             config_path = CONFIG.CONFIG_PATH / f"{config_name}.json"
             model_run_counter[model_number] = model_run_counter.get(model_number, 0) + 1

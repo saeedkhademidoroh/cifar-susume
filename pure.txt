@@ -1,0 +1,743 @@
+Epoch 1/164
+
+Epoch 1: val_accuracy improved from -inf to 0.45260, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 157s - 448ms/step - accuracy: 0.2911 - loss: 2.0815 - val_accuracy: 0.4526 - val_loss: 1.6872 - learning_rate: 0.1000
+Epoch 2/164
+
+Epoch 2: val_accuracy did not improve from 0.45260
+351/351 - 147s - 419ms/step - accuracy: 0.4160 - loss: 1.8887 - val_accuracy: 0.4404 - val_loss: 1.6893 - learning_rate: 0.1000
+Epoch 3/164
+
+Epoch 3: val_accuracy improved from 0.45260 to 0.49760, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 413ms/step - accuracy: 0.4882 - loss: 1.7948 - val_accuracy: 0.4976 - val_loss: 1.5814 - learning_rate: 0.1000
+Epoch 4/164
+
+Epoch 4: val_accuracy did not improve from 0.49760
+351/351 - 147s - 418ms/step - accuracy: 0.5230 - loss: 1.7376 - val_accuracy: 0.4622 - val_loss: 1.8004 - learning_rate: 0.1000
+Epoch 5/164
+
+Epoch 5: val_accuracy improved from 0.49760 to 0.68080, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 147s - 419ms/step - accuracy: 0.5522 - loss: 1.7025 - val_accuracy: 0.6808 - val_loss: 1.2319 - learning_rate: 0.1000
+Epoch 6/164
+
+Epoch 6: val_accuracy did not improve from 0.68080
+351/351 - 148s - 422ms/step - accuracy: 0.5642 - loss: 1.6641 - val_accuracy: 0.6538 - val_loss: 1.3161 - learning_rate: 0.1000
+Epoch 7/164
+
+Epoch 7: val_accuracy improved from 0.68080 to 0.70980, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 148s - 421ms/step - accuracy: 0.5960 - loss: 1.6136 - val_accuracy: 0.7098 - val_loss: 1.1554 - learning_rate: 0.1000
+Epoch 8/164
+
+Epoch 8: val_accuracy did not improve from 0.70980
+351/351 - 146s - 415ms/step - accuracy: 0.5871 - loss: 1.6314 - val_accuracy: 0.6940 - val_loss: 1.2071 - learning_rate: 0.1000
+Epoch 9/164
+
+Epoch 9: val_accuracy did not improve from 0.70980
+351/351 - 147s - 418ms/step - accuracy: 0.6068 - loss: 1.6039 - val_accuracy: 0.6232 - val_loss: 1.3477 - learning_rate: 0.1000
+Epoch 10/164
+
+Epoch 10: val_accuracy improved from 0.70980 to 0.75020, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 147s - 420ms/step - accuracy: 0.6164 - loss: 1.5765 - val_accuracy: 0.7502 - val_loss: 1.1056 - learning_rate: 0.1000
+Epoch 11/164
+
+Epoch 11: val_accuracy improved from 0.75020 to 0.78100, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 147s - 419ms/step - accuracy: 0.6275 - loss: 1.5590 - val_accuracy: 0.7810 - val_loss: 1.0369 - learning_rate: 0.1000
+Epoch 12/164
+
+Epoch 12: val_accuracy did not improve from 0.78100
+351/351 - 145s - 413ms/step - accuracy: 0.6368 - loss: 1.5482 - val_accuracy: 0.7646 - val_loss: 1.0515 - learning_rate: 0.1000
+Epoch 13/164
+
+Epoch 13: val_accuracy did not improve from 0.78100
+351/351 - 145s - 412ms/step - accuracy: 0.6406 - loss: 1.5341 - val_accuracy: 0.7260 - val_loss: 1.1448 - learning_rate: 0.1000
+Epoch 14/164
+
+Epoch 14: val_accuracy did not improve from 0.78100
+351/351 - 144s - 411ms/step - accuracy: 0.6554 - loss: 1.5240 - val_accuracy: 0.7330 - val_loss: 1.1192 - learning_rate: 0.1000
+Epoch 15/164
+
+Epoch 15: val_accuracy improved from 0.78100 to 0.79020, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 414ms/step - accuracy: 0.6478 - loss: 1.5201 - val_accuracy: 0.7902 - val_loss: 1.0171 - learning_rate: 0.1000
+Epoch 16/164
+
+Epoch 16: val_accuracy did not improve from 0.79020
+351/351 - 144s - 410ms/step - accuracy: 0.6479 - loss: 1.5188 - val_accuracy: 0.6950 - val_loss: 1.1911 - learning_rate: 0.1000
+Epoch 17/164
+
+Epoch 17: val_accuracy did not improve from 0.79020
+351/351 - 144s - 409ms/step - accuracy: 0.6414 - loss: 1.5328 - val_accuracy: 0.7844 - val_loss: 1.0182 - learning_rate: 0.1000
+Epoch 18/164
+
+Epoch 18: val_accuracy improved from 0.79020 to 0.79900, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 144s - 409ms/step - accuracy: 0.6563 - loss: 1.5021 - val_accuracy: 0.7990 - val_loss: 1.0068 - learning_rate: 0.1000
+Epoch 19/164
+
+Epoch 19: val_accuracy improved from 0.79900 to 0.80620, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 143s - 408ms/step - accuracy: 0.6666 - loss: 1.4873 - val_accuracy: 0.8062 - val_loss: 0.9791 - learning_rate: 0.1000
+Epoch 20/164
+
+Epoch 20: val_accuracy did not improve from 0.80620
+351/351 - 143s - 408ms/step - accuracy: 0.6635 - loss: 1.5001 - val_accuracy: 0.8016 - val_loss: 0.9887 - learning_rate: 0.1000
+Epoch 21/164
+
+Epoch 21: val_accuracy improved from 0.80620 to 0.80840, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 413ms/step - accuracy: 0.6735 - loss: 1.4816 - val_accuracy: 0.8084 - val_loss: 0.9782 - learning_rate: 0.1000
+Epoch 22/164
+
+Epoch 22: val_accuracy did not improve from 0.80840
+351/351 - 142s - 406ms/step - accuracy: 0.6745 - loss: 1.4884 - val_accuracy: 0.8050 - val_loss: 0.9752 - learning_rate: 0.1000
+Epoch 23/164
+
+Epoch 23: val_accuracy did not improve from 0.80840
+351/351 - 143s - 407ms/step - accuracy: 0.6757 - loss: 1.4785 - val_accuracy: 0.7118 - val_loss: 1.1708 - learning_rate: 0.1000
+Epoch 24/164
+
+Epoch 24: val_accuracy did not improve from 0.80840
+351/351 - 143s - 407ms/step - accuracy: 0.6702 - loss: 1.4862 - val_accuracy: 0.7608 - val_loss: 1.0588 - learning_rate: 0.1000
+Epoch 25/164
+
+Epoch 25: val_accuracy improved from 0.80840 to 0.81160, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 143s - 407ms/step - accuracy: 0.6999 - loss: 1.4522 - val_accuracy: 0.8116 - val_loss: 0.9646 - learning_rate: 0.1000
+Epoch 26/164
+
+Epoch 26: val_accuracy did not improve from 0.81160
+351/351 - 142s - 405ms/step - accuracy: 0.6913 - loss: 1.4403 - val_accuracy: 0.8064 - val_loss: 0.9661 - learning_rate: 0.1000
+Epoch 27/164
+
+Epoch 27: val_accuracy did not improve from 0.81160
+351/351 - 142s - 404ms/step - accuracy: 0.6871 - loss: 1.4513 - val_accuracy: 0.8030 - val_loss: 0.9741 - learning_rate: 0.1000
+Epoch 28/164
+
+Epoch 28: val_accuracy improved from 0.81160 to 0.82740, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 143s - 407ms/step - accuracy: 0.6968 - loss: 1.4411 - val_accuracy: 0.8274 - val_loss: 0.9272 - learning_rate: 0.1000
+Epoch 29/164
+
+Epoch 29: val_accuracy did not improve from 0.82740
+351/351 - 142s - 405ms/step - accuracy: 0.6855 - loss: 1.4538 - val_accuracy: 0.7512 - val_loss: 1.1141 - learning_rate: 0.1000
+Epoch 30/164
+
+Epoch 30: val_accuracy did not improve from 0.82740
+351/351 - 143s - 407ms/step - accuracy: 0.6999 - loss: 1.4235 - val_accuracy: 0.7974 - val_loss: 0.9970 - learning_rate: 0.1000
+Epoch 31/164
+
+Epoch 31: val_accuracy did not improve from 0.82740
+351/351 - 144s - 410ms/step - accuracy: 0.6838 - loss: 1.4465 - val_accuracy: 0.8274 - val_loss: 0.9577 - learning_rate: 0.1000
+Epoch 32/164
+
+Epoch 32: val_accuracy did not improve from 0.82740
+351/351 - 144s - 411ms/step - accuracy: 0.6990 - loss: 1.4312 - val_accuracy: 0.8012 - val_loss: 0.9847 - learning_rate: 0.1000
+Epoch 33/164
+
+Epoch 33: val_accuracy did not improve from 0.82740
+351/351 - 144s - 411ms/step - accuracy: 0.7105 - loss: 1.4175 - val_accuracy: 0.7796 - val_loss: 1.0194 - learning_rate: 0.1000
+Epoch 34/164
+
+Epoch 34: val_accuracy did not improve from 0.82740
+351/351 - 146s - 416ms/step - accuracy: 0.7117 - loss: 1.4179 - val_accuracy: 0.8192 - val_loss: 0.9546 - learning_rate: 0.1000
+Epoch 35/164
+
+Epoch 35: val_accuracy did not improve from 0.82740
+351/351 - 159s - 453ms/step - accuracy: 0.6909 - loss: 1.4341 - val_accuracy: 0.8034 - val_loss: 0.9703 - learning_rate: 0.1000
+Epoch 36/164
+
+Epoch 36: val_accuracy did not improve from 0.82740
+351/351 - 156s - 446ms/step - accuracy: 0.7153 - loss: 1.4064 - val_accuracy: 0.8010 - val_loss: 0.9902 - learning_rate: 0.1000
+Epoch 37/164
+
+Epoch 37: val_accuracy did not improve from 0.82740
+351/351 - 156s - 446ms/step - accuracy: 0.6914 - loss: 1.4355 - val_accuracy: 0.8246 - val_loss: 0.9412 - learning_rate: 0.1000
+Epoch 38/164
+
+Epoch 38: val_accuracy did not improve from 0.82740
+351/351 - 157s - 448ms/step - accuracy: 0.7000 - loss: 1.4402 - val_accuracy: 0.7994 - val_loss: 0.9962 - learning_rate: 0.1000
+Epoch 39/164
+
+Epoch 39: val_accuracy did not improve from 0.82740
+351/351 - 156s - 445ms/step - accuracy: 0.7171 - loss: 1.4061 - val_accuracy: 0.8178 - val_loss: 0.9437 - learning_rate: 0.1000
+Epoch 40/164
+
+Epoch 40: val_accuracy improved from 0.82740 to 0.83540, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 156s - 446ms/step - accuracy: 0.7046 - loss: 1.4164 - val_accuracy: 0.8354 - val_loss: 0.9022 - learning_rate: 0.1000
+Epoch 41/164
+
+Epoch 41: val_accuracy did not improve from 0.83540
+351/351 - 161s - 457ms/step - accuracy: 0.7075 - loss: 1.4135 - val_accuracy: 0.7628 - val_loss: 1.0526 - learning_rate: 0.1000
+Epoch 42/164
+
+Epoch 42: val_accuracy did not improve from 0.83540
+351/351 - 151s - 429ms/step - accuracy: 0.7075 - loss: 1.4142 - val_accuracy: 0.8242 - val_loss: 0.9529 - learning_rate: 0.1000
+Epoch 43/164
+
+Epoch 43: val_accuracy did not improve from 0.83540
+351/351 - 151s - 431ms/step - accuracy: 0.7038 - loss: 1.4104 - val_accuracy: 0.8000 - val_loss: 0.9878 - learning_rate: 0.1000
+Epoch 44/164
+
+Epoch 44: val_accuracy did not improve from 0.83540
+351/351 - 150s - 428ms/step - accuracy: 0.7026 - loss: 1.4250 - val_accuracy: 0.8138 - val_loss: 0.9541 - learning_rate: 0.1000
+Epoch 45/164
+
+Epoch 45: val_accuracy improved from 0.83540 to 0.85640, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 152s - 433ms/step - accuracy: 0.6989 - loss: 1.4250 - val_accuracy: 0.8564 - val_loss: 0.8629 - learning_rate: 0.1000
+Epoch 46/164
+
+Epoch 46: val_accuracy did not improve from 0.85640
+351/351 - 150s - 428ms/step - accuracy: 0.7229 - loss: 1.3865 - val_accuracy: 0.7944 - val_loss: 0.9960 - learning_rate: 0.1000
+Epoch 47/164
+
+Epoch 47: val_accuracy did not improve from 0.85640
+351/351 - 151s - 431ms/step - accuracy: 0.7158 - loss: 1.3856 - val_accuracy: 0.8174 - val_loss: 0.9473 - learning_rate: 0.1000
+Epoch 48/164
+
+Epoch 48: val_accuracy did not improve from 0.85640
+351/351 - 151s - 429ms/step - accuracy: 0.7142 - loss: 1.3918 - val_accuracy: 0.8196 - val_loss: 0.9366 - learning_rate: 0.1000
+Epoch 49/164
+
+Epoch 49: val_accuracy did not improve from 0.85640
+351/351 - 150s - 428ms/step - accuracy: 0.7254 - loss: 1.3857 - val_accuracy: 0.8146 - val_loss: 0.9216 - learning_rate: 0.1000
+Epoch 50/164
+
+Epoch 50: val_accuracy did not improve from 0.85640
+351/351 - 152s - 433ms/step - accuracy: 0.7114 - loss: 1.4119 - val_accuracy: 0.8102 - val_loss: 0.9616 - learning_rate: 0.1000
+Epoch 51/164
+
+Epoch 51: val_accuracy did not improve from 0.85640
+351/351 - 153s - 436ms/step - accuracy: 0.7151 - loss: 1.3929 - val_accuracy: 0.8384 - val_loss: 0.9054 - learning_rate: 0.1000
+Epoch 52/164
+
+Epoch 52: val_accuracy did not improve from 0.85640
+351/351 - 151s - 431ms/step - accuracy: 0.7089 - loss: 1.4023 - val_accuracy: 0.8470 - val_loss: 0.8911 - learning_rate: 0.1000
+Epoch 53/164
+
+Epoch 53: val_accuracy did not improve from 0.85640
+351/351 - 153s - 436ms/step - accuracy: 0.7317 - loss: 1.3978 - val_accuracy: 0.8302 - val_loss: 0.9131 - learning_rate: 0.1000
+Epoch 54/164
+
+Epoch 54: val_accuracy did not improve from 0.85640
+351/351 - 152s - 432ms/step - accuracy: 0.7275 - loss: 1.3835 - val_accuracy: 0.8438 - val_loss: 0.9019 - learning_rate: 0.1000
+Epoch 55/164
+
+Epoch 55: val_accuracy did not improve from 0.85640
+351/351 - 152s - 434ms/step - accuracy: 0.7265 - loss: 1.3950 - val_accuracy: 0.8142 - val_loss: 0.9587 - learning_rate: 0.1000
+Epoch 56/164
+
+Epoch 56: val_accuracy did not improve from 0.85640
+351/351 - 152s - 432ms/step - accuracy: 0.7252 - loss: 1.3778 - val_accuracy: 0.8494 - val_loss: 0.8721 - learning_rate: 0.1000
+Epoch 57/164
+
+Epoch 57: val_accuracy did not improve from 0.85640
+351/351 - 152s - 434ms/step - accuracy: 0.7234 - loss: 1.3815 - val_accuracy: 0.8488 - val_loss: 0.8715 - learning_rate: 0.1000
+Epoch 58/164
+
+Epoch 58: val_accuracy did not improve from 0.85640
+351/351 - 151s - 431ms/step - accuracy: 0.7349 - loss: 1.3711 - val_accuracy: 0.7790 - val_loss: 1.0237 - learning_rate: 0.1000
+Epoch 59/164
+
+Epoch 59: val_accuracy did not improve from 0.85640
+351/351 - 152s - 433ms/step - accuracy: 0.7349 - loss: 1.3679 - val_accuracy: 0.8220 - val_loss: 0.9330 - learning_rate: 0.1000
+Epoch 60/164
+
+Epoch 60: val_accuracy did not improve from 0.85640
+351/351 - 151s - 430ms/step - accuracy: 0.7232 - loss: 1.3700 - val_accuracy: 0.7856 - val_loss: 1.0387 - learning_rate: 0.1000
+Epoch 61/164
+
+Epoch 61: val_accuracy did not improve from 0.85640
+351/351 - 151s - 431ms/step - accuracy: 0.7117 - loss: 1.4066 - val_accuracy: 0.7944 - val_loss: 0.9776 - learning_rate: 0.1000
+Epoch 62/164
+
+Epoch 62: val_accuracy did not improve from 0.85640
+351/351 - 151s - 429ms/step - accuracy: 0.7099 - loss: 1.3915 - val_accuracy: 0.8416 - val_loss: 0.8937 - learning_rate: 0.1000
+Epoch 63/164
+
+Epoch 63: val_accuracy improved from 0.85640 to 0.86800, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 151s - 431ms/step - accuracy: 0.7390 - loss: 1.3518 - val_accuracy: 0.8680 - val_loss: 0.8315 - learning_rate: 0.1000
+Epoch 64/164
+
+Epoch 64: val_accuracy did not improve from 0.86800
+351/351 - 152s - 434ms/step - accuracy: 0.7467 - loss: 1.3371 - val_accuracy: 0.8154 - val_loss: 0.9611 - learning_rate: 0.1000
+Epoch 65/164
+
+Epoch 65: val_accuracy did not improve from 0.86800
+351/351 - 156s - 444ms/step - accuracy: 0.7272 - loss: 1.3702 - val_accuracy: 0.8324 - val_loss: 0.9119 - learning_rate: 0.1000
+Epoch 66/164
+
+Epoch 66: val_accuracy did not improve from 0.86800
+351/351 - 154s - 440ms/step - accuracy: 0.7245 - loss: 1.3742 - val_accuracy: 0.7636 - val_loss: 1.0459 - learning_rate: 0.1000
+Epoch 67/164
+
+Epoch 67: val_accuracy did not improve from 0.86800
+351/351 - 154s - 440ms/step - accuracy: 0.7280 - loss: 1.3712 - val_accuracy: 0.7848 - val_loss: 1.0049 - learning_rate: 0.1000
+Epoch 68/164
+
+Epoch 68: val_accuracy did not improve from 0.86800
+351/351 - 154s - 438ms/step - accuracy: 0.7404 - loss: 1.3554 - val_accuracy: 0.8046 - val_loss: 0.9990 - learning_rate: 0.1000
+Epoch 69/164
+
+Epoch 69: val_accuracy did not improve from 0.86800
+351/351 - 154s - 437ms/step - accuracy: 0.7112 - loss: 1.3855 - val_accuracy: 0.8348 - val_loss: 0.9147 - learning_rate: 0.1000
+Epoch 70/164
+
+Epoch 70: val_accuracy did not improve from 0.86800
+351/351 - 152s - 432ms/step - accuracy: 0.7395 - loss: 1.3598 - val_accuracy: 0.8244 - val_loss: 0.9332 - learning_rate: 0.1000
+Epoch 71/164
+
+Epoch 71: val_accuracy did not improve from 0.86800
+351/351 - 152s - 433ms/step - accuracy: 0.7393 - loss: 1.3530 - val_accuracy: 0.8062 - val_loss: 0.9459 - learning_rate: 0.1000
+Epoch 72/164
+
+Epoch 72: val_accuracy did not improve from 0.86800
+351/351 - 153s - 437ms/step - accuracy: 0.7250 - loss: 1.3745 - val_accuracy: 0.8124 - val_loss: 0.9721 - learning_rate: 0.1000
+Epoch 73/164
+
+Epoch 73: val_accuracy did not improve from 0.86800
+351/351 - 153s - 437ms/step - accuracy: 0.7474 - loss: 1.3553 - val_accuracy: 0.8378 - val_loss: 0.9054 - learning_rate: 0.1000
+Epoch 74/164
+
+Epoch 74: val_accuracy did not improve from 0.86800
+351/351 - 153s - 435ms/step - accuracy: 0.7428 - loss: 1.3567 - val_accuracy: 0.8270 - val_loss: 0.9218 - learning_rate: 0.1000
+Epoch 75/164
+
+Epoch 75: val_accuracy did not improve from 0.86800
+351/351 - 153s - 437ms/step - accuracy: 0.7333 - loss: 1.3689 - val_accuracy: 0.8336 - val_loss: 0.9180 - learning_rate: 0.1000
+Epoch 76/164
+
+Epoch 76: val_accuracy did not improve from 0.86800
+351/351 - 153s - 436ms/step - accuracy: 0.7378 - loss: 1.3599 - val_accuracy: 0.8308 - val_loss: 0.9167 - learning_rate: 0.1000
+Epoch 77/164
+
+Epoch 77: val_accuracy did not improve from 0.86800
+351/351 - 148s - 421ms/step - accuracy: 0.7217 - loss: 1.3874 - val_accuracy: 0.8226 - val_loss: 0.9557 - learning_rate: 0.1000
+Epoch 78/164
+
+Epoch 78: val_accuracy did not improve from 0.86800
+351/351 - 144s - 411ms/step - accuracy: 0.7396 - loss: 1.3593 - val_accuracy: 0.8390 - val_loss: 0.9142 - learning_rate: 0.1000
+Epoch 79/164
+
+Epoch 79: val_accuracy did not improve from 0.86800
+351/351 - 145s - 412ms/step - accuracy: 0.7366 - loss: 1.3561 - val_accuracy: 0.8380 - val_loss: 0.9135 - learning_rate: 0.1000
+Epoch 80/164
+
+Epoch 80: val_accuracy did not improve from 0.86800
+351/351 - 146s - 416ms/step - accuracy: 0.7481 - loss: 1.3478 - val_accuracy: 0.8592 - val_loss: 0.8854 - learning_rate: 0.1000
+Epoch 81/164
+
+Epoch 81: val_accuracy did not improve from 0.86800
+351/351 - 146s - 415ms/step - accuracy: 0.7353 - loss: 1.3594 - val_accuracy: 0.8514 - val_loss: 0.9068 - learning_rate: 0.1000
+Epoch 82/164
+
+Epoch 82: val_accuracy did not improve from 0.86800
+351/351 - 146s - 416ms/step - accuracy: 0.7358 - loss: 1.3434 - val_accuracy: 0.8288 - val_loss: 0.9275 - learning_rate: 0.1000
+Epoch 83/164
+
+Epoch 83: val_accuracy improved from 0.86800 to 0.90700, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 416ms/step - accuracy: 0.7583 - loss: 1.3405 - val_accuracy: 0.9070 - val_loss: 0.7653 - learning_rate: 0.0100
+Epoch 84/164
+
+Epoch 84: val_accuracy improved from 0.90700 to 0.90840, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 147s - 418ms/step - accuracy: 0.7702 - loss: 1.2849 - val_accuracy: 0.9084 - val_loss: 0.7478 - learning_rate: 0.0100
+Epoch 85/164
+
+Epoch 85: val_accuracy did not improve from 0.90840
+351/351 - 146s - 415ms/step - accuracy: 0.7514 - loss: 1.3146 - val_accuracy: 0.9040 - val_loss: 0.7579 - learning_rate: 0.0100
+Epoch 86/164
+
+Epoch 86: val_accuracy did not improve from 0.90840
+351/351 - 146s - 415ms/step - accuracy: 0.7776 - loss: 1.2729 - val_accuracy: 0.9026 - val_loss: 0.7594 - learning_rate: 0.0100
+Epoch 87/164
+
+Epoch 87: val_accuracy improved from 0.90840 to 0.90940, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 413ms/step - accuracy: 0.7757 - loss: 1.2950 - val_accuracy: 0.9094 - val_loss: 0.7512 - learning_rate: 0.0100
+Epoch 88/164
+
+Epoch 88: val_accuracy improved from 0.90940 to 0.91060, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 413ms/step - accuracy: 0.7634 - loss: 1.2912 - val_accuracy: 0.9106 - val_loss: 0.7467 - learning_rate: 0.0100
+Epoch 89/164
+
+Epoch 89: val_accuracy improved from 0.91060 to 0.91220, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 415ms/step - accuracy: 0.7629 - loss: 1.3017 - val_accuracy: 0.9122 - val_loss: 0.7466 - learning_rate: 0.0100
+Epoch 90/164
+
+Epoch 90: val_accuracy improved from 0.91220 to 0.91320, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 416ms/step - accuracy: 0.7836 - loss: 1.2764 - val_accuracy: 0.9132 - val_loss: 0.7480 - learning_rate: 0.0100
+Epoch 91/164
+
+Epoch 91: val_accuracy did not improve from 0.91320
+351/351 - 144s - 412ms/step - accuracy: 0.7778 - loss: 1.2779 - val_accuracy: 0.9122 - val_loss: 0.7515 - learning_rate: 0.0100
+Epoch 92/164
+
+Epoch 92: val_accuracy did not improve from 0.91320
+351/351 - 147s - 418ms/step - accuracy: 0.7784 - loss: 1.2797 - val_accuracy: 0.9076 - val_loss: 0.7498 - learning_rate: 0.0100
+Epoch 93/164
+
+Epoch 93: val_accuracy did not improve from 0.91320
+351/351 - 145s - 414ms/step - accuracy: 0.7844 - loss: 1.2693 - val_accuracy: 0.9056 - val_loss: 0.7577 - learning_rate: 0.0100
+Epoch 94/164
+
+Epoch 94: val_accuracy did not improve from 0.91320
+351/351 - 145s - 412ms/step - accuracy: 0.7892 - loss: 1.2733 - val_accuracy: 0.9110 - val_loss: 0.7382 - learning_rate: 0.0100
+Epoch 95/164
+
+Epoch 95: val_accuracy did not improve from 0.91320
+351/351 - 145s - 412ms/step - accuracy: 0.7838 - loss: 1.2773 - val_accuracy: 0.9074 - val_loss: 0.7507 - learning_rate: 0.0100
+Epoch 96/164
+
+Epoch 96: val_accuracy did not improve from 0.91320
+351/351 - 145s - 413ms/step - accuracy: 0.7660 - loss: 1.2902 - val_accuracy: 0.9126 - val_loss: 0.7487 - learning_rate: 0.0100
+Epoch 97/164
+
+Epoch 97: val_accuracy improved from 0.91320 to 0.91480, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 416ms/step - accuracy: 0.7787 - loss: 1.2878 - val_accuracy: 0.9148 - val_loss: 0.7404 - learning_rate: 0.0100
+Epoch 98/164
+
+Epoch 98: val_accuracy did not improve from 0.91480
+351/351 - 146s - 416ms/step - accuracy: 0.7744 - loss: 1.2812 - val_accuracy: 0.9098 - val_loss: 0.7568 - learning_rate: 0.0100
+Epoch 99/164
+
+Epoch 99: val_accuracy did not improve from 0.91480
+351/351 - 146s - 416ms/step - accuracy: 0.7652 - loss: 1.3028 - val_accuracy: 0.9132 - val_loss: 0.7439 - learning_rate: 0.0100
+Epoch 100/164
+
+Epoch 100: val_accuracy did not improve from 0.91480
+351/351 - 145s - 414ms/step - accuracy: 0.7827 - loss: 1.2659 - val_accuracy: 0.9108 - val_loss: 0.7460 - learning_rate: 0.0100
+Epoch 101/164
+
+Epoch 101: val_accuracy did not improve from 0.91480
+351/351 - 146s - 415ms/step - accuracy: 0.7633 - loss: 1.2880 - val_accuracy: 0.9104 - val_loss: 0.7577 - learning_rate: 0.0100
+Epoch 102/164
+
+Epoch 102: val_accuracy did not improve from 0.91480
+351/351 - 145s - 413ms/step - accuracy: 0.7754 - loss: 1.2901 - val_accuracy: 0.9128 - val_loss: 0.7479 - learning_rate: 0.0100
+Epoch 103/164
+
+Epoch 103: val_accuracy did not improve from 0.91480
+351/351 - 145s - 414ms/step - accuracy: 0.7883 - loss: 1.2689 - val_accuracy: 0.9092 - val_loss: 0.7501 - learning_rate: 0.0100
+Epoch 104/164
+
+Epoch 104: val_accuracy did not improve from 0.91480
+351/351 - 146s - 415ms/step - accuracy: 0.7726 - loss: 1.3005 - val_accuracy: 0.9100 - val_loss: 0.7507 - learning_rate: 0.0100
+Epoch 105/164
+
+Epoch 105: val_accuracy did not improve from 0.91480
+351/351 - 145s - 413ms/step - accuracy: 0.7749 - loss: 1.2679 - val_accuracy: 0.9074 - val_loss: 0.7527 - learning_rate: 0.0100
+Epoch 106/164
+
+Epoch 106: val_accuracy did not improve from 0.91480
+351/351 - 144s - 410ms/step - accuracy: 0.7767 - loss: 1.2919 - val_accuracy: 0.9080 - val_loss: 0.7533 - learning_rate: 0.0100
+Epoch 107/164
+
+Epoch 107: val_accuracy did not improve from 0.91480
+351/351 - 146s - 417ms/step - accuracy: 0.7851 - loss: 1.2704 - val_accuracy: 0.9116 - val_loss: 0.7440 - learning_rate: 0.0100
+Epoch 108/164
+
+Epoch 108: val_accuracy improved from 0.91480 to 0.91540, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 414ms/step - accuracy: 0.7811 - loss: 1.2500 - val_accuracy: 0.9154 - val_loss: 0.7415 - learning_rate: 0.0100
+Epoch 109/164
+
+Epoch 109: val_accuracy did not improve from 0.91540
+351/351 - 145s - 413ms/step - accuracy: 0.7861 - loss: 1.2560 - val_accuracy: 0.9138 - val_loss: 0.7356 - learning_rate: 0.0100
+Epoch 110/164
+
+Epoch 110: val_accuracy did not improve from 0.91540
+351/351 - 144s - 409ms/step - accuracy: 0.7768 - loss: 1.2706 - val_accuracy: 0.9152 - val_loss: 0.7361 - learning_rate: 0.0100
+Epoch 111/164
+
+Epoch 111: val_accuracy did not improve from 0.91540
+351/351 - 144s - 411ms/step - accuracy: 0.7749 - loss: 1.2824 - val_accuracy: 0.9152 - val_loss: 0.7382 - learning_rate: 0.0100
+Epoch 112/164
+
+Epoch 112: val_accuracy did not improve from 0.91540
+351/351 - 146s - 416ms/step - accuracy: 0.7856 - loss: 1.2786 - val_accuracy: 0.9068 - val_loss: 0.7551 - learning_rate: 0.0100
+Epoch 113/164
+
+Epoch 113: val_accuracy did not improve from 0.91540
+351/351 - 145s - 413ms/step - accuracy: 0.7872 - loss: 1.2660 - val_accuracy: 0.9146 - val_loss: 0.7355 - learning_rate: 0.0100
+Epoch 114/164
+
+Epoch 114: val_accuracy did not improve from 0.91540
+351/351 - 146s - 415ms/step - accuracy: 0.7661 - loss: 1.3028 - val_accuracy: 0.9114 - val_loss: 0.7399 - learning_rate: 0.0100
+Epoch 115/164
+
+Epoch 115: val_accuracy did not improve from 0.91540
+351/351 - 146s - 415ms/step - accuracy: 0.7778 - loss: 1.2917 - val_accuracy: 0.9148 - val_loss: 0.7540 - learning_rate: 0.0100
+Epoch 116/164
+
+Epoch 116: val_accuracy did not improve from 0.91540
+351/351 - 146s - 416ms/step - accuracy: 0.7782 - loss: 1.2684 - val_accuracy: 0.9108 - val_loss: 0.7474 - learning_rate: 0.0100
+Epoch 117/164
+
+Epoch 117: val_accuracy did not improve from 0.91540
+351/351 - 145s - 414ms/step - accuracy: 0.7759 - loss: 1.2635 - val_accuracy: 0.9136 - val_loss: 0.7376 - learning_rate: 0.0100
+Epoch 118/164
+
+Epoch 118: val_accuracy did not improve from 0.91540
+351/351 - 145s - 414ms/step - accuracy: 0.7672 - loss: 1.2740 - val_accuracy: 0.9048 - val_loss: 0.7549 - learning_rate: 0.0100
+Epoch 119/164
+
+Epoch 119: val_accuracy did not improve from 0.91540
+351/351 - 146s - 416ms/step - accuracy: 0.7806 - loss: 1.2790 - val_accuracy: 0.9134 - val_loss: 0.7452 - learning_rate: 0.0100
+Epoch 120/164
+
+Epoch 120: val_accuracy did not improve from 0.91540
+351/351 - 147s - 418ms/step - accuracy: 0.7829 - loss: 1.2759 - val_accuracy: 0.9114 - val_loss: 0.7404 - learning_rate: 0.0100
+Epoch 121/164
+
+Epoch 121: val_accuracy did not improve from 0.91540
+351/351 - 145s - 414ms/step - accuracy: 0.7663 - loss: 1.2793 - val_accuracy: 0.9122 - val_loss: 0.7410 - learning_rate: 0.0100
+Epoch 122/164
+
+Epoch 122: val_accuracy did not improve from 0.91540
+351/351 - 147s - 418ms/step - accuracy: 0.7739 - loss: 1.2691 - val_accuracy: 0.9118 - val_loss: 0.7389 - learning_rate: 0.0100
+Epoch 123/164
+
+Epoch 123: val_accuracy did not improve from 0.91540
+351/351 - 146s - 415ms/step - accuracy: 0.7821 - loss: 1.2734 - val_accuracy: 0.9144 - val_loss: 0.7464 - learning_rate: 0.0100
+Epoch 124/164
+
+Epoch 124: val_accuracy improved from 0.91540 to 0.91960, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 415ms/step - accuracy: 0.7857 - loss: 1.2543 - val_accuracy: 0.9196 - val_loss: 0.7302 - learning_rate: 1.0000e-03
+Epoch 125/164
+
+Epoch 125: val_accuracy improved from 0.91960 to 0.92000, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 145s - 414ms/step - accuracy: 0.7961 - loss: 1.2610 - val_accuracy: 0.9200 - val_loss: 0.7302 - learning_rate: 1.0000e-03
+Epoch 126/164
+
+Epoch 126: val_accuracy improved from 0.92000 to 0.92020, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 144s - 410ms/step - accuracy: 0.7974 - loss: 1.2633 - val_accuracy: 0.9202 - val_loss: 0.7283 - learning_rate: 1.0000e-03
+Epoch 127/164
+
+Epoch 127: val_accuracy did not improve from 0.92020
+351/351 - 143s - 407ms/step - accuracy: 0.7894 - loss: 1.2505 - val_accuracy: 0.9196 - val_loss: 0.7268 - learning_rate: 1.0000e-03
+Epoch 128/164
+
+Epoch 128: val_accuracy did not improve from 0.92020
+351/351 - 143s - 408ms/step - accuracy: 0.7954 - loss: 1.2453 - val_accuracy: 0.9202 - val_loss: 0.7256 - learning_rate: 1.0000e-03
+Epoch 129/164
+
+Epoch 129: val_accuracy did not improve from 0.92020
+351/351 - 144s - 411ms/step - accuracy: 0.7882 - loss: 1.2588 - val_accuracy: 0.9194 - val_loss: 0.7298 - learning_rate: 1.0000e-03
+Epoch 130/164
+
+Epoch 130: val_accuracy improved from 0.92020 to 0.92040, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 146s - 415ms/step - accuracy: 0.7752 - loss: 1.2712 - val_accuracy: 0.9204 - val_loss: 0.7299 - learning_rate: 1.0000e-03
+Epoch 131/164
+
+Epoch 131: val_accuracy did not improve from 0.92040
+351/351 - 145s - 412ms/step - accuracy: 0.7926 - loss: 1.2464 - val_accuracy: 0.9184 - val_loss: 0.7293 - learning_rate: 1.0000e-03
+Epoch 132/164
+
+Epoch 132: val_accuracy did not improve from 0.92040
+351/351 - 146s - 416ms/step - accuracy: 0.7833 - loss: 1.2560 - val_accuracy: 0.9196 - val_loss: 0.7308 - learning_rate: 1.0000e-03
+Epoch 133/164
+
+Epoch 133: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7737 - loss: 1.2743 - val_accuracy: 0.9184 - val_loss: 0.7363 - learning_rate: 1.0000e-03
+Epoch 134/164
+
+Epoch 134: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7752 - loss: 1.2684 - val_accuracy: 0.9192 - val_loss: 0.7326 - learning_rate: 1.0000e-03
+Epoch 135/164
+
+Epoch 135: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7839 - loss: 1.2572 - val_accuracy: 0.9192 - val_loss: 0.7297 - learning_rate: 1.0000e-03
+Epoch 136/164
+
+Epoch 136: val_accuracy did not improve from 0.92040
+351/351 - 146s - 417ms/step - accuracy: 0.7877 - loss: 1.2691 - val_accuracy: 0.9194 - val_loss: 0.7312 - learning_rate: 1.0000e-03
+Epoch 137/164
+
+Epoch 137: val_accuracy did not improve from 0.92040
+351/351 - 147s - 419ms/step - accuracy: 0.7876 - loss: 1.2633 - val_accuracy: 0.9192 - val_loss: 0.7302 - learning_rate: 1.0000e-03
+Epoch 138/164
+
+Epoch 138: val_accuracy did not improve from 0.92040
+351/351 - 146s - 417ms/step - accuracy: 0.7801 - loss: 1.2726 - val_accuracy: 0.9198 - val_loss: 0.7311 - learning_rate: 1.0000e-03
+Epoch 139/164
+
+Epoch 139: val_accuracy did not improve from 0.92040
+351/351 - 147s - 418ms/step - accuracy: 0.7905 - loss: 1.2543 - val_accuracy: 0.9190 - val_loss: 0.7287 - learning_rate: 1.0000e-03
+Epoch 140/164
+
+Epoch 140: val_accuracy did not improve from 0.92040
+351/351 - 147s - 418ms/step - accuracy: 0.7999 - loss: 1.2511 - val_accuracy: 0.9204 - val_loss: 0.7307 - learning_rate: 1.0000e-03
+Epoch 141/164
+
+Epoch 141: val_accuracy did not improve from 0.92040
+351/351 - 146s - 416ms/step - accuracy: 0.7876 - loss: 1.2513 - val_accuracy: 0.9190 - val_loss: 0.7281 - learning_rate: 1.0000e-03
+Epoch 142/164
+
+Epoch 142: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7827 - loss: 1.2559 - val_accuracy: 0.9196 - val_loss: 0.7286 - learning_rate: 1.0000e-03
+Epoch 143/164
+
+Epoch 143: val_accuracy did not improve from 0.92040
+351/351 - 145s - 413ms/step - accuracy: 0.7775 - loss: 1.2768 - val_accuracy: 0.9182 - val_loss: 0.7317 - learning_rate: 1.0000e-03
+Epoch 144/164
+
+Epoch 144: val_accuracy did not improve from 0.92040
+351/351 - 145s - 413ms/step - accuracy: 0.7770 - loss: 1.2662 - val_accuracy: 0.9196 - val_loss: 0.7311 - learning_rate: 1.0000e-03
+Epoch 145/164
+
+Epoch 145: val_accuracy did not improve from 0.92040
+351/351 - 146s - 417ms/step - accuracy: 0.7776 - loss: 1.2682 - val_accuracy: 0.9182 - val_loss: 0.7323 - learning_rate: 1.0000e-03
+Epoch 146/164
+
+Epoch 146: val_accuracy did not improve from 0.92040
+351/351 - 146s - 417ms/step - accuracy: 0.7834 - loss: 1.2677 - val_accuracy: 0.9194 - val_loss: 0.7293 - learning_rate: 1.0000e-03
+Epoch 147/164
+
+Epoch 147: val_accuracy did not improve from 0.92040
+351/351 - 145s - 413ms/step - accuracy: 0.7888 - loss: 1.2560 - val_accuracy: 0.9194 - val_loss: 0.7293 - learning_rate: 1.0000e-03
+Epoch 148/164
+
+Epoch 148: val_accuracy did not improve from 0.92040
+351/351 - 146s - 416ms/step - accuracy: 0.7798 - loss: 1.2782 - val_accuracy: 0.9200 - val_loss: 0.7324 - learning_rate: 1.0000e-03
+Epoch 149/164
+
+Epoch 149: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7837 - loss: 1.2643 - val_accuracy: 0.9190 - val_loss: 0.7272 - learning_rate: 1.0000e-03
+Epoch 150/164
+
+Epoch 150: val_accuracy did not improve from 0.92040
+351/351 - 146s - 417ms/step - accuracy: 0.7750 - loss: 1.2631 - val_accuracy: 0.9190 - val_loss: 0.7269 - learning_rate: 1.0000e-03
+Epoch 151/164
+
+Epoch 151: val_accuracy did not improve from 0.92040
+351/351 - 145s - 414ms/step - accuracy: 0.7789 - loss: 1.2618 - val_accuracy: 0.9202 - val_loss: 0.7284 - learning_rate: 1.0000e-03
+Epoch 152/164
+
+Epoch 152: val_accuracy did not improve from 0.92040
+351/351 - 146s - 415ms/step - accuracy: 0.7935 - loss: 1.2467 - val_accuracy: 0.9196 - val_loss: 0.7257 - learning_rate: 1.0000e-03
+Epoch 153/164
+
+Epoch 153: val_accuracy did not improve from 0.92040
+351/351 - 144s - 411ms/step - accuracy: 0.7921 - loss: 1.2652 - val_accuracy: 0.9196 - val_loss: 0.7321 - learning_rate: 1.0000e-03
+Epoch 154/164
+
+Epoch 154: val_accuracy did not improve from 0.92040
+351/351 - 144s - 411ms/step - accuracy: 0.7869 - loss: 1.2604 - val_accuracy: 0.9202 - val_loss: 0.7282 - learning_rate: 1.0000e-03
+Epoch 155/164
+
+Epoch 155: val_accuracy did not improve from 0.92040
+351/351 - 144s - 410ms/step - accuracy: 0.7826 - loss: 1.2725 - val_accuracy: 0.9204 - val_loss: 0.7292 - learning_rate: 1.0000e-03
+Epoch 156/164
+
+Epoch 156: val_accuracy did not improve from 0.92040
+351/351 - 145s - 412ms/step - accuracy: 0.7828 - loss: 1.2616 - val_accuracy: 0.9200 - val_loss: 0.7296 - learning_rate: 1.0000e-03
+Epoch 157/164
+
+Epoch 157: val_accuracy did not improve from 0.92040
+351/351 - 144s - 411ms/step - accuracy: 0.7951 - loss: 1.2467 - val_accuracy: 0.9202 - val_loss: 0.7295 - learning_rate: 1.0000e-03
+Epoch 158/164
+
+Epoch 158: val_accuracy did not improve from 0.92040
+351/351 - 145s - 412ms/step - accuracy: 0.8048 - loss: 1.2400 - val_accuracy: 0.9202 - val_loss: 0.7252 - learning_rate: 1.0000e-03
+Epoch 159/164
+
+Epoch 159: val_accuracy did not improve from 0.92040
+351/351 - 144s - 410ms/step - accuracy: 0.7937 - loss: 1.2582 - val_accuracy: 0.9192 - val_loss: 0.7285 - learning_rate: 1.0000e-03
+Epoch 160/164
+
+Epoch 160: val_accuracy improved from 0.92040 to 0.92060, saving model to best_model.h5
+
+WARNING:absl:You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`.
+
+351/351 - 143s - 408ms/step - accuracy: 0.7954 - loss: 1.2423 - val_accuracy: 0.9206 - val_loss: 0.7287 - learning_rate: 1.0000e-03
+Epoch 161/164
+
+Epoch 161: val_accuracy did not improve from 0.92060
+351/351 - 143s - 407ms/step - accuracy: 0.7904 - loss: 1.2540 - val_accuracy: 0.9196 - val_loss: 0.7310 - learning_rate: 1.0000e-03
+Epoch 162/164
+
+Epoch 162: val_accuracy did not improve from 0.92060
+351/351 - 143s - 407ms/step - accuracy: 0.7956 - loss: 1.2465 - val_accuracy: 0.9200 - val_loss: 0.7247 - learning_rate: 1.0000e-03
+Epoch 163/164
+
+Epoch 163: val_accuracy did not improve from 0.92060
+351/351 - 144s - 411ms/step - accuracy: 0.7853 - loss: 1.2546 - val_accuracy: 0.9194 - val_loss: 0.7287 - learning_rate: 1.0000e-03
+Epoch 164/164
+
+Epoch 164: val_accuracy did not improve from 0.92060
+351/351 - 144s - 411ms/step - accuracy: 0.7925 - loss: 1.2672 - val_accuracy: 0.9198 - val_loss: 0.7289 - learning_rate: 1.0000e-03
+100/100 - 1s - 14ms/step - accuracy: 0.9173 - loss: 0.7369
+
+✅ Final test accuracy: 0.9173
