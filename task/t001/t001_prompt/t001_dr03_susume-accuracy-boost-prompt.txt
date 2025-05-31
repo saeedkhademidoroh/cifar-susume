@@ -1,0 +1,86 @@
+
+Strategic ResNet-Centric CIFAR-10 Optimization Pipeline**
+
+**Objective:**
+Maximize test accuracy on CIFAR-10 dataset using ResNet-style models (specifically m2, m3, and m4) while minimizing wasted experiments. Integrate empirical knowledge from previous 20+ runs, leveraging `result.json` and `log.txt` analysis.
+
+---
+
+### Phase 1: Eliminate Unfit Architectures
+
+* **Discard m0 and m1**: consistently underperforming
+
+  * m0: severe overfitting (\~97% train acc, \~66% test acc)
+  * m1: unstable training even with SGD+Schedule (\~32% test acc max)
+
+---
+
+### Phase 2: Prioritize High-Yield Models
+
+Focus only on:
+
+* **m2 (ResNet-inspired)** — best generalization (up to 76.4%)
+* **m3 (ResNet-lite)** — compact, robust (up to 77.6%)
+* **m4 (ResNet-enhanced)** — promising (\~78%)
+
+---
+
+### Insights from Results + Logs
+
+**Common Config Wins:**
+
+* `OPTIMIZER`: Adam (0.002–0.005) or SGD (0.01–0.05 w/ schedule)
+* `BATCH_SIZE`: 32 outperforms 8 or 16 in all models
+* `AUGMENT_MODE`: consistently boosts generalization
+* `SCHEDULE_MODE`: improves depth stability (ResNet especially)
+* **Dropout + L2 combo** works well when model size is moderate (m3/m4)
+
+**Failures to Avoid:**
+
+* Over-regularizing m2: drop/L2 kill performance
+* Batch size < 16: induces noisy gradients and degrades test acc
+* High LR (0.01) without scheduler: leads to unstable convergence
+
+---
+
+### Upgrade Loop Strategy
+
+Each run feeds back into the system to:
+
+1. Compare train/val/test curves
+2. Log convergence slope and final generalization gap
+3. Auto-suggest LR decay schedule or dropout change
+
+---
+
+### Suggested Next Configs
+
+* **m2\_sched**: Adam(0.003), batch=32, dropout=0.3, schedule ON
+* **m3\_sgd\_mixup**: SGD(0.01), augment=MixUp, dropout=0.4, schedule ON
+* **m4\_deep**: add 1 residual conv block, use cosine decay
+* **m4\_light++**: LightMode + augment + early stopping + dropout=0.3
+
+---
+
+### Runtime Intelligence Plan
+
+* Use val-loss delta per epoch to forecast early overfit
+* Adjust dropout/L2 adaptively in future configs
+* Score all previous configs with:
+
+  * `efficiency = test_acc / epochs_trained`
+  * `robustness = test_acc - val_acc` gap
+
+---
+
+### Integration Targets
+
+* Integrate this logic into `experiment.py`
+* Auto-append meta-analysis to each `result_*.json`
+* Optionally spawn next-gen config to `/artifact/config/auto/`
+
+---
+
+### Goal:
+
+Achieve **>82% test accuracy** using fewer than 10 smart runs by iterating only over **ResNet-inspired models** and discarding low-yield combinations early.
